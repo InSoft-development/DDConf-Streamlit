@@ -54,6 +54,15 @@ def load_from_file(_path=confile) -> dict:
 	
 	return data
 
+def parse_from_user(data) -> str:
+	mode = _mode.lower()
+	if mode == 'tx':
+		message=f'''
+receiver
+address={data['recv_addr']}
+server
+		'''
+	
 
 #tx
 def render():
@@ -61,14 +70,42 @@ def render():
 	st.header('Protocol 104 configuration page')
 	#TODO: expand on merge with rx
 	data = load_from_file(confile)
-	st.write(data)
-	if data['count'] > 0:
-		with st.container():
-			st.text_input(label = "Receiver Address (DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING)", value = data['old_recv_addr'] )
-			del(data['count'])
-			for i in data.keys():
-				st.text_input(label=i, value=data[i])
-			st.button(label='Submit',on_click=None)
-
+	#st.write(data)
+	f = st.form("dd104form")
+	if "count" not in st.session_state:
+		st.session_state.count = data['count']
+	if st.session_state.count > 0:
+		with f:
+			st.text_input(label = "Receiver Address (DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING)", value = data['old_recv_addr'], key='recv_addr')
+			
+			for i in range(1, st.session_state.count+1):
+				st.write(f"Server {i}")
+				if f'old_server_addr{i}' in data.keys():
+					st.text_input(label=f'Server Address {i}', value=data[f'old_server_addr{i}'], key=f'server_addr{i}') 
+					st.text_input(label=f'Server Port {i}', value=data[f'old_server_port{i}'], key=f'server_port{i}') 
+				else:
+					st.text_input(label=f'Server Address {i}', key=f'server_addr{i}') 
+					st.text_input(label=f'Server Port {i}', key=f'server_port{i}') 
+				
+			submit = st.form_submit_button(label='Submit')
+	
+	adder = st.button("Add Server")
+	if adder:
+		
+		st.session_state.count += 1
+		
+		with f:
+			st.text_input(label=f"Server Address {st.session_state.count}", key=f"server_addr{st.session_state.count}")
+			st.text_input(label=f"Server Port {st.session_state.count}", key=f"server_port{st.session_state.count}")
+	
+	if submit:
+		try:
+			st.write(st.session_state)
+			#save_to_struct()
+		except Exception as e:
+			st.write(f"{type(e)}: {str(e)}")
+	
+	
+	
 init()
 render()
