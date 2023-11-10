@@ -12,6 +12,8 @@ _mode = 'tx'
 def init():
 	global confile
 	confile = '/opt/dd/dd104client.ini'
+	if 'dd104' not in st.session_state.keys():
+		st.session_state['dd104'] = {}
 
 def load_from_file(_path=confile) -> dict:
 	mode = _mode.lower()
@@ -57,11 +59,52 @@ def load_from_file(_path=confile) -> dict:
 def parse_from_user(data) -> str:
 	mode = _mode.lower()
 	if mode == 'tx':
-		message=f'''
-receiver
-address={data['recv_addr']}
-server
-		'''
+		message=f"receiver\naddress={data['recv_addr']}\n\nserver"
+		for i in range(1, data['count']+1):
+			message = message + f"\naddress{i}={data[f'server_addr{i}']}\nport{i}={data[f'server_port{i}']}" 
+		st.write(message)
+		return message
+
+def save_to_file(string:str) -> None:
+	with Path(confile).open("w") as f:
+		f.write(string)
+	
+
+def sanitize():
+	#move stuff from st.session_state to st.<...>.dd104
+	for k,v in st.session_state.items():
+		if ('server_addr' in k or 'server_port' in k or 'recv_addr' in k):
+			st.session_state.dd104[k] = v
+			del(st.session_state[k])
+	
+	#sanitize
+	ids=[]
+	c = st.session_state.dd104['count']
+	for i in range(1, c+1):
+		#delete empty values, add ids of non-empty ones to ids[]
+		if (st.session_state.dd104[f'server_addr{i}'] == '' or st.session_state.dd104[f"server_port{i}"] == ''):
+			st.session_state.dd104['count'] -= 1
+			del(st.session_state.dd104[f'server_addr{i}'])
+			del(st.session_state.dd104[f"server_port{i}"])
+		else:
+			ids.append(i)
+	
+	c = st.session_state.dd104['count']
+	while '' in st.session_state.dd104.values():
+		for i in range(1, c+1):
+			if not i in ids:
+				st.write(f"{i} <- {ids[i-1]}; ")
+				st.session_state.dd104[f'server_addr{i}'] = st.session_state.dd104[f'server_addr{ids[i-1]}']
+				st.session_state.dd104[f'server_port{i}'] = st.session_state.dd104[f'server_port{ids[i-1]}']
+				st.session_state.dd104[f'server_addr{ids[i-1]}'] = ''
+				st.session_state.dd104[f'server_port{ids[i-1]}'] = ''
+			
+		for k,v in st.session_state.dd104.items():
+			if ('server' in k and v == ''):
+				i = k[-1]
+				del(st.session_state.dd104[f'server_addr{i}'])
+				del(st.session_state.dd104[f'server_port{i}'])
+	
 	
 
 #tx
@@ -72,13 +115,13 @@ def render():
 	data = load_from_file(confile)
 	#st.write(data)
 	f = st.form("dd104form")
-	if "count" not in st.session_state:
-		st.session_state.count = data['count']
-	if st.session_state.count > 0:
+	if "count" not in st.session_state.dd104:
+		st.session_state.dd104['count'] = data['count']
+	if st.session_state.dd104['count'] > 0:
 		with f:
 			st.text_input(label = "Receiver Address (DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING)", value = data['old_recv_addr'], key='recv_addr')
 			
-			for i in range(1, st.session_state.count+1):
+			for i in range(1, st.session_state.dd104['count']+1):
 				st.write(f"Server {i}")
 				if f'old_server_addr{i}' in data.keys():
 					st.text_input(label=f'Server Address {i}', value=data[f'old_server_addr{i}'], key=f'server_addr{i}') 
@@ -92,16 +135,18 @@ def render():
 	adder = st.button("Add Server")
 	if adder:
 		
-		st.session_state.count += 1
+		st.session_state.dd104['count'] += 1
 		
 		with f:
-			st.text_input(label=f"Server Address {st.session_state.count}", key=f"server_addr{st.session_state.count}")
-			st.text_input(label=f"Server Port {st.session_state.count}", key=f"server_port{st.session_state.count}")
+			st.text_input(label=f"Server Address {st.session_state.dd104['count']}", key=f"server_addr{st.session_state.dd104['count']}")
+			st.text_input(label=f"Server Port {st.session_state.dd104['count']}", key=f"server_port{st.session_state.dd104['count']}")
 	
 	if submit:
+		
 		try:
+			sanitize()
 			st.write(st.session_state)
-			#save_to_struct()
+			save_to_file(parse_from_user(st.session_state.dd104))
 		except Exception as e:
 			st.write(f"{type(e)}: {str(e)}")
 	
