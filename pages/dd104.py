@@ -1,17 +1,40 @@
 import streamlit as st
 import pandas as pd
+from streamlit_modal import Modal
 
-import syslog, json, platform, subprocess
+import syslog, platform, subprocess
 from pathlib import Path
 from os.path import exists
 from os import W_OK, R_OK, access, makedirs
 
+# Globals
 confile = ""
 _mode = 'tx'
+#servicename = ""
+
+col_css='''
+<style>
+    section.main>div {
+        padding-bottom: 1rem;
+    }
+    [data-testid="column"]>div>div>div>div>div {
+        overflow: auto;
+        height: 70vh;
+    }
+</style>
+'''
+
+# /Globals
 
 def init():
-	global confile
+	global confile, servicename
 	confile = '/opt/dd/dd104client.ini'
+	if 'servicename' not in st.session_state:
+		if _mode == 'tx':
+			st.session_state['servicename'] = 'dd104client'
+		elif _mode == 'rx':
+			st.session_state['servicename'] = 'dd104server'
+	
 	if 'dd104' not in st.session_state.keys():
 		st.session_state['dd104'] = {}
 
@@ -97,15 +120,88 @@ def sanitize():
 				del(st.session_state.dd104[f"server_port{i}"])
 	
 
+def _stop(service: str) -> dict:
+	'''
+	statuses are:
+	0 - success, 1 - subprocess/pipe error, 2 - stderr
+	
+	'''
+	status = {'status':'', 'errors':[]} 
+	try:
+		stat = subprocess.run(f'systemctl stop {service}'.split(), text=True, capture_output=True)
+	except subprocess.CalledProcessError as e:
+		status['status'] = 1
+		status['errors'].append(e.output)
+		syslog.syslog(syslog.LOG_CRIT, str(e.output))
+		return
+	else:
+		if not stat.stderr:
+			status['status'] = 0
+		else:
+			status['status'] = 2
+			status['errors'].append(stat.stderr)
+			syslog.syslog(syslog.LOG_ERR, f"DD104: Error while stopping {service}: \n{stat.stderr}\n")
+		
+	return status
+
+def _restart(service: str) -> dict:
+	'''
+	statuses are:
+	0 - success, 1 - subprocess/pipe error, 2 - stderr
+	
+	'''
+	status = {'status':'', 'errors':[]} 
+	try:
+		stat = subprocess.run(f'systemctl restart {service}'.split(), text=True, capture_output=True)
+	except subprocess.CalledProcessError as e:
+		status['status'] = 1
+		status['errors'].append(e.output)
+		syslog.syslog(syslog.LOG_CRIT, str(e.output))
+		return
+	else:
+		if not stat.stderr:
+			status['status'] = 0
+		else:
+			status['status'] = 2
+			status['errors'].append(stat.stderr)
+			syslog.syslog(syslog.LOG_ERR, f"DD104: Error while restarting {service}: \n{stat.stderr}\n")
+		
+	return status
+
+def _start(service: str) -> dict:
+	'''
+	statuses are:
+	0 - success, 1 - subprocess/pipe error, 2 - stderr
+	
+	'''
+	status = {'status':'', 'errors':[]} 
+	try:
+		stat = subprocess.run(f'systemctl start {service}'.split(), text=True, capture_output=True)
+	except subprocess.CalledProcessError as e:
+		status['status'] = 1
+		status['errors'].append(e.output)
+		syslog.syslog(syslog.LOG_CRIT, str(e.output))
+		return
+	else:
+		if not stat.stderr:
+			status['status'] = 0
+		else:
+			status['status'] = 2
+			status['errors'].append(stat.stderr)
+			syslog.syslog(syslog.LOG_ERR, f"DD104: Error while starting {service}: \n{stat.stderr}\n")
+		
+	return status
+
 #tx
-def render():
+def render_tx(servicename): #TODO: expand on merge with rx
 	st.set_page_config(layout="wide")
+	#st.markdown(col_css, unsafe_allow_html=True)
 	st.title('Data Diode Configuration Service')
 	st.header('Protocol 104 configuration page')
-	#TODO: expand on merge with rx
+	
 	data = load_from_file(confile)
-	#st.write(data)
-	col1, col2 = st.columns([0.3, 0.7], gap='large')
+	
+	col1, col2, col3= st.columns([0.3, 0.18, 0.52], gap='large')
 	with col1:
 		f = st.form("dd104form")
 		if "count" not in st.session_state.dd104:
@@ -125,7 +221,12 @@ def render():
 					
 				submit = st.form_submit_button(label='Submit')
 		
-		adder = st.button("Add Server")
+		with col2:
+			adder = st.button("Add Server", use_container_width=True)
+			stop = st.button(f"Stop {servicename}", use_container_width=True)
+			start = st.button(f"Start {servicename}", use_container_width=True)
+			restart = st.button(f"Restart {servicename}", use_container_width=True)
+		
 		if adder:
 			
 			st.session_state.dd104['count'] += 1
@@ -134,18 +235,71 @@ def render():
 				st.text_input(label=f"Server Address {st.session_state.dd104['count']}", key=f"server_addr{st.session_state.dd104['count']}")
 				st.text_input(label=f"Server Port {st.session_state.dd104['count']}", key=f"server_port{st.session_state.dd104['count']}")
 		
+		
+		
 		if submit:
 			
 			try:
 				sanitize()
-				with col2:
+			except Exception as e:
+				msg = f"DD104: Failed to sanitize the form's contents; Error info: \n{type(e)}: {str(e)}\n"
+				syslog.syslog(syslog.LOG_CRIT, msg)
+				col3.write(msg)
+			
+			try:
+				with col3:
 					st.write(st.session_state)
 					save_to_file(parse_from_user(st.session_state.dd104))
 			except Exception as e:
-				with col2:
-					st.write(f"{type(e)}: {str(e)}")
+				msg = f"DD104: Failed to write the form's contents to the configuration file; Error info: \n{type(e)}: {str(e)}\n"
+				syslog.syslog(syslog.LOG_CRIT, msg)
+				col3.write(msg)
 	
+	if stop:
+		if not '.service' in servicename:
+			servicename = servicename + '.service'
+		status = _stop(servicename)
+		if status['status']:
+			popup = Modal(key="stop_err_dialog", title="Oops, an error occured!")
+			with popup.container():
+				st.write(f"Details: status = {status['status']}, description = {status['errors']}")
+		else:
+			col3.write(f"{servicename} was stopped succesfully!")
 	
+	if restart:
+		if not '.service' in servicename:
+			servicename = servicename + '.service'
+		status = _restart(servicename)
+		if status['status']:
+			popup = Modal(key="restart_err_dialog", title="Oops, an error occured!")
+			with popup.container():
+				st.write(f"Details: status = {status['status']}, description = {status['errors']}")
+		else:
+			col3.write(f"{servicename} was restarted succesfully!")
 	
+	if start:
+		if not '.service' in servicename:
+			servicename = servicename + '.service'
+		status = _start(servicename)
+		if status['status']:
+			popup = Modal(key="start_err_dialog", title="Oops, an error occured!")
+			with popup.container():
+				st.write(f"Details: status = {status['status']}, description = {status['errors']}")
+		else:
+			col3.write(f"{servicename} was started succesfully!")
+	
+
+def render_rx(servicename):
+	pass
+
+def render():
+	servicename = st.session_state['servicename']
+	mode = _mode.lower()
+	if mode == 'tx':
+		render_tx(servicename)
+	elif mode == 'rx':
+		render_rx(servicename)
+
+
 init()
 render()
