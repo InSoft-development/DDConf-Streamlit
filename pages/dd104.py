@@ -78,77 +78,72 @@ def sanitize():
 			del(st.session_state[k])
 	
 	#sanitize
-	ids=[]
+	for i in range(1, st.session_state.dd104['count']+1):
+		if (st.session_state.dd104[f"server_addr{i}"] == '' or st.session_state.dd104[f"server_port{i}"] == ''):
+			for j in range(i+1, st.session_state.dd104['count']+1):
+				if (st.session_state.dd104[f"server_addr{j}"] and st.session_state.dd104[f"server_port{j}"]):
+					st.session_state.dd104[f"server_addr{i}"] = st.session_state.dd104[f"server_addr{j}"]
+					st.session_state.dd104[f"server_port{i}"] = st.session_state.dd104[f"server_port{j}"]
+					st.session_state.dd104[f"server_addr{j}"] = ''
+					st.session_state.dd104[f"server_port{j}"] = ''
+					break
+	
 	c = st.session_state.dd104['count']
 	for i in range(1, c+1):
-		#delete empty values, add ids of non-empty ones to ids[]
-		if (st.session_state.dd104[f'server_addr{i}'] == '' or st.session_state.dd104[f"server_port{i}"] == ''):
-			st.session_state.dd104['count'] -= 1
-			del(st.session_state.dd104[f'server_addr{i}'])
-			del(st.session_state.dd104[f"server_port{i}"])
-		else:
-			ids.append(i)
-	
-	c = st.session_state.dd104['count']
-	while '' in st.session_state.dd104.values():
-		for i in range(1, c+1):
-			if not i in ids:
-				st.write(f"{i} <- {ids[i-1]}; ")
-				st.session_state.dd104[f'server_addr{i}'] = st.session_state.dd104[f'server_addr{ids[i-1]}']
-				st.session_state.dd104[f'server_port{i}'] = st.session_state.dd104[f'server_port{ids[i-1]}']
-				st.session_state.dd104[f'server_addr{ids[i-1]}'] = ''
-				st.session_state.dd104[f'server_port{ids[i-1]}'] = ''
-			
-		for k,v in st.session_state.dd104.items():
-			if ('server' in k and v == ''):
-				i = k[-1]
-				del(st.session_state.dd104[f'server_addr{i}'])
-				del(st.session_state.dd104[f'server_port{i}'])
-	
+		if i <= st.session_state.dd104['count']+1:
+			if (st.session_state.dd104[f"server_addr{i}"] == '' or st.session_state.dd104[f"server_port{i}"] == ''):
+				st.session_state.dd104['count'] -= 1
+				del(st.session_state.dd104[f"server_addr{i}"])
+				del(st.session_state.dd104[f"server_port{i}"])
 	
 
 #tx
 def render():
+	st.set_page_config(layout="wide")
 	st.title('Data Diode Configuration Service')
 	st.header('Protocol 104 configuration page')
 	#TODO: expand on merge with rx
 	data = load_from_file(confile)
 	#st.write(data)
-	f = st.form("dd104form")
-	if "count" not in st.session_state.dd104:
-		st.session_state.dd104['count'] = data['count']
-	if st.session_state.dd104['count'] > 0:
-		with f:
-			st.text_input(label = "Receiver Address (DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING)", value = data['old_recv_addr'], key='recv_addr')
-			
-			for i in range(1, st.session_state.dd104['count']+1):
-				st.write(f"Server {i}")
-				if f'old_server_addr{i}' in data.keys():
-					st.text_input(label=f'Server Address {i}', value=data[f'old_server_addr{i}'], key=f'server_addr{i}') 
-					st.text_input(label=f'Server Port {i}', value=data[f'old_server_port{i}'], key=f'server_port{i}') 
-				else:
-					st.text_input(label=f'Server Address {i}', key=f'server_addr{i}') 
-					st.text_input(label=f'Server Port {i}', key=f'server_port{i}') 
+	col1, col2 = st.columns([0.3, 0.7], gap='large')
+	with col1:
+		f = st.form("dd104form")
+		if "count" not in st.session_state.dd104:
+			st.session_state.dd104['count'] = data['count']
+		if st.session_state.dd104['count'] > 0:
+			with f:
+				st.text_input(label = "Receiver Address (DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING)", value = data['old_recv_addr'], key='recv_addr')
 				
-			submit = st.form_submit_button(label='Submit')
-	
-	adder = st.button("Add Server")
-	if adder:
+				for i in range(1, st.session_state.dd104['count']+1):
+					st.write(f"Server {i}")
+					if f'old_server_addr{i}' in data.keys():
+						st.text_input(label=f'Server Address {i}', value=data[f'old_server_addr{i}'], key=f'server_addr{i}') 
+						st.text_input(label=f'Server Port {i}', value=data[f'old_server_port{i}'], key=f'server_port{i}') 
+					else:
+						st.text_input(label=f'Server Address {i}', key=f'server_addr{i}') 
+						st.text_input(label=f'Server Port {i}', key=f'server_port{i}') 
+					
+				submit = st.form_submit_button(label='Submit')
 		
-		st.session_state.dd104['count'] += 1
+		adder = st.button("Add Server")
+		if adder:
+			
+			st.session_state.dd104['count'] += 1
+			
+			with f:
+				st.text_input(label=f"Server Address {st.session_state.dd104['count']}", key=f"server_addr{st.session_state.dd104['count']}")
+				st.text_input(label=f"Server Port {st.session_state.dd104['count']}", key=f"server_port{st.session_state.dd104['count']}")
 		
-		with f:
-			st.text_input(label=f"Server Address {st.session_state.dd104['count']}", key=f"server_addr{st.session_state.dd104['count']}")
-			st.text_input(label=f"Server Port {st.session_state.dd104['count']}", key=f"server_port{st.session_state.dd104['count']}")
-	
-	if submit:
-		
-		try:
-			sanitize()
-			st.write(st.session_state)
-			save_to_file(parse_from_user(st.session_state.dd104))
-		except Exception as e:
-			st.write(f"{type(e)}: {str(e)}")
+		if submit:
+			
+			try:
+				sanitize()
+				with col2:
+					st.write(st.session_state)
+					save_to_file(parse_from_user(st.session_state.dd104))
+			except Exception as e:
+				with col2:
+					st.write(f"{type(e)}: {str(e)}")
 	
 	
 	
