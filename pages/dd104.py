@@ -85,7 +85,7 @@ def parse_from_user(data) -> str:
 		message=f"receiver\naddress={data['recv_addr']}\n\nserver"
 		for i in range(1, data['count']+1):
 			message = message + f"\naddress{i}={data[f'server_addr{i}']}\nport{i}={data[f'server_port{i}']}" 
-		st.write(message)
+		#st.text(message)
 		return message
 
 def save_to_file(string:str) -> None:
@@ -133,7 +133,7 @@ def _stop(service: str) -> dict:
 		status['status'] = 1
 		status['errors'].append(e.output)
 		syslog.syslog(syslog.LOG_CRIT, str(e.output))
-		return
+		return status
 	else:
 		if not stat.stderr:
 			status['status'] = 0
@@ -157,7 +157,7 @@ def _restart(service: str) -> dict:
 		status['status'] = 1
 		status['errors'].append(e.output)
 		syslog.syslog(syslog.LOG_CRIT, str(e.output))
-		return
+		return status
 	else:
 		if not stat.stderr:
 			status['status'] = 0
@@ -181,7 +181,7 @@ def _start(service: str) -> dict:
 		status['status'] = 1
 		status['errors'].append(e.output)
 		syslog.syslog(syslog.LOG_CRIT, str(e.output))
-		return
+		return status
 	else:
 		if not stat.stderr:
 			status['status'] = 0
@@ -191,6 +191,66 @@ def _start(service: str) -> dict:
 			syslog.syslog(syslog.LOG_ERR, f"DD104: Error while starting {service}: \n{stat.stderr}\n")
 		
 	return status
+
+def _statparse(data:str) -> dict:
+	try:
+		data = data.split('\n')
+		output = {}
+		line = data[1]
+		i = 1
+		while not line == '':
+			line = data[i]
+			if ': ' in line:
+				output[line.split(': ')[0].strip(' ')] = ': '.join(line.split(': ')[1::])
+			else:
+				output['CGroup'] = f"{output['CGroup']}\n{line}"  
+			i+=1
+	except Exception as e:
+		syslog.syslog(syslog.LOG_CRIT, f'DDConfServer: Error while parsing status block; more data below:\n {str(e)}\n')
+		raise e
+	return output
+
+
+
+def _status(service = 'dd104client.service') -> str:
+	try:
+		stat = subprocess.run(f"systemctl status {service}".split(), text=True, capture_output=True)
+	except Exception as e:
+		msg = f"dd104: can't fetch {service} status; \nDetails: {type(e)} - {str(e)}\n"
+		syslog.syslog(syslog.LOG_ERR, msg)
+		return None
+	else:
+		if stat.stderr:
+			msg = f"dd104: {stat.stderr}\n"
+			syslog.syslog(syslog.LOG_ERR, msg)
+			return None
+		else:
+			try:
+				data = _statparse(stat)
+				if data:
+					return data
+				else:
+					msg = f"dd104: Error: parsing {service} status yielded no result; please try collecting status again or report the bug with system logs to InControl support service.\n"
+					syslog.syslog(syslog.LOG_ERR, msg)
+					return None
+			except Exception as e:
+				syslog.syslog(syslog.LOG_CRIT, f'DDConfServer: Error while parsing status block; more data below:\n {str(e.output)}\n')
+				raise e
+
+def current_op() -> str:
+	try:
+		stat = _status(st.session_state['servicename'])
+		if not stat:
+			raise RuntimeError(f"Could not get status for {st.session_state['servicename']}.\n")
+	except Exception as e:
+		msg = f"dd104: can't fetch {st.session_state['servicename']} status; \nDetails: {type(e)} - {str(e)}\n"
+		return msg
+	else:
+		if 'running' in stat['Active'] or 'failed' in stat['Active']:
+			return 'restart'
+		elif 'stopped' in stat['Active'] :
+			return 'start'
+	
 
 #tx
 def render_tx(servicename): #TODO: expand on merge with rx
@@ -202,6 +262,12 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	data = load_from_file(confile)
 	
 	col1, col2, col3= st.columns([0.3, 0.18, 0.52], gap='large')
+	
+	col3.empty()
+	with col3:
+		col3.subheader(f"{servicename} status:")
+		st.text(f"{_status()}")
+	
 	with col1:
 		f = st.form("dd104form")
 		if "count" not in st.session_state.dd104:
@@ -211,7 +277,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 				st.text_input(label = "Receiver Address (DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING)", value = data['old_recv_addr'], key='recv_addr')
 				
 				for i in range(1, st.session_state.dd104['count']+1):
-					st.write(f"Server {i}")
+					st.text(f"Server {i}")
 					if f'old_server_addr{i}' in data.keys():
 						st.text_input(label=f'Server Address {i}', value=data[f'old_server_addr{i}'], key=f'server_addr{i}') 
 						st.text_input(label=f'Server Port {i}', value=data[f'old_server_port{i}'], key=f'server_port{i}') 
@@ -238,55 +304,74 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		
 		
 		if submit:
-			
+			col3.empty()
 			try:
 				sanitize()
 			except Exception as e:
 				msg = f"DD104: Failed to sanitize the form's contents; Error info: \n{type(e)}: {str(e)}\n"
 				syslog.syslog(syslog.LOG_CRIT, msg)
-				col3.write(msg)
-			
-			try:
-				with col3:
-					st.write(st.session_state)
-					save_to_file(parse_from_user(st.session_state.dd104))
-			except Exception as e:
-				msg = f"DD104: Failed to write the form's contents to the configuration file; Error info: \n{type(e)}: {str(e)}\n"
-				syslog.syslog(syslog.LOG_CRIT, msg)
-				col3.write(msg)
+				col3.text(msg)
+			else:
+				try:
+					with col3:
+						#st.text(st.session_state)
+						save_to_file(parse_from_user(st.session_state.dd104))
+				except Exception as e:
+					col3.empty()
+					msg = f"DD104: Failed to write the form's contents to the configuration file; Error info: \n{type(e)}: {str(e)}\n"
+					syslog.syslog(syslog.LOG_CRIT, msg)
+					col3.header("Error")
+					col3.text(msg)
+				else:
+					operation = current_op()
+					col3.empty()
+					with col3:
+						if operation and len(operation) > 10: #if error, basically
+							st.text(operation)
+						else:
+							st.text(f"For the service to function properly, a manual {operation} is required.")
+						collapse = st.button("OK")
+						
+					if collapse:
+						col3.empty()
+						with col3:
+							st.text(_status())
 	
 	if stop:
 		if not '.service' in servicename:
 			servicename = servicename + '.service'
 		status = _stop(servicename)
 		if status['status']:
-			popup = Modal(key="stop_err_dialog", title="Oops, an error occured!")
-			with popup.container():
-				st.write(f"Details: status = {status['status']}, description = {status['errors']}")
+			with col3:
+				st.header("Oops, an error has occurred")
+				st.subheader('Details:')
+				st.text(f"status: {status['status']}, \ndescription: \n{status['errors']}")
 		else:
-			col3.write(f"{servicename} was stopped succesfully!")
+			col3.text(f"{servicename} was stopped succesfully!")
 	
 	if restart:
 		if not '.service' in servicename:
 			servicename = servicename + '.service'
 		status = _restart(servicename)
 		if status['status']:
-			popup = Modal(key="restart_err_dialog", title="Oops, an error occured!")
-			with popup.container():
-				st.write(f"Details: status = {status['status']}, description = {status['errors']}")
+			with col3:
+				st.header("Oops, an error has occurred")
+				st.subheader('Details:')
+				st.text(f"status: {status['status']}, \ndescription: \n{status['errors']}")
 		else:
-			col3.write(f"{servicename} was restarted succesfully!")
+			col3.text(f"{servicename} was restarted succesfully!")
 	
 	if start:
 		if not '.service' in servicename:
 			servicename = servicename + '.service'
 		status = _start(servicename)
 		if status['status']:
-			popup = Modal(key="start_err_dialog", title="Oops, an error occured!")
-			with popup.container():
-				st.write(f"Details: status = {status['status']}, description = {status['errors']}")
+			with col3:
+				st.header("Oops, an error has occurred")
+				st.subheader('Details:')
+				st.text(f"status: {status['status']}, \ndescription: \n{status['errors']}")
 		else:
-			col3.write(f"{servicename} was started succesfully!")
+			col3.text(f"{servicename} was started succesfully!")
 	
 
 def render_rx(servicename):
