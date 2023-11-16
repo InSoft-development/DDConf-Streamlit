@@ -10,22 +10,22 @@ from shutil import copy2, copyfileobj, unpack_archive
 
 #from . import settings
 
-parser = argparse.ArgumentParser(description='DataDiodeConfigurationService')
+# parser = argparse.ArgumentParser(description='DataDiodeConfigurationService')
+# 
+# parser.add_argument('--port', help="HTTP access port")
+# # parser.add_argument('--mode', help='Operation mode (possible values are: RX, TX')
+# try:
+# 	args = parser.parse_args()
+# except SystemExit as e:
+# 	# This exception will be raised if --help or invalid command line arguments
+# 	# are used. Currently streamlit prevents the program from exiting normally
+# 	# so we have to do a hard exit.
+# 	_exit(e.code)
 
-parser.add_argument('--port', help="HTTP access port")
-# parser.add_argument('--mode', help='Operation mode (possible values are: RX, TX')
-try:
-	args = parser.parse_args()
-except SystemExit as e:
-	# This exception will be raised if --help or invalid command line arguments
-	# are used. Currently streamlit prevents the program from exiting normally
-	# so we have to do a hard exit.
-	_exit(e.code)
 
-
-st.title('Data Diode Configuration Service')
+st.title('Сервис конфигурации Диода Данных')
 st.empty()
-st.text("This is the start page for the Data Diode Configuration service.\nYou can find the endpoints for the most interesting functions\nin the *sidebar* on the left.")
+st.text("Добро пожаловать в сервис конфигурации Диода Данных.\nДля начала настройки выберите интересующий вас пункт\nиз левой боковой панели.")
 
 
 
