@@ -30,6 +30,10 @@ col_css='''
 
 def init():
 	global confile
+	
+	st.set_page_config(layout="wide")
+	
+	
 	confile = '/opt/dd/dd104client.ini'
 	
 	if 'dd104' not in st.session_state.keys():
@@ -40,7 +44,6 @@ def init():
 			st.session_state.dd104['servicename'] = 'dd104client'
 		elif _mode == 'rx':
 			st.session_state.dd104['servicename'] = 'dd104server'
-	
 	
 
 def _archive(filepath:str, location=f'/opt/dd/dd104/') -> None:
@@ -72,41 +75,6 @@ def _archive(filepath:str, location=f'/opt/dd/dd104/') -> None:
 		except Exception as e:
 			syslog.syslog(syslog.LOG_CRIT, f"dd104: Ошибка при обработке архива конфигураций, операция не может быть продолжена.")
 			raise e
-
-def _load_savefile(col3, archive='/opt/dd/dd104/Archive.tar.gz', name=None):
-	if name == None:
-		raise RuntimeError('dd104: no filename provided')
-	try:
-		_archive(confile)
-	except Exception as e:
-		col3.empty()
-		msg = f"dd104: Не удалось сохранить данные в архив при загрузке старой версии,\nПодробности:\n{type(e)}: {str(e)}\n"
-		syslog.syslog(syslog.LOG_CRIT, msg)
-		col3.header("Ошибка!")
-		col3.text(msg)
-	try:
-		stat = subprocess.run(f'rm -rf {confile}'.split())
-		confiledir = "/".join(confile.split('/')[0:-1:])
-		with tarfile.open(archive, 'r:gz') as tar:
-			tar.extractall(confiledir, name)
-			tar.close()
-		st.rerun()
-	except Exception as e:
-		msg = f"dd104: Ошибка при загрузке архивированного файла;\nПодробности:\n{type(e)}: {str(e)}\n"
-		syslog.syslog(syslog.LOG_CRIT, msg)
-		raise RuntimeError(e)
-
-def _getnames(archive='/opt/dd/dd104/Archive.tar.gz') -> list: # [('savename', 'filename'),(),()]
-	try:
-		with tarfile.open(archive, "r:gz") as tar:
-			files = tar.getnames()
-			tar.close()
-	except Exception as e:
-		msg = f"dd104: Ошибка при обработке архивного файла;\nПодробности:\n{type(e)}: {str(e)}\n"
-		syslog.syslog(syslog.LOG_CRIT, msg)
-		raise RuntimeError(e)
-	else:
-		return [(x,x) for x in files if x and x != '.']
 
 def load_from_file(_path=confile) -> dict:
 	mode = _mode.lower()
@@ -328,19 +296,17 @@ def current_op() -> str:
 #/Logic
 
 #Render
+
 def render_tx(servicename): #TODO: expand on merge with rx
-	st.set_page_config(layout="wide")
+	
 	#st.markdown(col_css, unsafe_allow_html=True)
 	st.title('Сервис Конфигурации Диода Данных')
 	st.header('Страница конфигурации протокола DD104')
-	loader = st.button("Выбрать файл для редактирования")
 	exp = st.expander("Доступные конфигурации", False)
 	
 	data = load_from_file(confile)
 	
 	col1, col2, col3= st.columns([0.3, 0.23, 0.47], gap='large')
-	
-	
 	
 	col3.empty()
 	with col3:
@@ -348,18 +314,9 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		st.text(f"{_status()}")
 	
 	
-	
-	if loader:
-		filelist = _getnames('/opt/dd/dd104/Archive.tar.gz') #[('savename', 'filename'),(),()]
-		with exp:
-			for k, v in filelist:
-				st.button(k, on_click=_load_savefile(col3, '/opt/dd/dd104/Archive.tar.gz', v))
-		
-	
-	
-	
 	with col1:
 		f = st.form("dd104form")
+		
 		if "count" not in st.session_state.dd104:
 			st.session_state.dd104['count'] = data['count']
 		if st.session_state.dd104['count'] > 0:
@@ -396,6 +353,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		
 		if submit:
 			col3.empty()
+			
 			try:
 				sanitize()
 			except Exception as e:
@@ -405,6 +363,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			else:
 				try:
 					with col3:
+						col3.write(st.session_state)
 						#st.text(st.session_state)
 						_save_to_file(parse_from_user(st.session_state.dd104), st.session_state.dd104['savename'])
 						_archive(confile)
@@ -465,6 +424,8 @@ def render_tx(servicename): #TODO: expand on merge with rx
 				st.text(f"status: {status['status']}, \ndescription: \n{status['errors']}")
 		else:
 			col3.text(f"{servicename} был успешно запущен!")
+	
+	
 
 	
 
