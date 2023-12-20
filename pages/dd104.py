@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from streamlit_modal import Modal
+
 
 import syslog, subprocess, time, tarfile
 from shutil import move, copy2, unpack_archive, make_archive
@@ -302,7 +302,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	#st.markdown(col_css, unsafe_allow_html=True)
 	st.title('Сервис Конфигурации Диода Данных')
 	st.header('Страница конфигурации протокола DD104')
-	exp = st.expander("Доступные конфигурации", False)
+	#exp = st.expander("Доступные конфигурации", False)
 	
 	data = load_from_file(confile)
 	
