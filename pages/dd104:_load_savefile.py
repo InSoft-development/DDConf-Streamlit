@@ -50,7 +50,7 @@ def _load_savefile(savename=None):
 			
 
 
-
+#TODO: DEFINITELY A BUG HERE, parsing is not working with the choicebox
 def _archive(filepath:str, location=f'/opt/dd/dd104/') -> None:
 	if exists(filepath):
 		try:
@@ -107,7 +107,7 @@ def render():
 		
 		with col1:
 			choice = st.selectbox("Выберите файл конфигурации:", options=options, index=None)
-			col3.text = f'{choice}, {type(choice)}'
+		st.text = f'{choice}, {type(choice)}'
 		
 		with col2:
 			
