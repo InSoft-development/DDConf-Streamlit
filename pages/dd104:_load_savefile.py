@@ -10,6 +10,7 @@ import pandas as pd
 
 
 confile = ""
+archive = "/opt/dd/dd104/Archive.tar.gz"
 
 def init():
 	global confile
@@ -24,33 +25,31 @@ def init():
 	if "render_run_n" not in st.session_state.keys():
 		st.session_state['dd104L']['render_run_n'] = False
 
-
-def _load_savefile(archive='/opt/dd/dd104/Archive.tar.gz', name=None):
-	if not name:
-		raise RuntimeError('dd104: no filename provided')
-	try:
-		_archive(confile)
-	except Exception as e:
-		st.empty()
-		msg = f"dd104: Не удалось сохранить данные в архив при загрузке старой версии,\nПодробности:\n{type(e)}: {str(e)}\n"
-		syslog.syslog(syslog.LOG_CRIT, msg)
-		st.header("Ошибка!")
-		st.text(msg)
-	try:
-		#stat = subprocess.run(f'rm -rf {confile}'.split())
-		confiledir = "/".join(confile.split('/')[0:-1:])
-		with tarfile.open(archive, 'r:gz') as tar:
-			tar.extractall(confiledir, name)
-			tar.close()
-		if Path('/'.join([confiledir, name])).exists():
-			move('/'.join([confiledir, name]), confile)
+def _load_savefile(savename=None):
+	if not savename is None and not savename == 'None':
+		try:
+			_archive(confile)
+		except Exception as e:
+			msg = f"dd104: Не удалось сохранить данные в архив при загрузке старой версии,\nПодробности:\n{type(e)}: {str(e)}\n"
+			syslog.syslog(syslog.LOG_CRIT, msg)
+			return msg
 		else:
-			raise RuntimeError(f"Error: {confiledir}/{name} file does not exist!\n")
-		# st.rerun()
-	except Exception as e:
-		msg = f"dd104: Ошибка при загрузке архивированного файла;\nПодробности:\n{type(e)}: {str(e)}\n"
-		syslog.syslog(syslog.LOG_CRIT, msg)
-		raise RuntimeError(e)
+			try:
+				confiledir = "/".join(confile.split('/')[0:-1:])
+				with tarfile.open(archive, 'r:gz') as tar:
+					tar.extractall(confiledir, savename)
+					tar.close()
+				if Path('/'.join([confiledir, savename])).exists():
+					move('/'.join([confiledir, savename]), confile)
+				else:
+					raise RuntimeError(f"Error: {confiledir}/{savename} file does not exist!\n")
+			except Exception as e:
+				msg = f"dd104: Ошибка при загрузке архивированного файла;\nПодробности:\n{type(e)}: {str(e)}\n"
+				syslog.syslog(syslog.LOG_CRIT, msg)
+				return msg
+			
+
+
 
 def _archive(filepath:str, location=f'/opt/dd/dd104/') -> None:
 	if exists(filepath):
@@ -81,7 +80,7 @@ def _archive(filepath:str, location=f'/opt/dd/dd104/') -> None:
 		except Exception as e:
 			syslog.syslog(syslog.LOG_CRIT, f"dd104: Ошибка при обработке архива конфигураций, операция не может быть продолжена.")
 			raise e
-
+# 
 def _getnames(archive='/opt/dd/dd104/Archive.tar.gz') -> list: # [('savename', 'filename'),(),()]
 	try:
 		with tarfile.open(archive, "r:gz") as tar:
@@ -94,21 +93,13 @@ def _getnames(archive='/opt/dd/dd104/Archive.tar.gz') -> list: # [('savename', '
 	else:
 		return [(x.strip('./'), x.strip('./')) for x in files if x and x != '.']
 
-# def _loader(expander: st.expander, col3) -> None:
-# 	
-# 	filelist = _getnames('/opt/dd/dd104/Archive.tar.gz') #[('savename', 'filename'),(),()]
-# 	with expander:
-# 		for k, v in filelist:
-# 			st.button(k, on_click=_load_savefile(col3, '/opt/dd/dd104/Archive.tar.gz', v))
-
-
 def render():
 	st.title('Сервис Конфигурации Диода Данных')
 	st.header('Страница конфигурации протокола DD104')
 	
 	if not st.session_state['dd104L']['render_run_n']:
 		
-		st.session_state['dd104L']['render_run_n'] = False
+		st.session_state['dd104L']['render_run_n'] = True
 		
 		col1, col2, col3= st.columns([0.3, 0.23, 0.47], gap='large')
 		
@@ -116,19 +107,20 @@ def render():
 		
 		with col1:
 			choice = st.selectbox("Выберите файл конфигурации:", options=options, index=None)
+			col3.text = f'{choice}, {type(choice)}'
 		
 		with col2:
 			
-			loader = st.button("Загрузить Конфигурацию")
+			loader = st.button("Загрузить Конфигурацию", on_click=col3.write(_load_savefile(f'{choice if not choice is None else "None"}')))
 		
 		
-		if col2.loader:
-			col3.empty()
-			#col3.write(type(choice[0]))
-			col3.write(choice[0])
-			_load_savefile(name=f'./{choice[0]}')
+		# if col2.loader:
+		# 	col3.empty()
+		# 	#col3.write(type(choice[0]))
+		# 	col3.write(choice[0] if not choice is None else "None")
+		# 	_load_savefile(name=f'{choice[0] if not choice is None else "None"}')
 	else:
-		st.session_state['dd104L']['render_run_n'] = True
+		st.session_state['dd104L']['render_run_n'] = False
 	
 	
 
