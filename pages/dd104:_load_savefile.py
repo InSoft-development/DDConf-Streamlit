@@ -20,7 +20,7 @@ def init():
 	
 	confile = '/opt/dd/dd104client.ini'
 	
-	if 'dd104' not in st.session_state.keys():
+	if 'dd104L' not in st.session_state.keys():
 		st.session_state['dd104L'] = {}
 	if "render_run_n" not in st.session_state.keys():
 		st.session_state['dd104L']['render_run_n'] = False
@@ -112,13 +112,8 @@ def render():
 		with col2:
 			
 			loader = st.button("Загрузить Конфигурацию", on_click=col3.write(_load_savefile(f'{choice if not choice is None else "None"}')))
-		
-		
-		# if col2.loader:
-		# 	col3.empty()
-		# 	#col3.write(type(choice[0]))
-		# 	col3.write(choice[0] if not choice is None else "None")
-		# 	_load_savefile(name=f'{choice[0] if not choice is None else "None"}')
+			
+			
 	else:
 		st.session_state['dd104L']['render_run_n'] = False
 	

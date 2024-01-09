@@ -125,7 +125,7 @@ def parse_from_user(data) -> str:
 		message=f"receiver\naddress={data['recv_addr']}\n\nserver"
 		for i in range(1, data['count']+1):
 			message = message + f"\naddress{i}={data[f'server_addr{i}']}\nport{i}={data[f'server_port{i}']}" 
-		#st.text(message)
+		#st.write(message)
 		return message
 
 def _save_to_file(string:str, name='unnamed_file_version') -> None:
@@ -311,7 +311,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	col3.empty()
 	with col3:
 		col3.subheader(f"Статус {servicename}:")
-		st.text(f"{_status()}")
+		st.write(f"{_status()}")
 	
 	
 	with col1:
@@ -325,7 +325,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 				st.text_input(label = "Адрес получателя (НЕ ИЗМЕНЯТЬ БЕЗ ИЗМЕНЕНИЙ АДРЕСАЦИИ ДИОДНОГО СОЕДИНЕНИЯ)", value = data['old_recv_addr'], key='recv_addr')
 				
 				for i in range(1, st.session_state.dd104['count']+1):
-					st.text(f"Сервер {i}")
+					st.write(f"Сервер {i}")
 					if f'old_server_addr{i}' in data.keys():
 						st.text_input(label=f'Адрес Сервера {i}', value=data[f'old_server_addr{i}'], key=f'server_addr{i}') 
 						st.text_input(label=f'Порт Сервера {i}', value=data[f'old_server_port{i}'], key=f'server_port{i}') 
@@ -359,12 +359,12 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			except Exception as e:
 				msg = f"dd104: Провал обработки данных формы,\nПодробности: \n{type(e)}: {str(e)}\n"
 				syslog.syslog(syslog.LOG_CRIT, msg)
-				col3.text(msg)
+				col3.text = msg
 			else:
 				try:
 					with col3:
 						col3.write(st.session_state)
-						#st.text(st.session_state)
+						#st.write(st.session_state)
 						_save_to_file(parse_from_user(st.session_state.dd104), st.session_state.dd104['savename'])
 						_archive(confile)
 						
@@ -379,15 +379,15 @@ def render_tx(servicename): #TODO: expand on merge with rx
 					col3.empty()
 					with col3:
 						if operation and len(operation) > 10: #if error, basically
-							st.text(operation)
+							st.write(operation)
 						else:
-							st.text(f"Для корректной работы сервиса необходим {operation}.")
+							st.write(f"Для корректной работы сервиса необходим {operation}.")
 						collapse = st.button("OK")
 						
 					if collapse:
 						col3.empty()
 						with col3:
-							st.text(_status())
+							st.write(_status())
 	
 	if stop:
 		if not '.service' in servicename:
@@ -397,7 +397,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			with col3:
 				st.header("Ошибка!")
 				st.subheader('Подробности:')
-				st.text(f"status: {status['status']}, \ndescription: \n{status['errors']}")
+				st.write(f"status: {status['status']}, \ndescription: \n{status['errors']}")
 		else:
 			col3.text(f"{servicename} был успешно остановлен!")
 	
@@ -409,7 +409,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			with col3:
 				st.header("Ошибка!")
 				st.subheader('Подробности:')
-				st.text(f"status: {status['status']}, \ndescription: \n{status['errors']}")
+				st.write(f"status: {status['status']}, \ndescription: \n{status['errors']}")
 		else:
 			col3.text(f"{servicename} был успешно перезапущен!")
 	
@@ -421,7 +421,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			with col3:
 				st.header("Ошибка!")
 				st.subheader('Подробности:')
-				st.text(f"status: {status['status']}, \ndescription: \n{status['errors']}")
+				st.write(f"status: {status['status']}, \ndescription: \n{status['errors']}")
 		else:
 			col3.text(f"{servicename} был успешно запущен!")
 	
