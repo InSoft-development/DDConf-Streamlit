@@ -5,7 +5,7 @@ import pandas as pd
 import syslog, subprocess, time, tarfile
 from shutil import move, copy2, unpack_archive, make_archive
 from pathlib import Path
-from os.path import exists, sep
+from os.path import exists, sep, isdir
 from os import W_OK, R_OK, access, makedirs
 
 # Globals
@@ -75,6 +75,25 @@ def _archive(filepath:str, location=f'/opt/dd/dd104/') -> None:
 		except Exception as e:
 			syslog.syslog(syslog.LOG_CRIT, f"dd104: Ошибка при обработке архива конфигураций, операция не может быть продолжена.")
 			raise e
+
+def _archive_d(filepath:str, location=f'/opt/dd/dd104/archive.d'):
+	if exists(filepath):
+		if not isdir(location):
+			makedirs(location)
+		
+		try:
+			filename = filepath.split('/')[-1].split('.')
+			rtime = time.localtime(time.time())
+			utime = f"{rtime.tm_mday}-{rtime.tm_mon}-{rtime.tm_year}-{rtime.tm_hour}-{rtime.tm_min}-{rtime.tm_sec}"
+			copy2(filepath, f"{location}/{filename[0]}-{utime}.{filename[1]}")
+		except Exception as e:
+			syslog.syslog(syslog.LOG_CRIT, f"dd104: провал при создании архивного файла конфигурации, операция не может быть продолжена.")
+			raise e
+		
+	else:
+		msg = f"dd104: провал при архивации файла конфигурации ({filepath}), файл конфигурации отсутствует или недоступен, операция не может быть продолжена."
+		syslog.syslog(syslog.LOG_CRIT, msg)
+		raise RuntimeError(msg)
 
 def load_from_file(_path=confile) -> dict:
 	mode = _mode.lower()
@@ -302,7 +321,6 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	#st.markdown(col_css, unsafe_allow_html=True)
 	st.title('Сервис Конфигурации Диода Данных')
 	st.header('Страница конфигурации протокола DD104')
-	#exp = st.expander("Доступные конфигурации", False)
 	
 	data = load_from_file(confile)
 	
@@ -366,7 +384,8 @@ def render_tx(servicename): #TODO: expand on merge with rx
 						col3.write(st.session_state)
 						#st.write(st.session_state)
 						_save_to_file(parse_from_user(st.session_state.dd104), st.session_state.dd104['savename'])
-						_archive(confile)
+						#_archive(confile)
+						_archive_d(confile)
 						
 				except Exception as e:
 					col3.empty()
