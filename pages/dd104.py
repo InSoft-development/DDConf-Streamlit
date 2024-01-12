@@ -5,7 +5,7 @@ import pandas as pd
 import syslog, subprocess, time, tarfile
 from shutil import move, copy2, unpack_archive, make_archive
 from pathlib import Path
-from os.path import exists, sep, isdir
+from os.path import exists, sep, isdir, isfile, join
 from os import W_OK, R_OK, access, makedirs
 
 # Globals
@@ -271,6 +271,53 @@ def _statparse(data:str) -> dict:
 	return output
 
 
+#TODO NOT create_services_and_inis, CREATE_SERVICES (the former goes into the caller of this func
+def _create_services(num:int) -> str: 
+	path_to_sysd = '/etc/systemd/system/'
+	default_service = Path('/opt/dd/ddconfserver/dd104client.service.default')
+	if not default_service.parent.is_dir() or not default_service.is_file():
+		msg = f"dd104: Файл сервиса {default_service} недоступен!"
+		syslog.syslog(syslog.LOG_ERR, msg)
+		raise FileNotFoundError(msg)
+	else:
+		
+		for i in range(1, num+1):
+			try:
+				#
+				#Copy the default to the system dir
+				#
+				copy2(default_service, Path(path_to_sysd/f"dd104client{i if i > 1 else ''}.service"))
+				#copy2('/opt/dd/dd104client.ini', f'/opt/dd/dd104client{i if i > 1 else ""}.ini')
+				#
+				#Edit the resulting file
+				#
+				# read & edit
+				with Path(path_to_sysd/f"dd104client{i if i > 1 else ''}.service").open("rw") as f:
+					conf = f.read.split('\n')[:-1:]
+					for n in range(len(conf)):
+						if 'ExecStart=' in conf[n]:
+							conf[n] = f'ExecStart=/opt/dd/dd104client/dd104client -c /etc/dd/dd104client{i if i > 1 else ''}.ini'
+							break
+					f.close()
+				# write
+				with Path(path_to_sysd/f"dd104client{i if i > 1 else ''}.service").open("w") as f:
+					conf = '\n'.join(conf)
+					f.write(conf)
+					f.close()
+			except Exception as e:
+				syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при создании файла сервиса dd104client{i if i > 1 else ''}, подробности:\n {str(e)}\n')
+				raise e
+		return "Успех"
+
+
+def _delete_services(mode='all'): #deletes all services dd104client*.service, for now
+	if mode == 'all':
+		try:
+			stat = subprocess.run('rm -f /etc/systemd/system/dd104client*.service'.split(), capture_output=True, text=True)
+		except Exception as e:
+			syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при уничтожении файлов сервисов dd104client, подробности:\n {str(e)}\n')
+			raise e
+
 
 def _status(service = 'dd104client.service') -> str:
 	try:
@@ -343,7 +390,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 				st.text_input(label = "Адрес получателя (НЕ ИЗМЕНЯТЬ БЕЗ ИЗМЕНЕНИЙ АДРЕСАЦИИ ДИОДНОГО СОЕДИНЕНИЯ)", value = data['old_recv_addr'], key='recv_addr')
 				
 				for i in range(1, st.session_state.dd104['count']+1):
-					st.write(f"Сервер {i}")
+					st.write(f"Сервер {i} (Процесс {i})")
 					if f'old_server_addr{i}' in data.keys():
 						st.text_input(label=f'Адрес Сервера {i}', value=data[f'old_server_addr{i}'], key=f'server_addr{i}') 
 						st.text_input(label=f'Порт Сервера {i}', value=data[f'old_server_port{i}'], key=f'server_port{i}') 
@@ -371,7 +418,6 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		
 		if submit:
 			col3.empty()
-			
 			try:
 				sanitize()
 			except Exception as e:
