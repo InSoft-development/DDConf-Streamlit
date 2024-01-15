@@ -296,7 +296,7 @@ def _create_services(num:int) -> str:
 					conf = f.read.split('\n')[:-1:]
 					for n in range(len(conf)):
 						if 'ExecStart=' in conf[n]:
-							conf[n] = f'ExecStart=/opt/dd/dd104client/dd104client -c /etc/dd/dd104client{i if i > 1 else ''}.ini'
+							conf[n] = f"ExecStart=/opt/dd/dd104client/dd104client -c /etc/dd/dd104client{i if i > 1 else ''}.ini"
 							break
 					f.close()
 				# write
@@ -305,7 +305,7 @@ def _create_services(num:int) -> str:
 					f.write(conf)
 					f.close()
 			except Exception as e:
-				syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при создании файла сервиса dd104client{i if i > 1 else ''}, подробности:\n {str(e)}\n')
+				syslog.syslog(syslog.LOG_CRIT, f"dd104: Ошибка при создании файла сервиса dd104client{i if i > 1 else ''}, подробности:\n {str(e)}\n")
 				raise e
 		return "Успех"
 
