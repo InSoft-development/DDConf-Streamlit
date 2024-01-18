@@ -6,44 +6,31 @@ import syslog, subprocess, time, tarfile
 from shutil import move, copy2, unpack_archive, make_archive
 from pathlib import Path
 from os.path import exists, sep, isdir, isfile, join
-from os import W_OK, R_OK, access, makedirs
+from os import W_OK, R_OK, access, makedirs, listdir
 
 # Globals
-confile = ""
 _mode = 'tx'
-
-col_css='''
-<style>
-    section.main>div {
-        padding-bottom: 1rem;
-    }
-    [data-testid="column"]>div>div>div>div>div {
-        overflow: auto;
-        height: 70vh;
-    }
-</style>
-'''
-
+INIDIR = '/etc/dd/dd104/'
 # /Globals
 
 #Logic
 
 def init():
-	global confile
 	
 	st.set_page_config(layout="wide")
 	
 	
-	confile = '/opt/dd/dd104client.ini'
+	if 'dd104m' not in st.session_state.keys():
+		st.session_state['dd104m'] = {}
 	
-	if 'dd104' not in st.session_state.keys():
-		st.session_state['dd104'] = {}
-	
-	if 'servicename' not in st.session_state.dd104:
+	if 'servicename' not in st.session_state.dd104m.keys():
 		if _mode == 'tx':
-			st.session_state.dd104['servicename'] = 'dd104client'
+			st.session_state.dd104m['servicename'] = 'dd104client'
 		elif _mode == 'rx':
-			st.session_state.dd104['servicename'] = 'dd104server'
+			st.session_state.dd104m['servicename'] = 'dd104server'
+	
+	if 'inidir' not in st.session_state.dd104m.keys():
+		st.session_state.dd104m['inidir'] = INIDIR
 	
 
 def _archive(filepath:str, location=f'/opt/dd/dd104/') -> None:
@@ -95,7 +82,7 @@ def _archive_d(filepath:str, location=f'/opt/dd/dd104/archive.d'):
 		syslog.syslog(syslog.LOG_CRIT, msg)
 		raise RuntimeError(msg)
 
-def load_from_file(_path=confile) -> dict:
+def load_from_file(_path) -> dict:
 	mode = _mode.lower()
 	try:
 		lines = [ x.strip() for x in Path(_path).read_text().split('\n') if not x == '']
@@ -270,6 +257,10 @@ def _statparse(data:str) -> dict:
 		raise e
 	return output
 
+def _create_inis(data:dict):
+	# the data should be the st.session_state['dd104m']
+	pass
+
 
 #TODO NOT create_services_and_inis, CREATE_SERVICES (the former goes into the caller of this func
 def _create_services(num:int) -> str: 
@@ -310,10 +301,16 @@ def _create_services(num:int) -> str:
 		return "Успех"
 
 
-def _delete_services(mode='all'): #deletes all services dd104client*.service, for now
-	if mode == 'all':
+def _delete_services(target='all'): #deletes all services dd104client*.service, for now
+	if target == 'all':
 		try:
 			stat = subprocess.run('rm -f /etc/systemd/system/dd104client*.service'.split(), capture_output=True, text=True)
+		except Exception as e:
+			syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при уничтожении файлов сервисов dd104client, подробности:\n {str(e)}\n')
+			raise e
+	else:
+		try:
+			stat = subprocess.run(f'rm -f /etc/systemd/system/{target}'.split(), capture_output=True, text=True)
 		except Exception as e:
 			syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при уничтожении файлов сервисов dd104client, подробности:\n {str(e)}\n')
 			raise e
@@ -359,6 +356,33 @@ def current_op() -> str:
 			return 'запуск'
 	
 
+def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename':'', 'savetime':'', 'filename':''}
+	_dir = Path(_dir)
+	if not _dir.is_dir():
+		msg = f"dd104: Директория сервиса {_dir} недоступна!"
+		syslog.syslog(syslog.LOG_ERR, msg)
+		raise FileNotFoundError(msg)
+	L = [x for x in listdir(_dir) if (_dir/x).is_file()]
+	out = []
+	for f in L:
+		try:
+			with (_dir/f).open('r') as F:
+				savetime = ''
+				savename = ''
+				for line in F.read().split('\n'):
+					if line.strip()[0] == '#' and 'savetime: ' in line:
+						savetime = line.strip().split(': ')[1]
+					if line.strip()[0] == '#' and 'savename: ' in line:
+						savename = line.strip().split(': ')[1]
+						break
+				out.append({'savename':savename, 'savetime':savetime, 'filename':str(_dir/f)})
+				
+		except Exception as e:
+			syslog.syslog(syslog.LOG_CRIT, f'dd104multi: Ошибка: Файл конфигурации {_dir/f} недоступен, подробности:\n {str(e.output)}\n')
+			raise e
+	return out
+	
+
 #/Logic
 
 #Render
@@ -369,126 +393,19 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	st.title('Сервис Конфигурации Диода Данных')
 	st.header('Страница конфигурации протокола DD104')
 	
-	data = load_from_file(confile)
+	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	
-	col1, col2, col3= st.columns([0.3, 0.23, 0.47], gap='large')
+	col1, col2= st.columns([0.3, 0.7], gap='large')
+	filebox = col1.container(height=600)
 	
-	col3.empty()
-	with col3:
-		col3.subheader(f"Статус {servicename}:")
-		st.write(f"{_status()}")
+	for source in filelist:
+		filebox.button(f"{source['savename']}@{source['savetime']}", key=)
 	
+	# confile = col1.selectbox("", options=[x['id'] for x in data], index=None)
+	# loader = col2.button("Загрузить выбранную конфигурацию")
 	
-	with col1:
-		f = st.form("dd104form")
-		
-		if "count" not in st.session_state.dd104:
-			st.session_state.dd104['count'] = data['count']
-		if st.session_state.dd104['count'] > 0:
-			with f:
-				st.text_input(label = "Имя версии конфигурации", value=data['old_savename'] if 'old_savename' in data.keys() else "", key='savename')
-				st.text_input(label = "Адрес получателя (НЕ ИЗМЕНЯТЬ БЕЗ ИЗМЕНЕНИЙ АДРЕСАЦИИ ДИОДНОГО СОЕДИНЕНИЯ)", value = data['old_recv_addr'], key='recv_addr')
-				
-				for i in range(1, st.session_state.dd104['count']+1):
-					st.write(f"Сервер {i} (Процесс {i})")
-					if f'old_server_addr{i}' in data.keys():
-						st.text_input(label=f'Адрес Сервера {i}', value=data[f'old_server_addr{i}'], key=f'server_addr{i}') 
-						st.text_input(label=f'Порт Сервера {i}', value=data[f'old_server_port{i}'], key=f'server_port{i}') 
-					else:
-						st.text_input(label=f'Адрес Сервера {i}', key=f'server_addr{i}') 
-						st.text_input(label=f'Порт Сервера {i}', key=f'server_port{i}') 
-					
-				submit = st.form_submit_button(label='Сохранить')
-		
-		with col2:
-			adder = st.button("Добавить Сервер", use_container_width=True)
-			stop = st.button(f"Остановить {servicename}", use_container_width=True)
-			start = st.button(f"Запустить {servicename}", use_container_width=True)
-			restart = st.button(f"Перезапустить {servicename}", use_container_width=True)
-		
-		if adder:
-			
-			st.session_state.dd104['count'] += 1
-			
-			with f:
-				st.text_input(label=f"Адрес Сервера {st.session_state.dd104['count']}", key=f"server_addr{st.session_state.dd104['count']}")
-				st.text_input(label=f"Порт Сервера {st.session_state.dd104['count']}", key=f"server_port{st.session_state.dd104['count']}")
-		
-		
-		
-		if submit:
-			col3.empty()
-			try:
-				sanitize()
-			except Exception as e:
-				msg = f"dd104: Провал обработки данных формы,\nПодробности: \n{type(e)}: {str(e)}\n"
-				syslog.syslog(syslog.LOG_CRIT, msg)
-				col3.text = msg
-			else:
-				try:
-					with col3:
-						col3.write(st.session_state)
-						#st.write(st.session_state)
-						_save_to_file(parse_from_user(st.session_state.dd104), st.session_state.dd104['savename'])
-						#_archive(confile)
-						_archive_d(confile)
-						
-				except Exception as e:
-					col3.empty()
-					msg = f"dd104: Не удалось сохранить данные формы в файл конфигурации,\nПодробности:\n{type(e)}: {str(e)}\n"
-					syslog.syslog(syslog.LOG_CRIT, msg)
-					col3.header("Ошибка!")
-					col3.text(msg)
-				else:
-					operation = current_op()
-					col3.empty()
-					with col3:
-						if operation and len(operation) > 10: #if error, basically
-							st.write(operation)
-						else:
-							st.write(f"Для корректной работы сервиса необходим {operation}.")
-						collapse = st.button("OK")
-						
-					if collapse:
-						col3.empty()
-						with col3:
-							st.write(_status())
-	
-	if stop:
-		if not '.service' in servicename:
-			servicename = servicename + '.service'
-		status = _stop(servicename)
-		if status['status']:
-			with col3:
-				st.header("Ошибка!")
-				st.subheader('Подробности:')
-				st.write(f"status: {status['status']}, \ndescription: \n{status['errors']}")
-		else:
-			col3.text(f"{servicename} был успешно остановлен!")
-	
-	if restart:
-		if not '.service' in servicename:
-			servicename = servicename + '.service'
-		status = _restart(servicename)
-		if status['status']:
-			with col3:
-				st.header("Ошибка!")
-				st.subheader('Подробности:')
-				st.write(f"status: {status['status']}, \ndescription: \n{status['errors']}")
-		else:
-			col3.text(f"{servicename} был успешно перезапущен!")
-	
-	if start:
-		if not '.service' in servicename:
-			servicename = servicename + '.service'
-		status = _start(servicename)
-		if status['status']:
-			with col3:
-				st.header("Ошибка!")
-				st.subheader('Подробности:')
-				st.write(f"status: {status['status']}, \ndescription: \n{status['errors']}")
-		else:
-			col3.text(f"{servicename} был успешно запущен!")
+	# if loader:
+	# f = st.form('dd104multi_selected_file_form')
 	
 	
 
@@ -498,7 +415,7 @@ def render_rx(servicename):
 	pass
 
 def render():
-	servicename = st.session_state.dd104['servicename']
+	servicename = st.session_state.dd104m['servicename']
 	mode = _mode.lower()
 	if mode == 'tx':
 		render_tx(servicename)
