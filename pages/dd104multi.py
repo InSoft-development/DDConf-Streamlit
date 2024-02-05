@@ -144,16 +144,16 @@ def _save_to_file(string:str, name='unnamed_file_version') -> None:
 	
 
 def sanitize():
-	#move stuff from st.session_state to st.<...>.dd104
+	#move stuff from st.session_state to st.<...>.dd104m
 	for k,v in st.session_state.items():
 		if ('server_addr' in k or 'server_port' in k or 'recv_addr' in k or 'servicename' in k or 'savename' in k):
 			st.session_state.dd104m[k] = v
 			del(st.session_state[k])
 	
 	#sanitize
-	for i in range(1, st.session_state.dd104['count']+1):
-		if (st.session_state.dd104[f"server_addr{i}"] == '' or st.session_state.dd104[f"server_port{i}"] == ''):
-			for j in range(i+1, st.session_state.dd104['count']+1):
+	for i in range(1, st.session_state.dd104m['count']+1):
+		if (st.session_state.dd104m[f"server_addr{i}"] == '' or st.session_state.dd104m[f"server_port{i}"] == ''):
+			for j in range(i+1, st.session_state.dd104m['count']+1):
 				if (st.session_state.dd104m[f"server_addr{j}"] and st.session_state.dd104m[f"server_port{j}"]):
 					st.session_state.dd104m[f"server_addr{i}"] = st.session_state.dd104m[f"server_addr{j}"]
 					st.session_state.dd104m[f"server_port{i}"] = st.session_state.dd104m[f"server_port{j}"]
@@ -386,7 +386,7 @@ def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename'
 	return out
 	
 
-def parse_form(col:st.columns):
+def parse_form():
 	col.empty()
 	try:
 		sanitize()
@@ -432,12 +432,17 @@ def _create_form(formbox: st.container, filepath: str):
 	try:
 		data = load_from_file(filepath)
 		formbox.empty()
-		_form = formbox.form("dd104mform")
+		with formbox:
+			_form = st.form("dd104mform")
 	except Exception as e:
 		syslog.syslog(syslog.LOG_CRIT, f'dd104multi: Ошибка заполнения формы: подробности:\n {str(e)}\n')
 		raise e
 	else:
 		with _form:
+			if '/' in filepath:
+				st.caption(f"Редактируемый файл: {filepath.split('/')[-1]}")
+			else:
+				st.caption(f"Редактируемый файл: {filepath}")
 			st.text_input(label = "Имя версии конфигурации", value=data['old_savename'] if 'old_savename' in data.keys() else "", key='savename')
 			st.text_input(label = "Адрес получателя (НЕ ИЗМЕНЯТЬ БЕЗ ИЗМЕНЕНИЙ АДРЕСАЦИИ ДИОДНОГО СОЕДИНЕНИЯ)", value = data['old_recv_addr'], key='recv_addr')
 			for i in range(1, data['count']):
@@ -448,32 +453,38 @@ def _create_form(formbox: st.container, filepath: str):
 				else:
 					st.text_input(label=f'Адрес Сервера {i}', key=f'server_addr{i}') 
 					st.text_input(label=f'Порт Сервера {i}', key=f'server_port{i}') 
-				
-			submit = st.form_submit_button(label='Сохранить', on_click=parse_form)#, kwargs={'col':c})
+			submit = st.form_submit_button(label='Сохранить', on_click=parse_form)# kwargs={'col':columns['col3']})
+			
 
 def render_tx(servicename): #TODO: expand on merge with rx
 	
 	#st.markdown(col_css, unsafe_allow_html=True)
 	st.title('Сервис Конфигурации Диода Данных')
-	st.header('Страница конфигурации протокола DD104')
+	st.header('Редактор файла конфигурации протокола DD104')
 	
 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	
 	col1, col2, col3= st.columns([0.25, 0.375, 0.375], gap='large')
-	filebox = col1.container(height=600)
+	with col1:
+		col1.subheader("Выберите файл конфигурации")
+		filebox = col1.container(height=600)
+	
+	col2.subheader("Редактор Конфигурации")
 	formbox = col2.container()
-	bc1, bc2, bc3 = col2.columns(3)
 	# f = formbox.form("dd104multi-form")
 	
 	col3.empty()
 	with col3:
-		col3.subheader(f"Статус {servicename}:")
+		col3.subheader(f"Статус Операции:")
 		st.write(f"{_status()}")
 	
+	
 	for source in filelist:
-		filebox.button(f"{source['savename']};{source['savetime']}", on_click=_create_form, kwargs={'formbox':formbox, 'filepath':source['filename']})
+		if filebox.button(f"{source['savename']};{source['savetime']} ({source['filename']})"):
+			st.session_state.dd104m['selected_file'] = source['filename']
 	
-	
+	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file']:
+		_create_form(formbox, st.session_state.dd104m['selected_file'])
 
 def render_rx(servicename):
 	pass
