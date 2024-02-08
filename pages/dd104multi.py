@@ -94,44 +94,47 @@ def load_from_file(_path:str) -> dict:
 	except FileNotFoundError:
 		return {'count':-1}
 	
-	data = {} # {'count':N, 'mode':mode, 'old_..._...1':..., ...}
-	block = 0
-	for line in lines:
-		if line[0]=='#' and 'savename' in line:
-			data['old_savename'] = line.strip().split(': ')[1]
-		if line[0]=='#' and 'savetime' in line:
-			data['old_savetime'] = line.strip().split(': ')[1]
-		if 'receiver' in line:
-			block = 1
-		elif 'server' in line:
-			block = 2
+	if len(lines)>1:
+		data = {} # {'count':N, 'mode':mode, 'old_..._...1':..., ...}
+		block = 0
+		for line in lines:
+			if line[0]=='#' and 'savename' in line:
+				data['old_savename'] = line.strip().split(': ')[1]
+			if line[0]=='#' and 'savetime' in line:
+				data['old_savetime'] = line.strip().split(': ')[1]
+			if 'receiver' in line:
+				block = 1
+			elif 'server' in line:
+				block = 2
+			else:
+				if block == 1:
+					if 'address' in line and not line[0] == '#':
+						data['old_recv_addr'] = line.split('=')[1]
+				elif block == 2:
+					if mode == 'tx':
+						if 'address' in line and not line[0] == '#':
+							data[f'old_server_addr{line.split("=")[0].strip()[-1]}'] = line.split('=')[1].strip()
+						elif 'port' in line and not line[0] == '#':
+							data[f'old_server_port{line.split("=")[0].strip()[-1]}'] = line.split('=')[1].strip() 
+					elif mode == 'rx':
+						if 'address' in line and not line[0] == '#':
+							data['old_addr'] = line.split('=')[1].strip()
+						elif 'port' in line and not line[0] == '#':
+							data['old_port'] = line.split('=')[1].strip()
+						elif 'queuesize' in line and not line[0] == '#':
+							data['old_queuesize'] = line.split('=')[1].strip()
+						elif 'mode' in line and not line[0] == '#':
+							data['old_mode'] = line.split('=')[1].strip()
+		
+		if mode == 'tx':
+			#the 3 is for savename, savetime and recv
+			data['count'] = (len(data.keys()) - 3) //2
 		else:
-			if block == 1:
-				if 'address' in line and not line[0] == '#':
-					data['old_recv_addr'] = line.split('=')[1]
-			elif block == 2:
-				if mode == 'tx':
-					if 'address' in line and not line[0] == '#':
-						data[f'old_server_addr{line.split("=")[0].strip()[-1]}'] = line.split('=')[1].strip()
-					elif 'port' in line and not line[0] == '#':
-						data[f'old_server_port{line.split("=")[0].strip()[-1]}'] = line.split('=')[1].strip() 
-				elif mode == 'rx':
-					if 'address' in line and not line[0] == '#':
-						data['old_addr'] = line.split('=')[1].strip()
-					elif 'port' in line and not line[0] == '#':
-						data['old_port'] = line.split('=')[1].strip()
-					elif 'queuesize' in line and not line[0] == '#':
-						data['old_queuesize'] = line.split('=')[1].strip()
-					elif 'mode' in line and not line[0] == '#':
-						data['old_mode'] = line.split('=')[1].strip()
-	
-	if mode == 'tx':
-		#the 3 is for savename, savetime and recv
-		data['count'] = (len(data.keys()) - 3) //2
+			data['count'] = 1
+		
+		return data
 	else:
-		data['count'] = 1
-	
-	return data
+		return {'count':1, 'old_savename':'', 'old_savetime':'', 'old_recv_addr':''}
 
 def parse_from_user(data) -> str:
 	mode = _mode.lower()
@@ -397,7 +400,7 @@ def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename'
 	
 
 def parse_form(confile: str, output: st.empty):
-	
+	print(st.session_state)
 	
 	output.empty()
 	
@@ -440,6 +443,20 @@ def dict_cleanup(array: dict, to_be_saved=[]):
 	for k in dead_keys:
 		del(array[k])
 
+def _new_file():
+	filename = st.session_state['new_filename'] if '.ini' in st.session_state['new_filename'][-4::] else f"{st.session_state['new_filename']}.ini"
+	if isfile(f"{st.session_state.dd104m['inidir']}/{filename}"):
+		syslog.syslog(syslog.LOG_WARNING, f"dd104m: Файл {st.session_state.dd104m['inidir']}/{filename} уже существует!")
+		raise FileExistsError
+	try:
+		f = open(f"{st.session_state.dd104m['inidir']}/{filename}", 'w')
+		f.write('#')
+		f.close()
+		
+	except Exception as e:
+		syslog.syslog(syslog.LOG_CRIT, f"dd104m: Невозможно создать файл {st.session_state.dd104m['inidir']}/{filename}!")
+		raise e
+
 #/Logic
 
 #Render
@@ -450,8 +467,7 @@ def _create_form(formbox: st.container, filepath: str, output: st.empty):
 	try:
 		data = load_from_file(filepath)
 		ff = formbox.empty()
-		if 'contents' in st.session_state.dd104m.keys():
-			st.session_state.dd104m['contents'] = {}
+		st.session_state.dd104m['contents'] = {}
 		with ff.container():
 			_form = st.form("dd104mform")
 	except Exception as e:
@@ -464,28 +480,32 @@ def _create_form(formbox: st.container, filepath: str, output: st.empty):
 			else:
 				st.caption(f"Редактируемый файл: {filepath}")
 			
-			if "count" not in st.session_state.dd104m['contents'].keys():
-				st.session_state.dd104m['contents']['count'] = data['count']
+			
+			st.session_state.dd104m['contents']['count'] = data['count']
 			
 			st.text_input(label = "Имя версии конфигурации", value=data['old_savename'] if 'old_savename' in data.keys() else "", key='savename')
 			st.text_input(label = "Адрес получателя (НЕ ИЗМЕНЯТЬ БЕЗ ИЗМЕНЕНИЙ АДРЕСАЦИИ ДИОДНОГО СОЕДИНЕНИЯ)", value = data['old_recv_addr'], key='recv_addr')
-			if st.session_state.dd104m['contents']['count'] > 0:
-				for i in range(1, data['count']+1):
-					st.write(f"Сервер {i} (Процесс {i})")
-					if f'old_server_addr{i}' in data.keys():
-						st.text_input(label=f'Адрес Сервера {i}', value=data[f'old_server_addr{i}'], key=f'server_addr{i}') 
-						st.text_input(label=f'Порт Сервера {i}', value=data[f'old_server_port{i}'], key=f'server_port{i}') 
-					else:
-						st.text_input(label=f'Адрес Сервера {i}', key=f'server_addr{i}') 
-						st.text_input(label=f'Порт Сервера {i}', key=f'server_port{i}') 
-			else:
-				st.text('Ошибка! Файл конфигурации недоступен или поврежден!')
-				st.session_state.dd104m['corrupted'] = True
 			
-			if 'corrupted' in st.session_state.dd104m and st.session_state.dd104m['corrupted']:
-				submit = st.form_submit_button(label='Сохранить', disabled=True)
+			# if st.session_state.dd104m['contents']['count'] > 0:
+				
+			st.write(f"Основной Сервер (поля обязательны к заполнению)")
+			if f'old_server_addr1' in data.keys():
+				st.text_input(label=f'Адрес Сервера 1', value=data[f'old_server_addr1'], key=f'server_addr1') 
+				st.text_input(label=f'Порт Сервера 1', value=data[f'old_server_port1'], key=f'server_port1') 
 			else:
-				submit = st.form_submit_button(label='Сохранить', on_click=parse_form, kwargs={'confile':filepath, 'output':output})
+				st.text_input(label=f'Адрес Сервера 1', key=f'server_addr1') 
+				st.text_input(label=f'Порт Сервера 1', key=f'server_port1') 
+			
+			st.write(f"Запасной Сервер (оставьте поля пустыми если запасной сервер не требуется)")
+			if f'old_server_addr2' in data.keys():
+				st.text_input(label=f'Адрес Запасного Сервера', value=data[f'old_server_addr2'], key=f'server_addr2') 
+				st.text_input(label=f'Порт Запасного Сервера', value=data[f'old_server_port2'], key=f'server_port2') 
+			else:
+				st.text_input(label=f'Адрес Запасного Сервера', key=f'server_addr2') 
+				st.text_input(label=f'Порт Запасного Сервера', key=f'server_port2') 
+			
+			
+			submit = st.form_submit_button(label='Сохранить', on_click=parse_form, kwargs={'confile':filepath, 'output':output})
 			
 
 def render_tx(servicename): #TODO: expand on merge with rx
@@ -507,13 +527,19 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	
 	col3.subheader(f"Статус Операции:")
 	output = col3.empty()
-	with output.container():
-		st.write("render:")
-		st.write(st.session_state)
+	
 	
 	for source in filelist:
-		if filebox.button(f"{source['savename']}; {source['savetime']} ({source['filename']})"):
+		if filebox.button(f"{source['savename']}; {source['savetime']}"):
 			st.session_state.dd104m['selected_file'] = source['filename']
+	
+	if filebox.button(f"Новый Файл"):
+		newfbox = col1.empty()
+		with newfbox.container():
+			_form = st.form('newfileform')
+			with _form:
+				st.text_input(label='Имя файла', key='new_filename')
+				submit = st.form_submit_button('Создать', on_click=_new_file)
 	
 	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file']:
 		dict_cleanup(st.session_state, ['dd104m', 'dd104'])
