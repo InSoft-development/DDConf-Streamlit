@@ -11,6 +11,7 @@ from os import W_OK, R_OK, access, makedirs, listdir
 # Globals
 _mode = 'tx'
 INIDIR = '/etc/dd/dd104/configs/'
+INIT_KEYS = ['servicename', 'inidir', 'selected_file']
 # /Globals
 
 #Logic
@@ -31,8 +32,13 @@ def init():
 	
 	if 'inidir' not in st.session_state.dd104m.keys():
 		st.session_state.dd104m['inidir'] = INIDIR
+	
+	if 'contents' not in st.session_state.dd104m.keys():
+		st.session_state.dd104m['contents'] = {}
+	
+	# dict_cleanup(st.session_state, ['dd104m'])
 
-def _archive(filepath:str, location=f'/opt/dd/dd104/') -> None:
+def _archive(filepath:str, location=f'/etc/dd/dd104/') -> None:
 	if exists(filepath):
 		try:
 			filename = filepath.split('/')[-1].split('.')
@@ -62,7 +68,7 @@ def _archive(filepath:str, location=f'/opt/dd/dd104/') -> None:
 			syslog.syslog(syslog.LOG_CRIT, f"dd104: Ошибка при обработке архива конфигураций, операция не может быть продолжена.")
 			raise e
 
-def _archive_d(filepath:str, location=f'/opt/dd/dd104/archive.d'):
+def _archive_d(filepath:str, location=f'/etc/dd/dd104/archive.d'):
 	if exists(filepath):
 		if not isdir(location):
 			makedirs(location)
@@ -70,10 +76,10 @@ def _archive_d(filepath:str, location=f'/opt/dd/dd104/archive.d'):
 		try:
 			filename = filepath.split('/')[-1].split('.')
 			rtime = time.localtime(time.time())
-			utime = f"{rtime.tm_mday}-{rtime.tm_mon}-{rtime.tm_year}-{rtime.tm_hour}-{rtime.tm_min}-{rtime.tm_sec}"
+			utime = f"{rtime.tm_year}-{rtime.tm_mon}-{rtime.tm_mday}-{rtime.tm_hour}-{rtime.tm_min}-{rtime.tm_sec}"
 			copy2(filepath, f"{location}/{filename[0]}-{utime}.{filename[1]}")
 		except Exception as e:
-			syslog.syslog(syslog.LOG_CRIT, f"dd104: провал при создании архивного файла конфигурации, операция не может быть продолжена.")
+			syslog.syslog(syslog.LOG_CRIT, f"dd104m: провал при создании архивного файла конфигурации, операция не может быть продолжена.")
 			raise e
 		
 	else:
@@ -120,7 +126,8 @@ def load_from_file(_path:str) -> dict:
 						data['old_mode'] = line.split('=')[1].strip()
 	
 	if mode == 'tx':
-		data['count'] = len(data.keys())//2
+		#the 3 is for savename, savetime and recv
+		data['count'] = (len(data.keys()) - 3) //2
 	else:
 		data['count'] = 1
 	
@@ -135,39 +142,42 @@ def parse_from_user(data) -> str:
 		#st.write(message)
 		return message
 
-def _save_to_file(string:str, name='unnamed_file_version') -> None:
+def _save_to_file(string:str, confile:str, name='unnamed_file_version') -> None:
 	rtime = time.localtime(time.time())
-	utime = f"{rtime.tm_year}-{rtime.tm_mon}-{rtime.tm_day}-{rtime.tm_hour}-{rtime.tm_min}-{rtime.tm_sec}"
+	utime = f"{rtime.tm_year}-{rtime.tm_mon}-{rtime.tm_mday}@{rtime.tm_hour}:{rtime.tm_min}:{rtime.tm_sec}"
+	# print(utime)
 	with Path(confile).open("w") as f:
 		f.write(f"# Файл сгенерирован Сервисом Конфигурации Диода Данных;\n# savename: {name if name else 'unnamed_file_version'}\n# savetime: {utime}\n")
 		f.write(string)
 	
 
 def sanitize():
-	#move stuff from st.session_state to st.<...>.dd104m
+	#move stuff from st.session_state to st.<...>.dd104m.contents
+	if 'contents' not in st.session_state.dd104m.keys():
+		st.session_state.dd104m['contents'] = {}
 	for k,v in st.session_state.items():
 		if ('server_addr' in k or 'server_port' in k or 'recv_addr' in k or 'servicename' in k or 'savename' in k):
-			st.session_state.dd104m[k] = v
+			st.session_state.dd104m['contents'][k] = v
 			del(st.session_state[k])
 	
 	#sanitize
-	for i in range(1, st.session_state.dd104m['count']+1):
-		if (st.session_state.dd104m[f"server_addr{i}"] == '' or st.session_state.dd104m[f"server_port{i}"] == ''):
-			for j in range(i+1, st.session_state.dd104m['count']+1):
-				if (st.session_state.dd104m[f"server_addr{j}"] and st.session_state.dd104m[f"server_port{j}"]):
-					st.session_state.dd104m[f"server_addr{i}"] = st.session_state.dd104m[f"server_addr{j}"]
-					st.session_state.dd104m[f"server_port{i}"] = st.session_state.dd104m[f"server_port{j}"]
-					st.session_state.dd104m[f"server_addr{j}"] = ''
-					st.session_state.dd104m[f"server_port{j}"] = ''
+	for i in range(1, st.session_state.dd104m['contents']['count']+1): #moving the healthy pairs over the incorrect one 
+		if (st.session_state.dd104m['contents'][f"server_addr{i}"] == '' or st.session_state.dd104m['contents'][f"server_port{i}"] == ''):
+			for j in range(i+1, st.session_state.dd104m['contents']['count']+1):
+				if (st.session_state.dd104m['contents'][f"server_addr{j}"] and st.session_state.dd104m['contents'][f"server_port{j}"]):
+					st.session_state.dd104m['contents'][f"server_addr{i}"] = st.session_state.dd104m['contents'][f"server_addr{j}"]
+					st.session_state.dd104m['contents'][f"server_port{i}"] = st.session_state.dd104m['contents'][f"server_port{j}"]
+					st.session_state.dd104m['contents'][f"server_addr{j}"] = ''
+					st.session_state.dd104m['contents'][f"server_port{j}"] = ''
 					break
 	
-	c = st.session_state.dd104m['count']
+	c = st.session_state.dd104m['contents']['count']
 	for i in range(1, c+1):
-		if i <= st.session_state.dd104m['count']+1:
-			if (st.session_state.dd104m[f"server_addr{i}"] == '' or st.session_state.dd104m[f"server_port{i}"] == ''):
-				st.session_state.dd104m['count'] -= 1
-				del(st.session_state.dd104m[f"server_addr{i}"])
-				del(st.session_state.dd104m[f"server_port{i}"])
+		if i <= st.session_state.dd104m['contents']['count']+1:
+			if (st.session_state.dd104m['contents'][f"server_addr{i}"] == '' or st.session_state.dd104m['contents'][f"server_port{i}"] == ''):
+				st.session_state.dd104m['contents']['count'] -= 1
+				del(st.session_state.dd104m['contents'][f"server_addr{i}"])
+				del(st.session_state.dd104m['contents'][f"server_port{i}"])
 	
 
 def _stop(service: str) -> dict:
@@ -346,11 +356,11 @@ def _status(service = 'dd104client.service') -> str:
 
 def current_op() -> str:
 	try:
-		stat = _status(st.session_state.dd104['servicename'])
+		stat = _status(st.session_state.dd104m['servicename'])
 		if not stat:
-			raise RuntimeError(f"Провал при получении статуса сервиса {st.session_state.dd104['servicename']}.\n")
+			raise RuntimeError(f"Провал при получении статуса сервиса {st.session_state.dd104m['servicename']}.\n")
 	except Exception as e:
-		msg = f"dd104: не удалось получить статус {st.session_state.dd104['servicename']}; \nПодробности: \n{type(e)}: {str(e)}\n"
+		msg = f"dd104m: не удалось получить статус {st.session_state.dd104m['servicename']}; \nПодробности: \n{type(e)}: {str(e)}\n"
 		return msg
 	else:
 		if 'running' in stat['Active'] or 'failed' in stat['Active']:
@@ -377,7 +387,7 @@ def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename'
 						savetime = line.strip().split(': ')[1]
 					if 'savename: ' in line and line.strip()[0] == '#':
 						savename = line.strip().split(': ')[1]
-						break
+						# break
 				out.append({'savename':savename, 'savetime':savetime, 'filename':str(_dir/f)})
 				
 		except Exception as e:
@@ -386,53 +396,63 @@ def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename'
 	return out
 	
 
-def parse_form():
-	col.empty()
+def parse_form(confile: str, output: st.empty):
+	
+	
+	output.empty()
+	
 	try:
+		
 		sanitize()
+		
+		
 	except Exception as e:
 		msg = f"dd104: Провал обработки данных формы,\nПодробности: \n{type(e)}: {str(e)}\n"
 		syslog.syslog(syslog.LOG_CRIT, msg)
-		col.text = msg
+		output.text = msg
+		raise e
 	else:
 		try:
-			with col:
-				col.write(st.session_state)
-				#st.write(st.session_state)
-				_save_to_file(parse_from_user(st.session_state.dd104), st.session_state.dd104['savename'])
+			with output:
+				
+				_save_to_file(parse_from_user(st.session_state.dd104m['contents']), confile, st.session_state.dd104m['contents']['savename'])
 				#_archive(confile)
 				_archive_d(confile)
 				
 		except Exception as e:
-			col.empty()
+			output.empty()
 			msg = f"dd104: Не удалось сохранить данные формы в файл конфигурации,\nПодробности:\n{type(e)}: {str(e)}\n"
 			syslog.syslog(syslog.LOG_CRIT, msg)
-			col.header("Ошибка!")
-			col.text(msg)
+			output.subheader("Ошибка!")
+			output.text(msg)
+			raise e
 		else:
-			operation = current_op()
-			col.empty()
-			with col:
-				if operation and len(operation) > 10: #if error, basically
-					st.write(operation)
-				else:
-					st.write(f"Для корректной работы сервиса необходим {operation}.")
-				collapse = st.button("OK")
-				
-			if collapse:
-				col.empty()
-				with col:
-					st.write(_status())
+			output.subheader("Статус Операции:")
+			output.text("Успех")
+			if output.button("OK"):
+				output.empty()
+
+def dict_cleanup(array: dict, to_be_saved=[]):
+	dead_keys=[]
+	for k in array.keys():
+		if k not in to_be_saved:
+			dead_keys.append(k)
+	for k in dead_keys:
+		del(array[k])
 
 #/Logic
 
 #Render
-#TODO
-def _create_form(formbox: st.container, filepath: str):
+
+def _create_form(formbox: st.container, filepath: str, output: st.empty):
+	output.empty()
+	
 	try:
 		data = load_from_file(filepath)
-		formbox.empty()
-		with formbox:
+		ff = formbox.empty()
+		if 'contents' in st.session_state.dd104m.keys():
+			st.session_state.dd104m['contents'] = {}
+		with ff.container():
 			_form = st.form("dd104mform")
 	except Exception as e:
 		syslog.syslog(syslog.LOG_CRIT, f'dd104multi: Ошибка заполнения формы: подробности:\n {str(e)}\n')
@@ -443,24 +463,36 @@ def _create_form(formbox: st.container, filepath: str):
 				st.caption(f"Редактируемый файл: {filepath.split('/')[-1]}")
 			else:
 				st.caption(f"Редактируемый файл: {filepath}")
+			
+			if "count" not in st.session_state.dd104m['contents'].keys():
+				st.session_state.dd104m['contents']['count'] = data['count']
+			
 			st.text_input(label = "Имя версии конфигурации", value=data['old_savename'] if 'old_savename' in data.keys() else "", key='savename')
 			st.text_input(label = "Адрес получателя (НЕ ИЗМЕНЯТЬ БЕЗ ИЗМЕНЕНИЙ АДРЕСАЦИИ ДИОДНОГО СОЕДИНЕНИЯ)", value = data['old_recv_addr'], key='recv_addr')
-			for i in range(1, data['count']):
-				st.write(f"Сервер {i} (Процесс {i})")
-				if f'old_server_addr{i}' in data.keys():
-					st.text_input(label=f'Адрес Сервера {i}', value=data[f'old_server_addr{i}'], key=f'server_addr{i}') 
-					st.text_input(label=f'Порт Сервера {i}', value=data[f'old_server_port{i}'], key=f'server_port{i}') 
-				else:
-					st.text_input(label=f'Адрес Сервера {i}', key=f'server_addr{i}') 
-					st.text_input(label=f'Порт Сервера {i}', key=f'server_port{i}') 
-			submit = st.form_submit_button(label='Сохранить', on_click=parse_form)# kwargs={'col':columns['col3']})
+			if st.session_state.dd104m['contents']['count'] > 0:
+				for i in range(1, data['count']+1):
+					st.write(f"Сервер {i} (Процесс {i})")
+					if f'old_server_addr{i}' in data.keys():
+						st.text_input(label=f'Адрес Сервера {i}', value=data[f'old_server_addr{i}'], key=f'server_addr{i}') 
+						st.text_input(label=f'Порт Сервера {i}', value=data[f'old_server_port{i}'], key=f'server_port{i}') 
+					else:
+						st.text_input(label=f'Адрес Сервера {i}', key=f'server_addr{i}') 
+						st.text_input(label=f'Порт Сервера {i}', key=f'server_port{i}') 
+			else:
+				st.text('Ошибка! Файл конфигурации недоступен или поврежден!')
+				st.session_state.dd104m['corrupted'] = True
+			
+			if 'corrupted' in st.session_state.dd104m and st.session_state.dd104m['corrupted']:
+				submit = st.form_submit_button(label='Сохранить', disabled=True)
+			else:
+				submit = st.form_submit_button(label='Сохранить', on_click=parse_form, kwargs={'confile':filepath, 'output':output})
 			
 
 def render_tx(servicename): #TODO: expand on merge with rx
 	
 	#st.markdown(col_css, unsafe_allow_html=True)
 	st.title('Сервис Конфигурации Диода Данных')
-	st.header('Редактор файла конфигурации протокола DD104')
+	st.header('Редактор файлов конфигурации протокола DD104')
 	
 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	
@@ -473,18 +505,19 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	formbox = col2.container()
 	# f = formbox.form("dd104multi-form")
 	
-	col3.empty()
-	with col3:
-		col3.subheader(f"Статус Операции:")
-		st.write(f"{_status()}")
-	
+	col3.subheader(f"Статус Операции:")
+	output = col3.empty()
+	with output.container():
+		st.write("render:")
+		st.write(st.session_state)
 	
 	for source in filelist:
-		if filebox.button(f"{source['savename']};{source['savetime']} ({source['filename']})"):
+		if filebox.button(f"{source['savename']}; {source['savetime']} ({source['filename']})"):
 			st.session_state.dd104m['selected_file'] = source['filename']
 	
 	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file']:
-		_create_form(formbox, st.session_state.dd104m['selected_file'])
+		dict_cleanup(st.session_state, ['dd104m', 'dd104'])
+		_create_form(formbox, st.session_state.dd104m['selected_file'], output)
 
 def render_rx(servicename):
 	pass
