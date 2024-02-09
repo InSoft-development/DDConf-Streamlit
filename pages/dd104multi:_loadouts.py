@@ -22,22 +22,21 @@ def init():
 	st.set_page_config(layout="wide")
 	
 	
-	if 'dd104m' not in st.session_state.keys():
-		st.session_state['dd104m'] = {}
+	if 'dd104L' not in st.session_state.keys():
+		st.session_state['dd104L'] = {}
 	
-	if 'servicename' not in st.session_state.dd104m.keys():
+	if 'servicename' not in st.session_state.dd104L.keys():
 		if _mode == 'tx':
-			st.session_state.dd104m['servicename'] = 'dd104client'
+			st.session_state.dd104L['servicename'] = 'dd104client'
 		elif _mode == 'rx':
-			st.session_state.dd104m['servicename'] = 'dd104server'
+			st.session_state.dd104L['servicename'] = 'dd104server'
 	
-	if 'inidir' not in st.session_state.dd104m.keys():
-		st.session_state.dd104m['inidir'] = INIDIR
+	if 'inidir' not in st.session_state.dd104L.keys():
+		st.session_state.dd104L['inidir'] = INIDIR
 	
-	if 'contents' not in st.session_state.dd104m.keys():
-		st.session_state.dd104m['contents'] = {}
+	if 'contents' not in st.session_state.dd104L.keys():
+		st.session_state.dd104L['contents'] = {}
 	
-	# dict_cleanup(st.session_state, ['dd104m'])
 
 
 
@@ -137,7 +136,7 @@ def _statparse(data:str) -> dict:
 
 
 
-#TODO NOT create_services_and_inis, CREATE_SERVICES (the former goes into the caller of this func
+#TODO 
 def _create_services(num:int) -> str: 
 	path_to_sysd = '/etc/systemd/system/'
 	default_service = Path('/opt/dd/ddconfserver/dd104client.service.default')
@@ -241,7 +240,7 @@ def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename'
 				out.append({'savename':savename, 'savetime':savetime, 'filename':str(_dir/f)})
 				
 		except Exception as e:
-			syslog.syslog(syslog.LOG_CRIT, f'dd104multi: Ошибка: Файл конфигурации {_dir/f} недоступен, подробности:\n {str(e)}\n')
+			syslog.syslog(syslog.LOG_CRIT, f'dd104Loadouts: Ошибка: Файл конфигурации {_dir/f} недоступен, подробности:\n {str(e)}\n')
 			raise e
 	return out
 	
@@ -266,36 +265,13 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	st.title('Сервис Конфигурации Диода Данных')
 	st.header('Редактор файла конфигурации протокола DD104')
 	
-	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	
-	col1, col2, col3= st.columns([0.25, 0.375, 0.375], gap='large')
-	with col1:
-		col1.subheader("Выберите файл конфигурации")
-		filebox = col1.container(height=600)
-	
-	col2.subheader("Редактор Конфигурации")
-	formbox = col2.container()
-	# f = formbox.form("dd104multi-form")
-	
-	col3.subheader(f"Статус Операции:")
-	output = col3.empty()
-	with output.container():
-		st.write("render:")
-		st.write(st.session_state)
-	
-	for source in filelist:
-		if filebox.button(f"{source['savename']}; {source['savetime']} ({source['filename']})"):
-			st.session_state.dd104m['selected_file'] = source['filename']
-	
-	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file']:
-		dict_cleanup(st.session_state, ['dd104m', 'dd104'])
-		_create_form(formbox, st.session_state.dd104m['selected_file'], output)
 
 def render_rx(servicename):
 	pass
 
 def render():
-	servicename = st.session_state.dd104m['servicename']
+	servicename = st.session_state.dd104L['servicename']
 	mode = _mode.lower()
 	if mode == 'tx':
 		render_tx(servicename)
