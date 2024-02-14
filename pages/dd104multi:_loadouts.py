@@ -1,6 +1,6 @@
  
 import streamlit as st
-import pandas as pd
+
 
 
 import syslog, subprocess, time, tarfile
@@ -12,6 +12,8 @@ from os import W_OK, R_OK, access, makedirs, listdir
 # Globals
 _mode = 'tx'
 INIDIR = '/etc/dd/dd104/configs/'
+ARCDIR = '/etc/dd/dd104/archive.d/'
+LOADOUTDIR = '/etc/dd/dd104/loadouts.d/'
 INIT_KEYS = ['servicename', 'inidir', 'selected_file']
 # /Globals
 
@@ -34,12 +36,38 @@ def init():
 	if 'inidir' not in st.session_state.dd104L.keys():
 		st.session_state.dd104L['inidir'] = INIDIR
 	
+	if 'arcdir' not in st.session_state.dd104L.keys():
+		st.session_state.dd104L['arcdir'] = ARCDIR
+	
 	if 'contents' not in st.session_state.dd104L.keys():
 		st.session_state.dd104L['contents'] = {}
 	
 
 
-
+# class Loadout:
+# 	
+# 	_name = ''
+# 	contents = {}
+# 	_valid = False
+# 	
+# 	
+# 	def __init__(self, name:str, confs=[]):
+# 		self.validate(count, confs)
+# 		for i in range(1, count+1):
+# 			self.contents[f'process_{i}'] = {'confile': confs}
+# 	
+# 	def validate(self, count: int, confs: list):
+# 		if not len(confs):
+# 			self._valid = False
+# 		else:
+# 			self._valid = True
+# 	
+# 	def isvalid(self):
+# 		return self._valid
+# 	
+# 	def __str__(self):
+# 		return f"{{ {self._name}:  {self.contents} }} "
+	
 
 
 
@@ -221,7 +249,7 @@ def _status(service = 'dd104client.service') -> str:
 def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename':'', 'savetime':'', 'filename':''}
 	_dir = Path(_dir)
 	if not _dir.is_dir():
-		msg = f"dd104: Директория сервиса {_dir} недоступна!"
+		msg = f"dd104L: Директория сервиса {_dir} недоступна!"
 		syslog.syslog(syslog.LOG_ERR, msg)
 		raise FileNotFoundError(msg)
 	L = [x for x in listdir(_dir) if (_dir/x).is_file() and ''.join(x[-3::]) == 'ini']
@@ -245,6 +273,23 @@ def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename'
 	return out
 	
 
+def list_loadouts(_dir=INIDIR) -> list: #returns a list of dicts like {'savename':'', 'savetime':'', 'filename':''}
+	_dir = Path(_dir)
+	if not _dir.is_dir():
+		msg = f"dd104L: Директория сервиса {_dir} недоступна!"
+		syslog.syslog(syslog.LOG_ERR, msg)
+		raise FileNotFoundError(msg)
+	L = [x for x in listdir(_dir) if (_dir/x).is_dir()]
+	out = []
+	for f in L:
+		try:
+			num = len([x for x in listdir(_dir/f) if isfile(join(_dir/f, x))])
+			out.append({'name':f, 'fcount':num})
+		
+		except Exception as e:
+			syslog.syslog(syslog.LOG_CRIT, f'dd104Loadouts: Ошибка: Файл конфигурации {_dir/f} недоступен, подробности:\n {str(e)}\n')
+			raise e
+	return out
 
 def dict_cleanup(array: dict, to_be_saved=[]):
 	dead_keys=[]
@@ -265,7 +310,22 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	st.title('Сервис Конфигурации Диода Данных')
 	st.header('Редактор файла конфигурации протокола DD104')
 	
+	#archived = list_sources(st.session_state.dd104L['arcdir'])
+	loadouts = list_loadouts(st.session_state.dd104L['arcdir']) # [{'name':'', 'fcount':''}, {}]
 	
+	loadouter, buttons, confer, out = st.columns([0.25, 0.25, 0.3, 0.2], gap='medium')
+	
+	for i in loadouts:
+		if loadouter.button(f"{i['name']}"):
+			st.session_state.dd104m['selected_ld'] = source['name']
+	
+	if loadouter.button(f"Новая Конфигурация"):
+		newlbox = col1.empty()
+		with newfbox.container():
+			_form = st.form('newloadoutform')
+			with _form:
+				st.text_input(label='Имя конфигурации', key='new_loadout_name')
+				submit = st.form_submit_button('Создать', on_click=_new_loadout)
 
 def render_rx(servicename):
 	pass
