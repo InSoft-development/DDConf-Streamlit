@@ -36,12 +36,17 @@ def init():
 	if 'inidir' not in st.session_state.dd104L.keys():
 		st.session_state.dd104L['inidir'] = INIDIR
 	
+	if 'loaddir' not in st.session_state.dd104L.keys():
+		st.session_state.dd104L['loaddir'] = LOADOUTDIR
+	
 	if 'arcdir' not in st.session_state.dd104L.keys():
 		st.session_state.dd104L['arcdir'] = ARCDIR
 	
 	if 'contents' not in st.session_state.dd104L.keys():
 		st.session_state.dd104L['contents'] = {}
 	
+	# if 'selected_ld' not in st.session_state.dd104L.keys():
+	# 	st.session_state.dd104L['selected_ld'] = ''
 
 
 # class Loadout:
@@ -287,7 +292,7 @@ def list_loadouts(_dir=INIDIR) -> list: #returns a list of dicts like {'savename
 			out.append({'name':f, 'fcount':num})
 		
 		except Exception as e:
-			syslog.syslog(syslog.LOG_CRIT, f'dd104Loadouts: Ошибка: Файл конфигурации {_dir/f} недоступен, подробности:\n {str(e)}\n')
+			syslog.syslog(syslog.LOG_CRIT, f'dd104Loadouts: Ошибка при перечислении файлов директории {_dir}, подробности:\n {str(e)}\n')
 			raise e
 	return out
 
@@ -303,6 +308,9 @@ def dict_cleanup(array: dict, to_be_saved=[]):
 
 #Render
 
+def _create_form(loadout:str, col:st.columns):
+	pass
+
 
 def render_tx(servicename): #TODO: expand on merge with rx
 	
@@ -310,18 +318,37 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	st.title('Сервис Конфигурации Диода Данных')
 	st.header('Редактор файла конфигурации протокола DD104')
 	
+	ld, bt, cf, outs = st.columns([0.25, 0.15, 0.3, 0.3], gap='small')
+	
 	#archived = list_sources(st.session_state.dd104L['arcdir'])
-	loadouts = list_loadouts(st.session_state.dd104L['arcdir']) # [{'name':'', 'fcount':''}, {}]
+	loadouts = list_loadouts(st.session_state.dd104L['loaddir']) # [{'name':'', 'fcount':''}, {}]
+	st.session_state.dd104L['names'] = [x['name'] for x in loadouts if x and 'name' in x]
 	
-	loadouter, buttons, confer, out = st.columns([0.25, 0.25, 0.3, 0.2], gap='medium')
+	#containers
+	ld.subheader('Конфигурации')
+	bt.subheader('Операции')
+	cf.subheader('Настройка Конфигурации')
+	outs.subheader('Вывод')
 	
+	out = outs.empty()
+	out.write(st.session_state)
+	
+	if st.session_state.dd104L['names']:
+		loadouter = ld.container(height=600)
+	
+	buttons = bt.container(height=600)
+	
+	#filling
 	for i in loadouts:
 		if loadouter.button(f"{i['name']}"):
-			st.session_state.dd104m['selected_ld'] = source['name']
+			st.session_state.dd104L['selected_ld'] = i['name']
+	
+	if 'selected_ld' in st.session_state.dd104L and st.session_state.dd104L['selected_ld']:
+		_create_form(st.session_state.dd104L['selected_ld'], cf)
 	
 	if loadouter.button(f"Новая Конфигурация"):
-		newlbox = col1.empty()
-		with newfbox.container():
+		newlbox = loadouter.empty()
+		with newlbox.container():
 			_form = st.form('newloadoutform')
 			with _form:
 				st.text_input(label='Имя конфигурации', key='new_loadout_name')
