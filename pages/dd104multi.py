@@ -512,7 +512,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	
 	#st.markdown(col_css, unsafe_allow_html=True)
 	st.title('Сервис Конфигурации Диода Данных')
-	st.header('Редактор файлов конфигурации протокола DD104')
+	st.header('Редактор файлов настроек протокола DD104')
 	
 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	

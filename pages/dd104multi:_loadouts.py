@@ -278,7 +278,7 @@ def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename'
 	return out
 	
 
-def list_loadouts(_dir=INIDIR) -> list: #returns a list of dicts like {'savename':'', 'savetime':'', 'filename':''}
+def list_loadouts(_dir=INIDIR) -> list: #returns a list of dicts like {'name':'', 'fcount':len([]), 'files':['','']}
 	_dir = Path(_dir)
 	if not _dir.is_dir():
 		msg = f"dd104L: Директория сервиса {_dir} недоступна!"
@@ -288,8 +288,9 @@ def list_loadouts(_dir=INIDIR) -> list: #returns a list of dicts like {'savename
 	out = []
 	for f in L:
 		try:
-			num = len([x for x in listdir(_dir/f) if isfile(join(_dir/f, x))])
-			out.append({'name':f, 'fcount':num})
+			files = [x for x in listdir(_dir/f) if isfile(join(_dir/f, x))]
+			
+			out.append({'name':f, 'fcount':len(files), 'files':files})
 		
 		except Exception as e:
 			syslog.syslog(syslog.LOG_CRIT, f'dd104Loadouts: Ошибка при перечислении файлов директории {_dir}, подробности:\n {str(e)}\n')
@@ -308,8 +309,23 @@ def dict_cleanup(array: dict, to_be_saved=[]):
 
 #Render
 
-def _create_form(loadout:str, col:st.columns):
-	pass
+#TODO
+def _create_form(loadout:dict, box:st.empty, out:st.empty):
+	box.empty()
+	out.empty()
+	out.write(loadout)
+	
+	with box:
+		archived = list_sources(st.session_state.dd104L['arcdir'])
+		
+		_form = st.form('dd104L-form')
+		with _form:
+			for i in range(0, loadout['fcount']+2):
+				with st.container():
+					st.caption(f'Процесс {i+1}')
+					st.selectbox(label='Файл настроек', options=[f"{x['savename']}@{x['savetime']} ({x['filename']})" for x in archived], index=None, key=f"select_file_{i}")
+			
+			st.form_submit_button('Сохранить Конфигурацию', on_click=save_loadout())
 
 
 def render_tx(servicename): #TODO: expand on merge with rx
@@ -333,6 +349,8 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	out = outs.empty()
 	out.write(st.session_state)
 	
+	formbox = cf.empty()
+	
 	if st.session_state.dd104L['names']:
 		loadouter = ld.container(height=600)
 	
@@ -341,10 +359,10 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	#filling
 	for i in loadouts:
 		if loadouter.button(f"{i['name']}"):
-			st.session_state.dd104L['selected_ld'] = i['name']
+			st.session_state.dd104L['selected_ld'] = i
 	
 	if 'selected_ld' in st.session_state.dd104L and st.session_state.dd104L['selected_ld']:
-		_create_form(st.session_state.dd104L['selected_ld'], cf)
+		_create_form(st.session_state.dd104L['selected_ld'], formbox, out)
 	
 	if loadouter.button(f"Новая Конфигурация"):
 		newlbox = loadouter.empty()
