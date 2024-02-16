@@ -481,7 +481,7 @@ def _create_form(formbox: st.container, filepath: str, output: st.empty):
 				st.caption(f"Редактируемый файл: {filepath}")
 			
 			
-			st.session_state.dd104m['contents']['count'] = data['count']
+			st.session_state.dd104m['contents']['count'] = 2 #data['count']
 			
 			st.text_input(label = "Имя версии конфигурации", value=data['old_savename'] if 'old_savename' in data.keys() else "", key='savename')
 			st.text_input(label = "Адрес получателя (НЕ ИЗМЕНЯТЬ БЕЗ ИЗМЕНЕНИЙ АДРЕСАЦИИ ДИОДНОГО СОЕДИНЕНИЯ)", value = data['old_recv_addr'], key='recv_addr')
@@ -542,7 +542,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 				submit = st.form_submit_button('Создать', on_click=_new_file)
 	
 	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file']:
-		dict_cleanup(st.session_state, ['dd104m', 'dd104'])
+		#dict_cleanup(st.session_state, ['dd104m', 'dd104'])
 		_create_form(formbox, st.session_state.dd104m['selected_file'], output)
 
 def render_rx(servicename):
