@@ -305,27 +305,53 @@ def dict_cleanup(array: dict, to_be_saved=[]):
 	for k in dead_keys:
 		del(array[k])
 
+#TODO
+def save_loadout(out:st.empty):
+	out.empty()
+	
+
+def _add_process(box:st.empty, out:st.empty):
+	out.empty()
+	box.empty()
+	out.write(st.session_state)
+	if 'fcount' in st.session_state.dd104L['selected_ld']:
+		st.session_state.dd104L['selected_ld']['fcount'] += 1
+	
+	
+
 #/Logic
 
 #Render
 
-#TODO
+
 def _create_form(loadout:dict, box:st.empty, out:st.empty):
 	box.empty()
 	out.empty()
-	out.write(loadout)
+	out.write(st.session_state)
 	
 	with box:
 		archived = list_sources(st.session_state.dd104L['arcdir'])
 		
 		_form = st.form('dd104L-form')
-		with _form:
-			for i in range(0, loadout['fcount']+2):
+		for i in range(0, loadout['fcount']+1):
+			with _form:
 				with st.container():
-					st.caption(f'Процесс {i+1}')
+					col1, col2 = st.columns([0.6, 0.4])
+					col1.caption(f'Процесс {i+1}')
+					col2.caption(f'Тут будет статус процесса {i+1}')
 					st.selectbox(label='Файл настроек', options=[f"{x['savename']}@{x['savetime']} ({x['filename']})" for x in archived], index=None, key=f"select_file_{i}")
+					
+			# with st.columns(3, gap='small') as c1, c2, c3:
+			# 	c1.button('Остановить процесс', on_click=_stop, kwargs={'out':out, 'service':f"dd104client{i+1}" if _mode.lower() == 'tx' else f"dd104server{i+1}"}, key=f'stopper{i+1}')
+			# 	c2.button('Перезапустить процесс', on_click=_restart, kwargs={'out':out, 'service':f"dd104client{i+1}" if _mode.lower() == 'tx' else f"dd104server{i+1}"}, key=f'restarter{i+1}')
+			# 	c3.button('Запустить процесс', on_click=_start, kwargs={'out':out, 'service':f"dd104client{i+1}" if _mode.lower() == 'tx' else f"dd104server{i+1}"}, key=f'starter{i+1}')
+		
+		_form.form_submit_button('Сохранить Конфигурацию', on_click=save_loadout, kwargs={'out':out})
+		
+		
+					
 			
-			st.form_submit_button('Сохранить Конфигурацию', on_click=save_loadout())
+			
 
 
 def render_tx(servicename): #TODO: expand on merge with rx
@@ -360,9 +386,16 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	for i in loadouts:
 		if loadouter.button(f"{i['name']}"):
 			st.session_state.dd104L['selected_ld'] = i
+			
 	
 	if 'selected_ld' in st.session_state.dd104L and st.session_state.dd104L['selected_ld']:
 		_create_form(st.session_state.dd104L['selected_ld'], formbox, out)
+	
+	with buttons:
+		stop = st.button('Остановить все процессы', use_container_width=True, on_click=_stop, kwargs={'out':out, 'service':'all'})
+		start = st.button('Запустить все процессы', use_container_width=True, on_click=_start, kwargs={'out':out, 'service':'all'})
+		restart = st.button('Перезапустить все процессы', use_container_width=True, on_click=_restart, kwargs={'out':out, 'service':'all'})
+		add = st.button('Добавить процесс', disabled=True if not 'selected_ld' in st.session_state.dd104L else False, use_container_width=True, on_click=_add_process, kwargs={'out':out, 'box':formbox})
 	
 	if loadouter.button(f"Новая Конфигурация"):
 		newlbox = loadouter.empty()
