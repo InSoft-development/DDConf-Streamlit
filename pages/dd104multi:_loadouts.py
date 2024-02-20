@@ -305,9 +305,56 @@ def dict_cleanup(array: dict, to_be_saved=[]):
 	for k in dead_keys:
 		del(array[k])
 
+def sanitize():
+	try:
+		st.session_state.dd104L['selected_ld']['selectors'] = {k:v for k,v in st.session_state.items() if 'select_file_' in k}
+		for k in st.session_state.dd104L['selected_ld']['selectors'].keys():
+			del(st.session_state[k])
+	except Exception as e:
+		msg = f"dd104L: Критическая ошибка: невозможно обработать данные сессии, подробности:\n{str(e)}\n"
+		syslog.syslog(syslog.LOG_CRIT, msg)
+		return msg
+	return st.session_state
+
 #TODO
 def save_loadout(out:st.empty):
 	out.empty()
+	out.write(sanitize())
+	ld = Path(st.session_state.dd104L['loaddir']) / st.session_state.dd104L['selected_ld']['name']
+	if not ld.is_dir():
+		try:
+			makedirs(ld)
+		except Exception as e:
+			msg = f"dd104L: Критическая ошибка: директория {ld.parent()} недоступна для записи, подробности:\n{str(e)}"
+			syslog.syslog(syslog.LOG_CRIT, msg)
+			raise e
+		
+	try:
+		stat = subprocess.run(f'rm -rf {ld}/*'.split(), text=True, capture_output=True)
+		print(stat.stdout, '\n', stat.stderr)
+	except Exception as e:
+		msg = f"dd104L: Критическая ошибка: не удалось очистить директорию {ld}, подробности:\n{str(e)}"
+		print(msg)
+		syslog.syslog(syslog.LOG_CRIT, msg)
+		raise e
+	for i in range(1, len(st.session_state.dd104L['selected_ld']['selectors'])+1):
+		filepath = Path(st.session_state.dd104L['arcdir']) / st.session_state.dd104L['selected_ld']['selectors'][f'select_file_{i}'].split('(')[1][:-1:]
+		
+		
+		
+		if filepath.is_file():
+			try:
+				(ld/(f"dd104client{i}.ini" if i>1 else "dd104client.ini")).symlink_to(filepath)
+				print(f'\nfile {(ld/(f"dd104client{i}.ini" if i>1 else "dd104client.ini"))} was created!')
+			except Exception as e:
+				msg = f"dd104L: Критическая ошибка: не удалось создать ссылку на файл {filepath} в директории {ld}, подробности:\n{str(e)}"
+				syslog.syslog(syslog.LOG_CRIT, msg)
+				raise e
+		else:
+			msg = f"dd104L: Критическая ошибка: файл {filepath} не найден!"
+			syslog.syslog(syslog.LOG_CRIT, msg)
+			raise e
+		
 	
 
 def _add_process(box:st.empty, out:st.empty):
@@ -319,11 +366,25 @@ def _add_process(box:st.empty, out:st.empty):
 	
 	
 
+def list_ld(name: str): #returns the list of files from the archive that are symlinked to from the loadout dir 
+	if not '/' in name:
+		ldpath = Path(st.session_state.dd104L['loaddir'])/name
+	else:
+		ldpath = Path(name)
+	
+	files = []
+	
+	for i in listdir(ldpath):
+		if (ldpath/i).is_symlink():
+			files.append(str(ldpath/i))
+	
+	return files
+
 #/Logic
 
 #Render
 
-
+#TODO: selectbox indexes
 def _create_form(loadout:dict, box:st.empty, out:st.empty):
 	box.empty()
 	out.empty()
@@ -336,15 +397,16 @@ def _create_form(loadout:dict, box:st.empty, out:st.empty):
 		for i in range(0, loadout['fcount']+1):
 			with _form:
 				with st.container():
+					
+					files = [f"{x['savename']}@{x['savetime']} ({x['filename']})" for x in archived]
+					loadouted = [f"{x['savename']}@{x['savetime']} ({x['filename']})" for x in archived if x['filename'] in list_ld(loadout['name'])]
+					
 					col1, col2 = st.columns([0.6, 0.4])
 					col1.caption(f'Процесс {i+1}')
 					col2.caption(f'Тут будет статус процесса {i+1}')
-					st.selectbox(label='Файл настроек', options=[f"{x['savename']}@{x['savetime']} ({x['filename']})" for x in archived], index=None, key=f"select_file_{i}")
+					st.selectbox(label='Файл настроек', options=files, index=None, key=f"select_file_{i+1}")
 					
-			# with st.columns(3, gap='small') as c1, c2, c3:
-			# 	c1.button('Остановить процесс', on_click=_stop, kwargs={'out':out, 'service':f"dd104client{i+1}" if _mode.lower() == 'tx' else f"dd104server{i+1}"}, key=f'stopper{i+1}')
-			# 	c2.button('Перезапустить процесс', on_click=_restart, kwargs={'out':out, 'service':f"dd104client{i+1}" if _mode.lower() == 'tx' else f"dd104server{i+1}"}, key=f'restarter{i+1}')
-			# 	c3.button('Запустить процесс', on_click=_start, kwargs={'out':out, 'service':f"dd104client{i+1}" if _mode.lower() == 'tx' else f"dd104server{i+1}"}, key=f'starter{i+1}')
+			
 		
 		_form.form_submit_button('Сохранить Конфигурацию', on_click=save_loadout, kwargs={'out':out})
 		
