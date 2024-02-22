@@ -320,6 +320,7 @@ def sanitize():
 def save_loadout(out:st.empty):
 	out.empty()
 	out.write(sanitize())
+	print(st.session_state)
 	ld = Path(st.session_state.dd104L['loaddir']) / st.session_state.dd104L['selected_ld']['name']
 	if not ld.is_dir():
 		try:
@@ -345,7 +346,7 @@ def save_loadout(out:st.empty):
 		raise e
 		
 	for i in range(1, len(st.session_state.dd104L['selected_ld']['selectors'])+1):
-		filepath = Path(st.session_state.dd104L['arcdir']) / st.session_state.dd104L['selected_ld']['selectors'][f'select_file_{i}'].split('(')[1][:-1:]
+		filepath = Path(st.session_state.dd104L['arcdir']) / st.session_state.dd104L['selected_ld']['selectors'][f'select_file_{i}'].split('(')[-1][:-1:]
 		
 		if filepath.is_file():
 			try:
@@ -358,7 +359,7 @@ def save_loadout(out:st.empty):
 		else:
 			msg = f"dd104L: Критическая ошибка: файл {filepath} не найден!"
 			syslog.syslog(syslog.LOG_CRIT, msg)
-			raise e
+			raise FileNotFoundError(msg)
 		
 	
 
@@ -407,6 +408,11 @@ def _new_loadout():
 		syslog.syslog(syslog.LOG_CRIT, msg)
 		raise e
 
+def _apply_process_ops(out: st.empty):
+	out.empty()
+	out.write(st.session_state)
+	
+
 #/Logic
 
 #Render
@@ -421,8 +427,8 @@ def _create_form(loadout:dict, box:st.empty, out:st.empty):
 		archived = list_sources(st.session_state.dd104L['arcdir'])
 		
 		_form = st.form('dd104L-form')
-		files = [f"{x['savename']}@{x['savetime']} ({x['filename']})" for x in archived]
-		loadouted = [f"{x['savename']}@{x['savetime']} ({x['filename']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
+		files = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived]
+		loadouted = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
 		
 		out.write(loadouted)
 		
@@ -456,7 +462,7 @@ def _create_form(loadout:dict, box:st.empty, out:st.empty):
 def render_tx(servicename): #TODO: expand on merge with rx
 	
 	#archived = list_sources(st.session_state.dd104L['arcdir'])
-	loadouts = list_loadouts(st.session_state.dd104L['loaddir']) # [{'name':'', 'fcount':''}, {}]
+	loadouts = list_loadouts(st.session_state.dd104L['loaddir']) # [{'name':'', 'fcount':'', 'files':[]}, {}]
 	st.session_state.dd104L['names'] = [x['name'] for x in loadouts if x and 'name' in x]
 	
 	#st.markdown(col_css, unsafe_allow_html=True)
@@ -466,6 +472,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	st.subheader('Выбрать конфигурацию для загрузки...')
 	
 	alpha = st.expander(label="Выбор конфигурации:")
+	
 	with alpha:
 		with st.container(height=600):
 			#TODO
@@ -473,7 +480,8 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	
 	st.subheader('...Или')
 	st.subheader('Отредактировать существующую конфигурацию:')
-	beta = st.expander(label="Конфигуратор конфигураций")
+	beta = st.expander(label="Конфигуратор:")
+	
 	with beta:
 		ld, bt, cf, outs = st.columns([0.20, 0.20, 0.3, 0.3], gap='small')
 		
@@ -488,14 +496,15 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		out = outs.empty()
 		out.write(st.session_state)
 		
-		formbox = cf.empty()
+		with cf.container(height=600):
+			formbox = st.empty()
 		
 		if st.session_state.dd104L['names']:
 			loadouter = ld.container(height=600)
 		
-		ldbuttons = bt.container(height=225)
+		ldbuttons = bt.container(height=100)
 		bt.subheader('Управление процессами:')
-		procs = bt.container(height=300)
+		procs = bt.container(height=425)
 		
 		#filling
 		for i in loadouts:
@@ -511,15 +520,27 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			add = st.button('Добавить процесс', disabled=True if not 'selected_ld' in st.session_state.dd104L else False, use_container_width=True, on_click=_add_process, kwargs={'out':out, 'box':formbox})
 			
 		with procs:
-			stop = st.button('Остановить все процессы', use_container_width=True, on_click=_stop, kwargs={'out':out, 'service':'all'})
-			start = st.button('Запустить все процессы', use_container_width=True, on_click=_start, kwargs={'out':out, 'service':'all'})
-			restart = st.button('Перезапустить все процессы', use_container_width=True, on_click=_restart, kwargs={'out':out, 'service':'all'})
+			
+			options = [f"Процесс {i} ({list_ld(st.session_state.dd104L['selected_ld']['name'])[i]})" for i in range(1, st.session_state.dd104L['selected_ld']['fcount']+1)] if 'selected_ld' in st.session_state.dd104L else []
+			
+			def disabler():
+					st.session_state.dd104L['proc_submit_disabled'] = not ('proclist_select' in st.session_state and st.session_state['proclist_select']) or not ('oplist_select' in st.session_state and st.session_state['oplist_select'])
+				
+			
+			procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'selected_ld' in st.session_state.dd104L), key=f"proclist_select", placeholder="Не выбрано", on_change=disabler)
+			
+			opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(not 'selected_ld' in st.session_state.dd104L), key="oplist_select", placeholder="Не выбрано", on_change=disabler)
+			
+			
+			if procs.button("Применить", disabled=st.session_state.dd104L['proc_submit_disabled'] if 'proc_submit_disabled' in st.session_state.dd104L else True):
+				_apply_process_ops(out)
+		
 		
 		if loadouter.button(f"Новая Конфигурация"):
 			newlbox = loadouter.empty()
 			with newlbox.container():
-				_form = st.form('newloadoutform')
-				with _form:
+				_form_nld = st.form('newloadoutform')
+				with _form_nld:
 					st.text_input(label='Имя конфигурации', key='new_loadout_name')
 					submit = st.form_submit_button('Создать', on_click=_new_loadout)
 
