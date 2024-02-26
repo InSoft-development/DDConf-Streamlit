@@ -1,13 +1,17 @@
- 
 import streamlit as st
-
-
 
 import syslog, subprocess, time, tarfile
 from shutil import move, copy2, unpack_archive, make_archive
 from pathlib import Path
 from os.path import exists, sep, isdir, isfile, join
 from os import W_OK, R_OK, access, makedirs, listdir
+
+# ---------Notes:---------
+#  
+# the server assumes that the first dd104<>.service process  
+# is called dd104<>1.service! 
+#  
+# ---------/Notes---------
 
 # Globals
 _mode = 'tx'
@@ -45,34 +49,8 @@ def init():
 	if 'contents' not in st.session_state.dd104L.keys():
 		st.session_state.dd104L['contents'] = {}
 	
-	# if 'selected_ld' not in st.session_state.dd104L.keys():
-	# 	st.session_state.dd104L['selected_ld'] = ''
 
 
-# class Loadout:
-# 	
-# 	_name = ''
-# 	contents = {}
-# 	_valid = False
-# 	
-# 	
-# 	def __init__(self, name:str, confs=[]):
-# 		self.validate(count, confs)
-# 		for i in range(1, count+1):
-# 			self.contents[f'process_{i}'] = {'confile': confs}
-# 	
-# 	def validate(self, count: int, confs: list):
-# 		if not len(confs):
-# 			self._valid = False
-# 		else:
-# 			self._valid = True
-# 	
-# 	def isvalid(self):
-# 		return self._valid
-# 	
-# 	def __str__(self):
-# 		return f"{{ {self._name}:  {self.contents} }} "
-	
 
 
 
@@ -162,7 +140,7 @@ def _statparse(data:str) -> dict:
 				output['CGroup'] = f"{output['CGroup']}\n{line}"  
 			i+=1
 	except Exception as e:
-		syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
+		syslog.syslog(syslog.LOG_CRIT, f'dd104L: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
 		raise e
 	return output
 
@@ -223,29 +201,41 @@ def _delete_services(target='all'): #deletes all services dd104client*.service, 
 			raise e
 
 
-def _status(service = 'dd104client.service') -> str:
+def _status(num = 1) -> str:
+	if num>=1:
+		service = f"dd104client{num}.service" if _mode == 'tx' else f"dd104server{num}.service"
+	else:
+		raise RuntimeError("dd104L: номер процесса за границей области допустимых значений!")
+	
 	try:
 		stat = subprocess.run(f"systemctl status {service}".split(), text=True, capture_output=True)
 	except Exception as e:
-		msg = f"dd104: невозможно получить статус {service}; \nПодробности: {type(e)} - {str(e)}\n"
+		msg = f"dd104L: невозможно получить статус {service}; \nПодробности: {type(e)} - {str(e)}\n"
 		syslog.syslog(syslog.LOG_ERR, msg)
-		return None
+		return f"🔴"
 	else:
 		if stat.stderr:
-			msg = f"dd104: {stat.stderr}\n"
+			msg = f"dd104L: {stat.stderr}\n"
 			syslog.syslog(syslog.LOG_ERR, msg)
-			return None
+			return f"🔴"
 		else:
 			try:
 				data = _statparse(stat)
 				if data:
-					return data
+					if "Stopped" in data['Active'] and not 'Failed' in data['Active']:
+						return "⚫"
+					elif 'Failed' in data['Active']:
+						return f"🔴"
+					elif "Running" in data['Active']:
+						return f"🟢"
+					else:
+						raise RuntimeError(data['Active'])
 				else:
-					msg = f"dd104: Ошибка: Парсинг статуса {service} передал пустой результат; Если эта ошибка повторяется, напишите в сервис поддержки ООО InControl.\n"
+					msg = f"dd104L: Ошибка: Парсинг статуса {service} передал пустой результат; Если эта ошибка повторяется, напишите в сервис поддержки ООО InControl.\n"
 					syslog.syslog(syslog.LOG_ERR, msg)
-					return None
+					return f"🔴"
 			except Exception as e:
-				syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e.output)}\n')
+				syslog.syslog(syslog.LOG_CRIT, f'dd104L: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
 				raise e
 
 
@@ -411,6 +401,34 @@ def _new_loadout():
 def _apply_process_ops(out: st.empty):
 	out.empty()
 	out.write(st.session_state)
+	if st.session_state.oplist_select == 'Перезапустить':
+		operation = 'restart'
+	elif st.session_state.oplist_select == 'Остановить':
+		operation = 'stop'
+	else:
+		operation = 'start'
+	
+	tgts = [x.split(':')[0] for x in st.session_state.proclist_select if ':' in x]
+	
+	#print(f"tgts: {tgts}")
+	
+	errs = []
+	
+	for tgt in tgts:
+		try:
+			a = subprocess.run(f'systemctl {operation} dd104client{tgt}.service'.split(), text=True, capture_output=True)
+			if a.stderr:
+				msg = f"{a.stderr}"
+				errs.append(f"dd104client{tgt}.service")
+				raise RuntimeError(msg)
+		except Exception as e:
+			msg = f"dd104L: Ошибка выполнения операции над процессом dd104client{tgt}.service:\n{str(e)}"
+			print(msg)
+			syslog.syslog(syslog.LOG_CRIT, msg)
+			#raise RuntimeError(msg)
+		
+		
+	out.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {errs} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно.")
 	
 
 #/Logic
@@ -436,18 +454,18 @@ def _create_form(loadout:dict, box:st.empty, out:st.empty):
 			with _form:
 					with st.container():
 						
-						col1, col2 = st.columns([0.6, 0.4])
+						col1, col2 = st.columns([0.8, 0.2])
 						col1.caption(f'Процесс 1')
-						col2.caption(f'Тут будет статус процесса 1')
+						col2.caption(f"Статус:  {_status(1)}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
 						st.selectbox(label='Файл настроек', options=files, index=None, key=f"select_file_1")
 		else:
 			for i in range(1, loadout['fcount']+1):
 				with _form:
 					with st.container():
 						
-						col1, col2 = st.columns([0.6, 0.4])
+						col1, col2 = st.columns([0.8, 0.2])
 						col1.caption(f'Процесс {i}')
-						col2.caption(f'Тут будет статус процесса {i}')
+						col2.caption(f"Статус:  {_status(i)}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
 						st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, key=f"select_file_{i}")
 					
 			
@@ -521,7 +539,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			
 		with procs:
 			
-			options = [f"Процесс {i} ({list_ld(st.session_state.dd104L['selected_ld']['name'])[i]})" for i in range(1, st.session_state.dd104L['selected_ld']['fcount']+1)] if 'selected_ld' in st.session_state.dd104L else []
+			options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104L['selected_ld']['name'])[i]})" for i in range(1, st.session_state.dd104L['selected_ld']['fcount']+1)] if 'selected_ld' in st.session_state.dd104L else []
 			
 			def disabler():
 					st.session_state.dd104L['proc_submit_disabled'] = not ('proclist_select' in st.session_state and st.session_state['proclist_select']) or not ('oplist_select' in st.session_state and st.session_state['oplist_select'])
