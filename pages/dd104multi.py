@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 
 
 import syslog, subprocess, time, tarfile

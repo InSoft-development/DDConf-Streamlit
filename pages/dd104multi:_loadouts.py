@@ -456,7 +456,7 @@ def _create_form(loadout:dict, box:st.empty, out:st.empty):
 						
 						col1, col2 = st.columns([0.8, 0.2])
 						col1.caption(f'Процесс 1')
-						col2.caption(f"Статус:  {_status(1)}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
+						# col2.caption(f"Статус:  {_status(1)}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
 						st.selectbox(label='Файл настроек', options=files, index=None, key=f"select_file_1")
 		else:
 			for i in range(1, loadout['fcount']+1):
@@ -465,7 +465,7 @@ def _create_form(loadout:dict, box:st.empty, out:st.empty):
 						
 						col1, col2 = st.columns([0.8, 0.2])
 						col1.caption(f'Процесс {i}')
-						col2.caption(f"Статус:  {_status(i)}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
+						# col2.caption(f"Статус:  {_status(i)}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
 						st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, key=f"select_file_{i}")
 					
 			
@@ -483,6 +483,8 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	loadouts = list_loadouts(st.session_state.dd104L['loaddir']) # [{'name':'', 'fcount':'', 'files':[]}, {}]
 	st.session_state.dd104L['names'] = [x['name'] for x in loadouts if x and 'name' in x]
 	
+	options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104L['activator_selected_ld']['name'])[i]})" for i in range(1, st.session_state.dd104L['activator_selected_ld']['fcount']+1)] if 'activator_selected_ld' in st.session_state.dd104L else []
+	
 	#st.markdown(col_css, unsafe_allow_html=True)
 	st.title('Сервис Конфигурации Диода Данных')
 	st.header('Управление конфигурациями протокола DD104')
@@ -492,9 +494,53 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	alpha = st.expander(label="Выбор конфигурации:")
 	
 	with alpha:
-		with st.container(height=600):
-			#TODO
-			pass
+		with st.container():
+			#TODO active ld => symlink?
+			
+			ald, aop, ast, aouts = st.columns([0.3, 0.2, 0.25, 0.25], gap='medium')
+			
+			ald.subheader("Конфигурации")
+			aop.subheader("Операции")
+			aouts.subheader("Вывод")
+			ast.subheader("Статус")
+			
+			astat = ast.container(height=600)
+			loads = ald.container(height=600)
+			buttons = aop.container(height=600)
+			aout = aouts.empty()
+			
+			aout.write(st.session_state)
+			
+			
+			for i in loadouts:
+				if loads.button(f"{i['name']}", key=f"act_{i['name']}"):
+					st.session_state.dd104L['activator_selected_ld'] = i
+			
+			with buttons:
+				
+				def disabler():
+						st.session_state.dd104L['proc_submit_disabled'] = not ('proclist_select' in st.session_state and st.session_state['proclist_select']) or not ('oplist_select' in st.session_state and st.session_state['oplist_select'])
+					
+				
+				procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'activator_selected_ld' in st.session_state.dd104L), key=f"proclist_select", placeholder="Не выбрано", on_change=disabler)
+				
+				opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(not 'activator_selected_ld' in st.session_state.dd104L), key="oplist_select", placeholder="Не выбрано", on_change=disabler)
+				
+				
+				if buttons.button("Применить", disabled=st.session_state.dd104L['proc_submit_disabled'] if 'proc_submit_disabled' in st.session_state.dd104L else True):
+					_apply_process_ops(aout)
+			
+			if 'activator_selected_ld' in st.session_state.dd104L:
+				with astat:
+					for proc in options:
+						col1, col2 = st.columns([0.75, 0.25])
+						col1.caption(f"Процесс {proc.split(':')[0]}")
+						col2.caption(f"Статус: {_status(int(proc.split(':')[0]))}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
+						st.text(f"Файл настроек: placeholder")
+					
+			
+			
+			
 	
 	st.subheader('...Или')
 	st.subheader('Отредактировать существующую конфигурацию:')
@@ -520,10 +566,10 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		if st.session_state.dd104L['names']:
 			loadouter = ld.container(height=600)
 		
-		ldbuttons = bt.container(height=100)
-		bt.subheader('Управление процессами:')
-		procs = bt.container(height=425)
-		
+		ldbuttons = bt.container(height=600)
+# 		bt.subheader('Управление процессами:')
+# 		procs = bt.container(height=425)
+# 		
 		#filling
 		for i in loadouts:
 			if loadouter.button(f"{i['name']}"):
@@ -537,21 +583,21 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			
 			add = st.button('Добавить процесс', disabled=True if not 'selected_ld' in st.session_state.dd104L else False, use_container_width=True, on_click=_add_process, kwargs={'out':out, 'box':formbox})
 			
-		with procs:
+		# with procs:
 			
-			options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104L['selected_ld']['name'])[i]})" for i in range(1, st.session_state.dd104L['selected_ld']['fcount']+1)] if 'selected_ld' in st.session_state.dd104L else []
-			
-			def disabler():
-					st.session_state.dd104L['proc_submit_disabled'] = not ('proclist_select' in st.session_state and st.session_state['proclist_select']) or not ('oplist_select' in st.session_state and st.session_state['oplist_select'])
-				
-			
-			procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'selected_ld' in st.session_state.dd104L), key=f"proclist_select", placeholder="Не выбрано", on_change=disabler)
-			
-			opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(not 'selected_ld' in st.session_state.dd104L), key="oplist_select", placeholder="Не выбрано", on_change=disabler)
-			
-			
-			if procs.button("Применить", disabled=st.session_state.dd104L['proc_submit_disabled'] if 'proc_submit_disabled' in st.session_state.dd104L else True):
-				_apply_process_ops(out)
+# 			options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104L['selected_ld']['name'])[i]})" for i in range(1, st.session_state.dd104L['selected_ld']['fcount']+1)] if 'selected_ld' in st.session_state.dd104L else []
+# 			
+# 			def disabler():
+# 					st.session_state.dd104L['proc_submit_disabled'] = not ('proclist_select' in st.session_state and st.session_state['proclist_select']) or not ('oplist_select' in st.session_state and st.session_state['oplist_select'])
+# 				
+# 			
+# 			procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'selected_ld' in st.session_state.dd104L), key=f"proclist_select", placeholder="Не выбрано", on_change=disabler)
+# 			
+# 			opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(not 'selected_ld' in st.session_state.dd104L), key="oplist_select", placeholder="Не выбрано", on_change=disabler)
+# 			
+# 			
+# 			if procs.button("Применить", disabled=st.session_state.dd104L['proc_submit_disabled'] if 'proc_submit_disabled' in st.session_state.dd104L else True):
+# 				_apply_process_ops(out)
 		
 		
 		if loadouter.button(f"Новая Конфигурация"):
