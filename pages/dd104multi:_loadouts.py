@@ -563,8 +563,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		with cf.container(height=600):
 			formbox = st.empty()
 		
-		if st.session_state.dd104L['names']:
-			loadouter = ld.container(height=600)
+		loadouter = ld.container(height=600)
 		
 		ldbuttons = bt.container(height=600)
 # 		bt.subheader('Управление процессами:')
