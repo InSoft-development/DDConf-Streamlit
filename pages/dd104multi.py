@@ -529,7 +529,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	
 	
 	for source in filelist:
-		if filebox.button(f"{source['savename']}; {source['savetime']}"):
+		if filebox.button(f"{source['savename']}; {source['savetime']}", key=f"src-{source['filename']}"):
 			st.session_state.dd104m['selected_file'] = source['filename']
 	
 	if filebox.button(f"Новый Файл"):

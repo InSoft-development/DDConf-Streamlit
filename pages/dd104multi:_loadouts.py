@@ -23,10 +23,10 @@ INIT_KEYS = ['servicename', 'inidir', 'selected_file']
 
 #Logic
 
+# this line was in init(), but streamlit started fussing up about it being called more than once all of a sudden
+st.set_page_config(layout="wide")
+
 def init():
-	
-	st.set_page_config(layout="wide")
-	
 	
 	if 'dd104L' not in st.session_state.keys():
 		st.session_state['dd104L'] = {}
@@ -429,12 +429,117 @@ def _apply_process_ops(out: st.empty):
 		
 		
 	out.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {errs} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно.")
+
+
+
+def get_active(LDIR:str) -> str: 
+	try:
+		LDIR=Path(LDIR)
+		if not LDIR.is_dir():
+			raise RuntimeError(f"Директория {LDIR} недоступна!")
+	except Exception as e:
+		msg = f"dd104L: Ошибка при получении текущей активной конфигурации, подробности:\n{str(e)}"
+		syslog.syslog(syslog.LOG_CRIT, msg)
+		raise e
+	else:
+		if '.ACTIVE' in listdir(LDIR) and (LDIR/'.ACTIVE').is_symlink():
+			try:
+				return (LDIR/'.ACTIVE').resolve().name()
+			except Exception as e:
+				msg = f"dd104L: Ошибка чтения указателя активной конфигурации, подробности:\n{str(e)}"
+				syslog.syslog(syslog.LOG_CRIT, msg)
+				raise e
+		else:
+			return None 
+
+
+
+def _edit_svc(path:str): #possible problems: num is anything that comes between dd104<> and .
 	
+	path = Path(path)
+	num = path.name().split('.')[0].split(st.session_state.dd104L['servicename'])[1]
+	text = path.read_text().split('\n')
+	for i in range(0, len(text)):
+		if 'ExecStart=' in text[i] and text[i].strip()[0] != '#':
+			text[i] = f"ExecStart=/opt/dd/{st.session_state.dd104L['servicename']}/{st.session_state.dd104L['servicename']} -c {st.session_state.dd104L['loaddir']}{st.session_state.dd104L['servicename']}{num}.service"
+			break
+	a = path.write_text('\n'.join(text))
+	
+
+
+def processify() -> dict: #TODO returns {'errors':[], 'failed':[]}
+	errors = []
+	failed = []
+	
+	#stop all dd104 services
+	try:
+		stat = subprocess.run("systemctl stop dd104*.service".split(), capture_output=True, text=True)
+		if stat.stderr:
+			# failed.append("systemctl stop dd104*.service")
+			# errors.append(stat.stderr)
+			raise RuntimeError(stat.stderr)
+	except Exception as e:
+		msg = f"dd104L: Ошибка при остановке процессов, подробности:\n{str(e)}"
+		raise RuntimeError(msg)
+	else:
+		#delete
+		services = [x for x in listdir('/etc/systemd/system/') if st.session_state.dd104L['servicename'] in x]
+		for s in services:
+			try:
+				(Path('/etc/systemd/system/')/s).unlink()
+			except Exception as e:
+				failed.append(s)
+				errors.append(str(e))
+		#copy
+		for i in range(1, st.session_state.dd104L['activator_selected_ld']['fcount']+1):
+			try:
+				copy2(f"/etc/dd/dd104/{st.session_state.dd104L['servicename']}.service.default", f"/etc/systemd/system/{st.session_state.dd104L['servicename']}{i}.service")
+			except Exception as e:
+				msg = f"dd104L: Ошибка при создании файлов сервиса, подробности:\n{str(e)}"
+				syslog.syslog(syslog.LOG_CRIT, msg)
+				errors.append(str(e))
+				failed.append(f"dd104client{i}.service")
+			else:
+				try:
+					_edit_svc(f"/etc/systemd/system/{st.session_state.dd104L['servicename']}{i}.service")
+				except Exception as e:
+					msg = f"dd104L: Ошибка при редактировании файлов сервиса, подробности:\n{str(e)}"
+					syslog.syslog(syslog.LOG_CRIT, msg)
+					errors.append(str(e))
+					failed.append(f"{st.session_state.dd104L['servicename']}{i}.service")
+					
+	return {'errors':errors, 'failed':failed}
+
+def activate_ld(name:str, out:st.empty()): #TODO
+	out.empty()
+	try:
+		loadout = Path(st.session_state.dd104L['loaddir'])/name
+		if '.ACTIVE' in listdir(loadout.parent()):
+			(loadout.parent()/'.ACTIVE').unlink()
+		(loadout.parent()/'.ACTIVE').symlink_to(loadout, target_is_directory=True)
+		
+		results = processify()
+		if not results['errors']:
+			msg = f"dd104L: Конфигурация {name} успешно активирована!"
+			syslog.syslog(syslog.LOG_INFO, msg)
+			out.write(msg)
+		else:
+			msg = f"dd104L: При обработке процессов {results['failed']} произошла(-и) ошибка(-и): \n{results['errors']}"
+			syslog.syslog(syslog.LOG_ERR, msg)
+			out.write(msg)
+		
+	except Exception as e:
+		msg = f"dd104L: Ошибка при активации конфигурации, подробности:\n{str(e)}"
+		syslog.syslog(syslog.LOG_CRIT, msg)
+		out.write(msg)
+		raise e
 
 #/Logic
 
 #Render
 
+def _processwork(astat: st.container, out:st.empty): #TODO
+	pass
 
 def _create_form(loadout:dict, box:st.empty, out:st.empty):
 	box.empty()
@@ -472,10 +577,8 @@ def _create_form(loadout:dict, box:st.empty, out:st.empty):
 		
 		_form.form_submit_button('Сохранить Конфигурацию', on_click=save_loadout, kwargs={'out':out})
 		
-		
-					
-			
-			
+
+
 
 def render_tx(servicename): #TODO: expand on merge with rx
 	
@@ -483,7 +586,9 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	loadouts = list_loadouts(st.session_state.dd104L['loaddir']) # [{'name':'', 'fcount':'', 'files':[]}, {}]
 	st.session_state.dd104L['names'] = [x['name'] for x in loadouts if x and 'name' in x]
 	
-	options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104L['activator_selected_ld']['name'])[i]})" for i in range(1, st.session_state.dd104L['activator_selected_ld']['fcount']+1)] if 'activator_selected_ld' in st.session_state.dd104L else []
+	_index = get_active(st.session_state.dd104L['loaddir'])
+	
+	st.session_state.dd104L['active_ld'] = (i for i in loadouts if i['name']==_index) if _index else None
 	
 	#st.markdown(col_css, unsafe_allow_html=True)
 	st.title('Сервис Конфигурации Диода Данных')
@@ -491,13 +596,19 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	
 	st.subheader('Выбрать конфигурацию для загрузки...')
 	
-	alpha = st.expander(label="Выбор конфигурации:")
+# 	if 'Flag_a' not in st.session_state.dd104L:
+# 		st.session_state.dd104L['Flag_a'] = False
+# 	
+# 	if 'Flag_b' not in st.session_state.dd104L:
+# 		st.session_state.dd104L['Flag_b'] = False
+	
+	alpha = st.expander(label="Выбор конфигурации:")#, expanded = st.session_state.dd104L['Flag_a'] if 'Flag_a' in st.session_state.dd104L else False)
 	
 	with alpha:
 		with st.container():
 			#TODO active ld => symlink?
 			
-			ald, aop, ast, aouts = st.columns([0.3, 0.2, 0.25, 0.25], gap='medium')
+			ald, aop, ast, aouts = st.columns([0.2, 0.2, 0.3, 0.3], gap='medium')
 			
 			ald.subheader("Конфигурации")
 			aop.subheader("Операции")
@@ -506,37 +617,58 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			
 			astat = ast.container(height=600)
 			loads = ald.container(height=600)
-			buttons = aop.container(height=600)
-			aout = aouts.empty()
+			procs = aop.container(height=434)
+			c_load = aop.container(height=150)
+			_aout = aouts.container(height=600)
+			aout = _aout.empty()
 			
 			aout.write(st.session_state)
 			
+			_processwork(astat, aout)
 			
 			for i in loadouts:
 				if loads.button(f"{i['name']}", key=f"act_{i['name']}"):
 					st.session_state.dd104L['activator_selected_ld'] = i
-			
-			with buttons:
-				
-				def disabler():
-						st.session_state.dd104L['proc_submit_disabled'] = not ('proclist_select' in st.session_state and st.session_state['proclist_select']) or not ('oplist_select' in st.session_state and st.session_state['oplist_select'])
-					
-				
-				procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'activator_selected_ld' in st.session_state.dd104L), key=f"proclist_select", placeholder="Не выбрано", on_change=disabler)
-				
-				opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(not 'activator_selected_ld' in st.session_state.dd104L), key="oplist_select", placeholder="Не выбрано", on_change=disabler)
-				
-				
-				if buttons.button("Применить", disabled=st.session_state.dd104L['proc_submit_disabled'] if 'proc_submit_disabled' in st.session_state.dd104L else True):
-					_apply_process_ops(aout)
+					aout.write(st.session_state)
 			
 			if 'activator_selected_ld' in st.session_state.dd104L:
-				with astat:
-					for proc in options:
-						col1, col2 = st.columns([0.75, 0.25])
-						col1.caption(f"Процесс {proc.split(':')[0]}")
-						col2.caption(f"Статус: {_status(int(proc.split(':')[0]))}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
-						st.text(f"Файл настроек: placeholder")
+				with c_load:
+					st.button(f"Загрузить конфигурацию {st.session_state.dd104L['activator_selected_ld']['name']}", on_click=activate_ld, kwargs={'name':st.session_state.dd104L['activator_selected_ld']['name'], 'out':aout})
+			
+			options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104L['active_ld']['name'])[i]})" for i in range(1, st.session_state.dd104L['active_ld']['fcount']+1)] if st.session_state.dd104L['active_ld'] else []
+			
+			with astat:
+				if st.session_state.dd104L['active_ld']:
+					if options:
+						for proc in options:
+							col1, col2 = st.columns([0.75, 0.25])
+							col1.caption(f"Процесс {proc.split(':')[0]}")
+							col2.caption(f"Статус: {_status(int(proc.split(':')[0]))}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
+							st.text(f"Файл настроек: placeholder")
+					else:
+						with st.empty():
+							st.write("Нет процессов!")
+				else:
+					with st.empty():
+						st.write("Нет загруженной конфигурации!")
+			
+			
+			
+# 			with buttons:
+# 				
+# 				def disabler():
+# 						st.session_state.dd104L['proc_submit_disabled'] = not ('proclist_select' in st.session_state and st.session_state['proclist_select']) or not ('oplist_select' in st.session_state and st.session_state['oplist_select'])
+# 					
+# 				
+# 				procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'activator_selected_ld' in st.session_state.dd104L), key=f"proclist_select", placeholder="Не выбрано", on_change=disabler)
+# 				
+# 				opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(not 'activator_selected_ld' in st.session_state.dd104L), key="oplist_select", placeholder="Не выбрано", on_change=disabler)
+# 				
+# 				
+# 				if buttons.button("Применить", disabled=st.session_state.dd104L['proc_submit_disabled'] if 'proc_submit_disabled' in st.session_state.dd104L else True):
+# 					_apply_process_ops(aout)
+# 			
+			
 					
 			
 			
@@ -544,7 +676,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	
 	st.subheader('...Или')
 	st.subheader('Отредактировать существующую конфигурацию:')
-	beta = st.expander(label="Конфигуратор:")
+	beta = st.expander(label="Конфигуратор:")#, expanded = st.session_state.dd104L['Flag_b'] if 'Flag_b' in st.session_state.dd104L else False)
 	
 	with beta:
 		ld, bt, cf, outs = st.columns([0.20, 0.20, 0.3, 0.3], gap='small')
@@ -566,9 +698,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		loadouter = ld.container(height=600)
 		
 		ldbuttons = bt.container(height=600)
-# 		bt.subheader('Управление процессами:')
-# 		procs = bt.container(height=425)
-# 		
+		
 		#filling
 		for i in loadouts:
 			if loadouter.button(f"{i['name']}"):
@@ -582,22 +712,6 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			
 			add = st.button('Добавить процесс', disabled=True if not 'selected_ld' in st.session_state.dd104L else False, use_container_width=True, on_click=_add_process, kwargs={'out':out, 'box':formbox})
 			
-		# with procs:
-			
-# 			options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104L['selected_ld']['name'])[i]})" for i in range(1, st.session_state.dd104L['selected_ld']['fcount']+1)] if 'selected_ld' in st.session_state.dd104L else []
-# 			
-# 			def disabler():
-# 					st.session_state.dd104L['proc_submit_disabled'] = not ('proclist_select' in st.session_state and st.session_state['proclist_select']) or not ('oplist_select' in st.session_state and st.session_state['oplist_select'])
-# 				
-# 			
-# 			procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'selected_ld' in st.session_state.dd104L), key=f"proclist_select", placeholder="Не выбрано", on_change=disabler)
-# 			
-# 			opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(not 'selected_ld' in st.session_state.dd104L), key="oplist_select", placeholder="Не выбрано", on_change=disabler)
-# 			
-# 			
-# 			if procs.button("Применить", disabled=st.session_state.dd104L['proc_submit_disabled'] if 'proc_submit_disabled' in st.session_state.dd104L else True):
-# 				_apply_process_ops(out)
-		
 		
 		if loadouter.button(f"Новая Конфигурация"):
 			newlbox = loadouter.empty()
