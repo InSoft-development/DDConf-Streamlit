@@ -136,69 +136,13 @@ def _statparse(data:str) -> dict:
 			line = data[i]
 			if ': ' in line:
 				output[line.split(': ')[0].strip(' ')] = ': '.join(line.split(': ')[1::])
-			else:
-				output['CGroup'] = f"{output['CGroup']}\n{line}"  
+			# else:
+			# 	output['CGroup'] = f"{output['CGroup']}\n{line}"  
 			i+=1
 	except Exception as e:
 		syslog.syslog(syslog.LOG_CRIT, f'dd104L: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
 		raise e
 	return output
-
-
-
-
-#TODO 
-def _create_services(num:int) -> str: 
-	path_to_sysd = '/etc/systemd/system/'
-	default_service = Path('/opt/dd/ddconfserver/dd104client.service.default')
-	if not default_service.parent.is_dir() or not default_service.is_file():
-		msg = f"dd104: Файл сервиса {default_service} недоступен!"
-		syslog.syslog(syslog.LOG_ERR, msg)
-		raise FileNotFoundError(msg)
-	else:
-		
-		for i in range(1, num+1):
-			try:
-				#
-				#Copy the default to the system dir
-				#
-				copy2(default_service, Path(path_to_sysd/f"dd104client{i if i > 1 else ''}.service"))
-				#copy2('/opt/dd/dd104client.ini', f'/opt/dd/dd104client{i if i > 1 else ""}.ini')
-				#
-				#Edit the resulting file
-				#
-				# read & edit
-				with Path(path_to_sysd/f"dd104client{i if i > 1 else ''}.service").open("rw") as f:
-					conf = f.read.split('\n')[:-1:]
-					for n in range(len(conf)):
-						if 'ExecStart=' in conf[n]:
-							conf[n] = f"ExecStart=/opt/dd/dd104client/dd104client -c /etc/dd/dd104client{i if i > 1 else ''}.ini"
-							break
-					f.close()
-				# write
-				with Path(path_to_sysd/f"dd104client{i if i > 1 else ''}.service").open("w") as f:
-					conf = '\n'.join(conf)
-					f.write(conf)
-					f.close()
-			except Exception as e:
-				syslog.syslog(syslog.LOG_CRIT, f"dd104: Ошибка при создании файла сервиса dd104client{i if i > 1 else ''}, подробности:\n {str(e)}\n")
-				raise e
-		return "Успех"
-
-
-def _delete_services(target='all'): #deletes all services dd104client*.service, for now
-	if target == 'all':
-		try:
-			stat = subprocess.run('rm -f /etc/systemd/system/dd104client*.service'.split(), capture_output=True, text=True)
-		except Exception as e:
-			syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при уничтожении файлов сервисов dd104client, подробности:\n {str(e)}\n')
-			raise e
-	else:
-		try:
-			stat = subprocess.run(f'rm -f /etc/systemd/system/{target}'.split(), capture_output=True, text=True)
-		except Exception as e:
-			syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при уничтожении файлов сервисов dd104client, подробности:\n {str(e)}\n')
-			raise e
 
 
 def _status(num = 1) -> str:
@@ -220,16 +164,16 @@ def _status(num = 1) -> str:
 			return f"🔴"
 		else:
 			try:
-				data = _statparse(stat)
+				data = _statparse(stat.stdout)
 				if data:
-					if "Stopped" in data['Active'] and not 'Failed' in data['Active']:
+					if "stopped" in data['Active'].lower() and not 'failed' in data['Active'].lower():
 						return "⚫"
-					elif 'Failed' in data['Active']:
+					elif 'failed' in data['Active'].lower() or 'dead' in data['Active'].lower():
 						return f"🔴"
-					elif "Running" in data['Active']:
+					elif "running" in data['Active'].lower():
 						return f"🟢"
 					else:
-						raise RuntimeError(data['Active'])
+						raise RuntimeError(data)
 				else:
 					msg = f"dd104L: Ошибка: Парсинг статуса {service} передал пустой результат; Если эта ошибка повторяется, напишите в сервис поддержки ООО InControl.\n"
 					syslog.syslog(syslog.LOG_ERR, msg)
@@ -316,7 +260,7 @@ def save_loadout(out:st.empty):
 		try:
 			makedirs(ld)
 		except Exception as e:
-			msg = f"dd104L: Критическая ошибка: директория {ld.parent()} недоступна для записи, подробности:\n{str(e)}"
+			msg = f"dd104L: Критическая ошибка: директория {ld.parent} недоступна для записи, подробности:\n{str(e)}"
 			syslog.syslog(syslog.LOG_CRIT, msg)
 			raise e
 		
@@ -444,7 +388,7 @@ def get_active(LDIR:str) -> str:
 	else:
 		if '.ACTIVE' in listdir(LDIR) and (LDIR/'.ACTIVE').is_symlink():
 			try:
-				return (LDIR/'.ACTIVE').resolve().name()
+				return (LDIR/'.ACTIVE').resolve().name
 			except Exception as e:
 				msg = f"dd104L: Ошибка чтения указателя активной конфигурации, подробности:\n{str(e)}"
 				syslog.syslog(syslog.LOG_CRIT, msg)
@@ -467,7 +411,11 @@ def _edit_svc(path:str): #possible problems: num is anything that comes between 
 	
 
 
-def processify() -> dict: #TODO returns {'errors':[], 'failed':[]}
+def processify() -> dict: 
+	#TODO returns {'errors':[], 'failed':[]}
+	# stops all related processes, deletes their files, copies the default files over them, 
+	# edits them to fit in the config file, returns the status of the whole ordeal
+	#
 	errors = []
 	failed = []
 	
@@ -508,15 +456,17 @@ def processify() -> dict: #TODO returns {'errors':[], 'failed':[]}
 					errors.append(str(e))
 					failed.append(f"{st.session_state.dd104L['servicename']}{i}.service")
 					
+	
+	
 	return {'errors':errors, 'failed':failed}
 
 def activate_ld(name:str, out:st.empty()): #TODO
 	out.empty()
 	try:
 		loadout = Path(st.session_state.dd104L['loaddir'])/name
-		if '.ACTIVE' in listdir(loadout.parent()):
-			(loadout.parent()/'.ACTIVE').unlink()
-		(loadout.parent()/'.ACTIVE').symlink_to(loadout, target_is_directory=True)
+		if '.ACTIVE' in listdir(loadout.parent):
+			(loadout.parent/'.ACTIVE').unlink()
+		(loadout.parent/'.ACTIVE').symlink_to(loadout, target_is_directory=True)
 		
 		results = processify()
 		if not results['errors']:
@@ -538,8 +488,13 @@ def activate_ld(name:str, out:st.empty()): #TODO
 
 #Render
 
-def _processwork(astat: st.container, out:st.empty): #TODO
-	pass
+# def _processwork(astat: st.container, out:st.empty): 
+# 	#TODO should get the process statuses and DRAW a container of 
+# 	# elements per process with a respective process' status 
+# 	# 
+# 	
+# 	
+# 	pass
 
 def _create_form(loadout:dict, box:st.empty, out:st.empty):
 	box.empty()
@@ -588,7 +543,14 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	
 	_index = get_active(st.session_state.dd104L['loaddir'])
 	
-	st.session_state.dd104L['active_ld'] = (i for i in loadouts if i['name']==_index) if _index else None
+	if _index:
+		for l in loadouts:
+			if l['name'] == _index:
+				st.session_state.dd104L['active_ld'] = l
+	else:
+		st.session_state.dd104L['active_ld'] = None
+	
+	#st.session_state.dd104L['active_ld'] = (i for i in loadouts if i['name']==_index) if _index else None
 	
 	#st.markdown(col_css, unsafe_allow_html=True)
 	st.title('Сервис Конфигурации Диода Данных')
@@ -624,12 +586,13 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			
 			aout.write(st.session_state)
 			
-			_processwork(astat, aout)
+			# _processwork(astat, aout)
 			
 			for i in loadouts:
-				if loads.button(f"{i['name']}", key=f"act_{i['name']}"):
-					st.session_state.dd104L['activator_selected_ld'] = i
-					aout.write(st.session_state)
+				if not i['name'] == '.ACTIVE':
+					if loads.button(f"{i['name']}", type='primary' if i['name']==_index else "secondary", key=f"act_{i['name']}"):
+						st.session_state.dd104L['activator_selected_ld'] = i
+						aout.write(st.session_state)
 			
 			if 'activator_selected_ld' in st.session_state.dd104L:
 				with c_load:
@@ -644,7 +607,9 @@ def render_tx(servicename): #TODO: expand on merge with rx
 							col1, col2 = st.columns([0.75, 0.25])
 							col1.caption(f"Процесс {proc.split(':')[0]}")
 							col2.caption(f"Статус: {_status(int(proc.split(':')[0]))}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
-							st.text(f"Файл настроек: placeholder")
+							st.caption('Файл настроек:')
+							col1, col2 = st.columns([0.35, 0.65])
+							col2.text(str((Path(st.session_state.dd104L['loaddir'])/f".ACTIVE/{st.session_state.dd104L['servicename']}{proc.split(':')[0]}.ini").resolve().name))
 					else:
 						with st.empty():
 							st.write("Нет процессов!")
@@ -654,19 +619,19 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			
 			
 			
-# 			with buttons:
-# 				
-# 				def disabler():
-# 						st.session_state.dd104L['proc_submit_disabled'] = not ('proclist_select' in st.session_state and st.session_state['proclist_select']) or not ('oplist_select' in st.session_state and st.session_state['oplist_select'])
-# 					
-# 				
-# 				procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'activator_selected_ld' in st.session_state.dd104L), key=f"proclist_select", placeholder="Не выбрано", on_change=disabler)
-# 				
-# 				opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(not 'activator_selected_ld' in st.session_state.dd104L), key="oplist_select", placeholder="Не выбрано", on_change=disabler)
-# 				
-# 				
-# 				if buttons.button("Применить", disabled=st.session_state.dd104L['proc_submit_disabled'] if 'proc_submit_disabled' in st.session_state.dd104L else True):
-# 					_apply_process_ops(aout)
+			with procs:
+				
+				def disabler():
+						st.session_state.dd104L['proc_submit_disabled'] = not ('proclist_select' in st.session_state and st.session_state['proclist_select']) or not ('oplist_select' in st.session_state and st.session_state['oplist_select'])
+					
+				
+				procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'activator_selected_ld' in st.session_state.dd104L), key=f"proclist_select", placeholder="Не выбрано", on_change=disabler)
+				
+				opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(not 'activator_selected_ld' in st.session_state.dd104L), key="oplist_select", placeholder="Не выбрано", on_change=disabler)
+				
+				
+				if procs.button("Применить", disabled=st.session_state.dd104L['proc_submit_disabled'] if 'proc_submit_disabled' in st.session_state.dd104L else True):
+					_apply_process_ops(aout)
 # 			
 			
 					
