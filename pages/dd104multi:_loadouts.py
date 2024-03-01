@@ -371,10 +371,11 @@ def _apply_process_ops(out: st.empty):
 			syslog.syslog(syslog.LOG_CRIT, msg)
 			#raise RuntimeError(msg)
 		
-		
-	out.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {errs} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно.")
-	if out.button("OK"):
-		out.empty()
+	
+	with out.container():
+		st.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {errs} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно.")
+		if st.button("OK"):
+			out.empty()
 
 
 
