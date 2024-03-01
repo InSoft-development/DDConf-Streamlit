@@ -455,7 +455,16 @@ def processify() -> dict:
 					syslog.syslog(syslog.LOG_CRIT, msg)
 					errors.append(str(e))
 					failed.append(f"{st.session_state.dd104L['servicename']}{i}.service")
-					
+				else:
+					try:
+						stat = subprocess.run(f"systemctl daemon-reload".split(), capture_output=True, text=True)
+						if stat.stderr:
+							raise RuntimeError(stat.stderr)
+					except Exception as e:
+						msg = f"dd104L: Ошибка при перезагрузке демонов systemctl, подробности:\n{str(e)}"
+						syslog.syslog(syslog.LOG_CRIT, msg)
+						errors.append(str(e))
+						failed.append(f"systemctl daemon-reload")
 	
 	
 	return {'errors':errors, 'failed':failed}
