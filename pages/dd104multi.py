@@ -144,7 +144,7 @@ def parse_from_user(data) -> str:
 		#st.write(message)
 		return message
 
-def _save_to_file(string:str, confile:str, name='unnamed_file_version') -> None:
+def _save_to_file(string:str, confile:str, name='unnamed_file_version', return_timestamp=False) -> None:
 	rtime = time.localtime(time.time())
 	utime = f"{rtime.tm_year}-{rtime.tm_mon}-{rtime.tm_mday}@{rtime.tm_hour}:{rtime.tm_min}:{rtime.tm_sec}"
 	# print(utime)
@@ -152,6 +152,8 @@ def _save_to_file(string:str, confile:str, name='unnamed_file_version') -> None:
 		f.write(f"# Файл сгенерирован Сервисом Конфигурации Диода Данных;\n# savename: {name if name else 'unnamed_file_version'}\n# savetime: {utime}\n")
 		f.write(string)
 	
+	if return_timestamp:
+		return utime
 
 def sanitize():
 	#move stuff from st.session_state to st.<...>.dd104m.contents
@@ -451,10 +453,13 @@ def _new_file():
 		f = open(f"{st.session_state.dd104m['inidir']}/{filename}", 'w')
 		f.write('#')
 		f.close()
+		utime = _save_to_file("", f"{st.session_state.dd104m['inidir']}/{filename}", f"{filename[:-4:]}", return_timestamp=True)
 		
 	except Exception as e:
 		syslog.syslog(syslog.LOG_CRIT, f"dd104m: Невозможно создать файл {st.session_state.dd104m['inidir']}/{filename}!")
 		raise e
+	else:
+		st.session_state.dd104m['selected_file'] = f"{st.session_state.dd104m['inidir']}/{filename}"
 
 #/Logic
 
@@ -483,7 +488,7 @@ def _create_form(formbox: st.container, filepath: str, output: st.empty):
 			st.session_state.dd104m['contents']['count'] = 2 #data['count']
 			
 			st.text_input(label = "Имя версии конфигурации", value=data['old_savename'] if 'old_savename' in data.keys() else "", key='savename')
-			st.text_input(label = "Адрес получателя (НЕ ИЗМЕНЯТЬ БЕЗ ИЗМЕНЕНИЙ АДРЕСАЦИИ ДИОДНОГО СОЕДИНЕНИЯ)", value = data['old_recv_addr'], key='recv_addr')
+			st.text_input(label = "Адрес получателя (НЕ ИЗМЕНЯТЬ БЕЗ ИЗМЕНЕНИЙ АДРЕСАЦИИ ДИОДНОГО СОЕДИНЕНИЯ)", value = data['old_recv_addr'] if 'old_recv_addr' in data.keys() else "", key='recv_addr')
 			
 			# if st.session_state.dd104m['contents']['count'] > 0:
 				
@@ -539,6 +544,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			with _form:
 				st.text_input(label='Имя файла', key='new_filename')
 				submit = st.form_submit_button('Создать', on_click=_new_file)
+		
 	
 	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file']:
 		#dict_cleanup(st.session_state, ['dd104m', 'dd104'])
