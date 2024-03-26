@@ -542,6 +542,8 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	output = col3.empty()
 	
 	if filebox.button(f"Новый Файл"):
+		if not st.session_state.dd104m['newfbox-flag']:
+			st.session_state.dd104m['newfbox-flag'] = True
 		tempbox = filebox.container()
 		with tempbox:
 			c1, c2 = st.columns([0.8, 0.2])
