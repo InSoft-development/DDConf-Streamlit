@@ -259,7 +259,14 @@ def save_loadout(out:st.empty):
 	out.empty()
 	out.write(sanitize())
 	print(st.session_state)
-	if st.session_state.dd104L['selected_ld']['selectors'][f'select_file_{i}']: #could be None
+	
+	valid = True
+	
+	for i in range(1, len(st.session_state.dd104L['selected_ld']['selectors'])+1):
+		if f'select_file_{i}' not in st.session_state.dd104L['selected_ld']['selectors'] or not st.session_state.dd104L['selected_ld']['selectors'][f'select_file_{i}']:
+			valid = False
+	
+	if valid:
 		ld = Path(st.session_state.dd104L['loaddir']) / st.session_state.dd104L['selected_ld']['name']
 		if not ld.is_dir():
 			try:
@@ -524,7 +531,7 @@ def _create_form(loadout:dict, box:st.empty, out:st.empty):
 			files = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived]
 			loadouted = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
 			
-			# out.write(loadouted)
+			out.write(loadouted)
 			
 			if loadout['fcount'] <= 0:
 				with _form:
