@@ -36,10 +36,10 @@ def init():
 		st.session_state.dd104m['contents'] = {}
 	
 	if 'newfbox-flag' not in st.session_state.dd104m.keys():
-		st.session_state.dd104m['newfbox-flag'] = True
+		st.session_state.dd104m['newfbox-flag'] = False
 	
 	if 'editor-flag' not in st.session_state.dd104m.keys():
-		st.session_state.dd104m['editor-flag'] = True
+		st.session_state.dd104m['editor-flag'] = False
 	
 	# dict_cleanup(st.session_state, ['dd104m'])
 
