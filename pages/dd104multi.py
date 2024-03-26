@@ -476,49 +476,54 @@ def _create_form(formbox: st.container, filepath: str, output: st.empty):
 	output.empty()
 	
 	try:
+		if not st.session_state.dd104m['editor-flag']:
+			st.session_state.dd104m['editor-flag'] = True
 		data = load_from_file(filepath)
-		c1, c2 = formbox.columns([0.8, 0.2])
-		ff = formbox.empty()
-		c2.button("❌", on_click=close_box, kwargs={'box':ff, 'bname':'editor'}, key='editor-close')
-		st.session_state.dd104m['contents'] = {}
-		with ff.container():
-			_form = st.form("dd104mform")
+		with formbox.container():
+			c1, c2 = st.columns([0.8, 0.2])
+			ff = st.empty()
+			c2.button("❌", on_click=close_box, kwargs={'box':ff, 'bname':'editor'}, key='editor-close')
+			st.session_state.dd104m['contents'] = {}
+			if st.session_state.dd104m['editor-flag']:
+				with ff.container():
+					_form = st.form("dd104mform")
 	except Exception as e:
 		syslog.syslog(syslog.LOG_CRIT, f'dd104multi: Ошибка заполнения формы: подробности:\n {str(e)}\n')
 		raise e
 	else:
-		with _form:
-			if '/' in filepath:
-				st.caption(f"Редактируемый файл: {filepath.split('/')[-1]}")
-			else:
-				st.caption(f"Редактируемый файл: {filepath}")
-			
-			
-			st.session_state.dd104m['contents']['count'] = 2 #data['count']
-			
-			st.text_input(label = "Имя версии конфигурации", value=data['old_savename'] if 'old_savename' in data.keys() else "", key='savename')
-			st.text_input(label = "Адрес получателя (НЕ ИЗМЕНЯТЬ БЕЗ ИЗМЕНЕНИЙ АДРЕСАЦИИ ДИОДНОГО СОЕДИНЕНИЯ)", value = data['old_recv_addr'] if 'old_recv_addr' in data.keys() else "", key='recv_addr')
-			
-			# if st.session_state.dd104m['contents']['count'] > 0:
+		if st.session_state.dd104m['editor-flag']:
+			with _form:
+				if '/' in filepath:
+					st.caption(f"Редактируемый файл: {filepath.split('/')[-1]}")
+				else:
+					st.caption(f"Редактируемый файл: {filepath}")
 				
-			st.write(f"Основной Сервер (поля обязательны к заполнению)")
-			if f'old_server_addr1' in data.keys():
-				st.text_input(label=f'Адрес Сервера 1', value=data[f'old_server_addr1'], key=f'server_addr1') 
-				st.text_input(label=f'Порт Сервера 1', value=data[f'old_server_port1'], key=f'server_port1') 
-			else:
-				st.text_input(label=f'Адрес Сервера 1', key=f'server_addr1') 
-				st.text_input(label=f'Порт Сервера 1', key=f'server_port1') 
-			
-			st.write(f"Запасной Сервер (оставьте поля пустыми если запасной сервер не требуется)")
-			if f'old_server_addr2' in data.keys():
-				st.text_input(label=f'Адрес Запасного Сервера', value=data[f'old_server_addr2'], key=f'server_addr2') 
-				st.text_input(label=f'Порт Запасного Сервера', value=data[f'old_server_port2'], key=f'server_port2') 
-			else:
-				st.text_input(label=f'Адрес Запасного Сервера', key=f'server_addr2') 
-				st.text_input(label=f'Порт Запасного Сервера', key=f'server_port2') 
-			
-			
-			submit = st.form_submit_button(label='Сохранить', on_click=parse_form, kwargs={'confile':filepath, 'output':output})
+				
+				st.session_state.dd104m['contents']['count'] = 2 #data['count']
+				
+				st.text_input(label = "Имя версии конфигурации", value=data['old_savename'] if 'old_savename' in data.keys() else "", key='savename')
+				st.text_input(label = "Адрес получателя (НЕ ИЗМЕНЯТЬ БЕЗ ИЗМЕНЕНИЙ АДРЕСАЦИИ ДИОДНОГО СОЕДИНЕНИЯ)", value = data['old_recv_addr'] if 'old_recv_addr' in data.keys() else "", key='recv_addr')
+				
+				# if st.session_state.dd104m['contents']['count'] > 0:
+					
+				st.write(f"Основной Сервер (поля обязательны к заполнению)")
+				if f'old_server_addr1' in data.keys():
+					st.text_input(label=f'Адрес Сервера 1', value=data[f'old_server_addr1'], key=f'server_addr1') 
+					st.text_input(label=f'Порт Сервера 1', value=data[f'old_server_port1'], key=f'server_port1') 
+				else:
+					st.text_input(label=f'Адрес Сервера 1', key=f'server_addr1') 
+					st.text_input(label=f'Порт Сервера 1', key=f'server_port1') 
+				
+				st.write(f"Запасной Сервер (оставьте поля пустыми если запасной сервер не требуется)")
+				if f'old_server_addr2' in data.keys():
+					st.text_input(label=f'Адрес Запасного Сервера', value=data[f'old_server_addr2'], key=f'server_addr2') 
+					st.text_input(label=f'Порт Запасного Сервера', value=data[f'old_server_port2'], key=f'server_port2') 
+				else:
+					st.text_input(label=f'Адрес Запасного Сервера', key=f'server_addr2') 
+					st.text_input(label=f'Порт Запасного Сервера', key=f'server_port2') 
+				
+				
+				submit = st.form_submit_button(label='Сохранить', on_click=parse_form, kwargs={'confile':filepath, 'output':output})
 			
 
 def render_tx(servicename): #TODO: expand on merge with rx
