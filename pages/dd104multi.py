@@ -43,14 +43,15 @@ def init():
 	
 	# dict_cleanup(st.session_state, ['dd104m'])
 
+#WARNING deprecated
 def _archive(filepath:str, location=f'/etc/dd/dd104/') -> None:
 	if exists(filepath):
 		try:
-			filename = filepath.split('/')[-1].split('.')
+			filename = Path(filepath).name[:-4:] if Path(filepath).name.count('.') == 1 else Path(filepath).name.replace('.','_')[:-4:]#filepath.split('/')[-1].split('.')
 			rtime = time.localtime(time.time())
 			utime = f"{rtime.tm_mday}-{rtime.tm_mon}-{rtime.tm_year}-{rtime.tm_hour}-{rtime.tm_min}-{rtime.tm_sec}"
-			copy2(filepath, f"/tmp/{filename[0]}-{utime}.{filename[1]}")
-			filepath = f"/tmp/{filename[0]}-{utime}.{filename[1]}"
+			copy2(filepath, f"/tmp/{filename}-{utime}.{filename[1]}")
+			filepath = f"/tmp/{filename}-{utime}.ini"
 		except Exception as e:
 			syslog.syslog(syslog.LOG_CRIT, f"dd104: провал при создании временного файла конфигурации, операция не может быть продолжена.")
 			raise e
@@ -79,10 +80,10 @@ def _archive_d(filepath:str, location=f'/etc/dd/dd104/archive.d'):
 			makedirs(location)
 		
 		try:
-			filename = filepath.split('/')[-1].split('.')
+			filename = Path(filepath).name[:-4:] if Path(filepath).name.count('.') == 1 else Path(filepath).name.replace('.','_')[:-4:] #filepath.split('/')[-1].split('.')
 			rtime = time.localtime(time.time())
 			utime = f"{rtime.tm_year}-{rtime.tm_mon}-{rtime.tm_mday}-{rtime.tm_hour}-{rtime.tm_min}-{rtime.tm_sec}"
-			copy2(filepath, f"{location}/{filename[0]}-{utime}.{filename[1]}")
+			copy2(filepath, f"{location}/{filename}-{utime}.{filename[1]}")
 		except Exception as e:
 			syslog.syslog(syslog.LOG_CRIT, f"dd104m: провал при создании архивного файла конфигурации, операция не может быть продолжена.")
 			raise e
