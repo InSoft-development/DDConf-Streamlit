@@ -552,7 +552,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			st.session_state.dd104m['newfbox-flag'] = True
 		tempbox = filebox.container()
 		with tempbox:
-			c1, c2 = st.columns([0.8, 0.2])
+			# c1, c2 = st.columns([0.8, 0.2])
 			newfbox = st.empty()
 			c2c2.button("❌", on_click=close_box, kwargs={'box':newfbox, 'bname':'newfbox'}, key='newfbox-close')
 			if st.session_state.dd104m['newfbox-flag']:
