@@ -546,14 +546,15 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	col3.subheader(f"Статус Операции:")
 	output = col3.empty()
 	
-	if filebox.button(f"Новый Файл"):
+	c1c1, c1c2 = filebox.columns([0.8, 0.2])
+	if c1c1.button(f"Новый Файл"):
 		if not st.session_state.dd104m['newfbox-flag']:
 			st.session_state.dd104m['newfbox-flag'] = True
 		tempbox = filebox.container()
 		with tempbox:
-			c1, c2 = st.columns([0.8, 0.2])
+			# c1, c2 = st.columns([0.8, 0.2])
 			newfbox = st.empty()
-			c2.button("❌", on_click=close_box, kwargs={'box':newfbox, 'bname':'newfbox'}, key='newfbox-close')
+			c1c2.button("❌", on_click=close_box, kwargs={'box':newfbox, 'bname':'newfbox'}, key='newfbox-close')
 			if st.session_state.dd104m['newfbox-flag']:
 				with newfbox.container():
 					_form = st.form('newfileform')
