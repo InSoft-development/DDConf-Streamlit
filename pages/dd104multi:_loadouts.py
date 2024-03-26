@@ -524,7 +524,7 @@ def _create_form(loadout:dict, box:st.empty, out:st.empty):
 			files = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived]
 			loadouted = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
 			
-			out.write(loadouted)
+			# out.write(loadouted)
 			
 			if loadout['fcount'] <= 0:
 				with _form:
