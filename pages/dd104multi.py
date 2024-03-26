@@ -537,7 +537,10 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		col1.subheader("Выберите файл конфигурации")
 		filebox = col1.container(height=600)
 	
-	col2.subheader("Редактор Конфигурации")
+	c2c1, c2c2 = col2.columns([0.9, 0.1])
+	if st.session_state.dd104m['editor-flag']:
+		c2c1.subheader("Редактор Файла Конфигурации")
+	
 	formbox = col2.container()
 	# f = formbox.form("dd104multi-form")
 	
@@ -551,7 +554,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		with tempbox:
 			c1, c2 = st.columns([0.8, 0.2])
 			newfbox = st.empty()
-			c2.button("❌", on_click=close_box, kwargs={'box':newfbox, 'bname':'newfbox'}, key='newfbox-close')
+			c2c2.button("❌", on_click=close_box, kwargs={'box':newfbox, 'bname':'newfbox'}, key='newfbox-close')
 			if st.session_state.dd104m['newfbox-flag']:
 				with newfbox.container():
 					_form = st.form('newfileform')
