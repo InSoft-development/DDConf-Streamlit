@@ -35,6 +35,12 @@ def init():
 	if 'contents' not in st.session_state.dd104m.keys():
 		st.session_state.dd104m['contents'] = {}
 	
+	if 'newfbox-flag' not in st.session_state.dd104m.keys():
+		st.session_state.dd104m['newfbox-flag'] = True
+	
+	if 'editor-flag' not in st.session_state.dd104m.keys():
+		st.session_state.dd104m['editor-flag'] = True
+	
 	# dict_cleanup(st.session_state, ['dd104m'])
 
 def _archive(filepath:str, location=f'/etc/dd/dd104/') -> None:
@@ -461,8 +467,9 @@ def _new_file():
 
 #Render
 
-def close_box(box:st.empty):
+def close_box(box:st.empty, bname='editor'):
 	box.empty()
+	st.session_state.dd104m[f'{bname}-flag'] = False
 
 
 def _create_form(formbox: st.container, filepath: str, output: st.empty):
@@ -472,7 +479,7 @@ def _create_form(formbox: st.container, filepath: str, output: st.empty):
 		data = load_from_file(filepath)
 		c1, c2 = formbox.columns([0.8, 0.2])
 		ff = formbox.empty()
-		c2.button("❌", on_click=close_box, kwargs={'box':ff})
+		c2.button("❌", on_click=close_box, kwargs={'box':ff, 'bname':'editor'}, key='editor-close')
 		st.session_state.dd104m['contents'] = {}
 		with ff.container():
 			_form = st.form("dd104mform")
@@ -535,14 +542,17 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	output = col3.empty()
 	
 	if filebox.button(f"Новый Файл"):
-		c1, c2 = filebox.columns([0.8, 0.2])
-		newfbox = filebox.empty()
-		c2.button("❌", on_click=close_box, kwargs={'box':newfbox})
-		with newfbox.container():
-			_form = st.form('newfileform')
-			with _form:
-				st.text_input(label='Имя файла', key='new_filename')
-				submit = st.form_submit_button('Создать', on_click=_new_file)
+		tempbox = filebox.container()
+		with tempbox:
+			c1, c2 = st.columns([0.8, 0.2])
+			newfbox = st.empty()
+			c2.button("❌", on_click=close_box, kwargs={'box':newfbox, 'bname':'newfbox'}, key='newfbox-close')
+			if st.session_state.dd104m['newfbox-flag']:
+				with newfbox.container():
+					_form = st.form('newfileform')
+					with _form:
+						st.text_input(label='Имя файла', key='new_filename')
+						submit = st.form_submit_button('Создать', on_click=_new_file)
 	
 	for source in filelist:
 		if filebox.button(f"{source['savename']}; {source['savetime']}", key=f"src-{source['filename']}"):
