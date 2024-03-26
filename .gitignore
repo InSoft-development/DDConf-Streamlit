@@ -166,3 +166,6 @@ pyvenv.cfg
 .venv
 pip-selfcheck.json
 
+# local files
+**/buglist.md
+
