@@ -480,7 +480,7 @@ def _create_form(formbox: st.container, filepath: str, output: st.empty):
 		with formbox.container():
 			c1, c2 = st.columns([0.8, 0.2])
 			ff = st.empty()
-			c2.button("❌", on_click=close_box, kwargs={'box':ff, 'bname':'editor'}, key='editor-close')
+			# c2.button("❌", on_click=close_box, kwargs={'box':ff, 'bname':'editor'}, key='editor-close')
 			st.session_state.dd104m['contents'] = {}
 			if st.session_state.dd104m['editor-flag']:
 				with ff.container():
