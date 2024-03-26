@@ -596,7 +596,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			ald, aop, ast, aouts = st.columns([0.2, 0.2, 0.3, 0.3], gap='medium')
 			
 			ald.subheader("Конфигурации")
-			aop.subheader("Операции над Активной Конфигурацией")
+			aop.subheader("Операции")
 			aouts.subheader("Вывод")
 			ast.subheader("Статус Активной Конфигурации")
 			
@@ -677,8 +677,8 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		c3c1, c3c2 = cf.columns([0.8, 0.2])
 		c3c1.subheader('Настройка Конфигурации')
 		outs.subheader('Вывод')
-		
-		out = outs.empty()
+		_out = outs.container(height=600)
+		out = _out.empty()
 		out.write(st.session_state)
 		
 		with cf.container(height=600):
