@@ -274,12 +274,8 @@ def _statparse(data:str) -> dict:
 		raise e
 	return output
 
-def _create_inis(data:dict):
-	# the data should be the st.session_state['dd104m']
-	pass
 
-
-#TODO NOT create_services_and_inis, CREATE_SERVICES (the former goes into the caller of this func
+#TODO NOT create_services_and_inis, CREATE_SERVICES (the former goes into the caller of this func)
 def _create_services(num:int) -> str: 
 	path_to_sysd = '/etc/systemd/system/'
 	default_service = Path('/opt/dd/ddconfserver/dd104client.service.default')
@@ -465,12 +461,18 @@ def _new_file():
 
 #Render
 
+def close_box(box:st.empty):
+	box.empty()
+
+
 def _create_form(formbox: st.container, filepath: str, output: st.empty):
 	output.empty()
 	
 	try:
 		data = load_from_file(filepath)
+		c1, c2 = formbox.columns([0.8, 0.2])
 		ff = formbox.empty()
+		c2.button("❌", on_click=close_box, kwargs={'box':ff})
 		st.session_state.dd104m['contents'] = {}
 		with ff.container():
 			_form = st.form("dd104mform")
@@ -533,7 +535,9 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	output = col3.empty()
 	
 	if filebox.button(f"Новый Файл"):
-		newfbox = col1.empty()
+		c1, c2 = filebox.columns([0.8, 0.2])
+		newfbox = filebox.empty()
+		c2.button("❌", on_click=close_box, kwargs={'box':newfbox})
 		with newfbox.container():
 			_form = st.form('newfileform')
 			with _form:
@@ -544,7 +548,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		if filebox.button(f"{source['savename']}; {source['savetime']}", key=f"src-{source['filename']}"):
 			st.session_state.dd104m['selected_file'] = source['filename']
 	
-		
+	
 	
 	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file']:
 		#dict_cleanup(st.session_state, ['dd104m', 'dd104'])
