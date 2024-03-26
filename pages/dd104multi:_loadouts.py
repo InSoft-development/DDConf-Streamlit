@@ -49,7 +49,11 @@ def init():
 	if 'contents' not in st.session_state.dd104L.keys():
 		st.session_state.dd104L['contents'] = {}
 	
-
+	if 'newlbox-flag' not in st.session_state.dd104L.keys():
+		st.session_state.dd104L['newfbox-flag'] = False
+	
+	if 'editor-flag' not in st.session_state.dd104L.keys():
+		st.session_state.dd104L['editor-flag'] = False
 
 
 
@@ -500,49 +504,46 @@ def activate_ld(name:str, out:st.empty()): #TODO
 
 #Render
 
-# def _processwork(astat: st.container, out:st.empty): 
-# 	#TODO should get the process statuses and DRAW a container of 
-# 	# elements per process with a respective process' status 
-# 	# 
-# 	
-# 	
-# 	pass
+def close_box(box:st.empty, bname='editor'):
+	box.empty()
+	st.session_state.dd104m[f'{bname}-flag'] = False
 
 def _create_form(loadout:dict, box:st.empty, out:st.empty):
 	box.empty()
 	out.empty()
 	out.write(st.session_state)
 	
-	with box:
-		archived = list_sources(st.session_state.dd104L['arcdir'])
-		
-		_form = st.form('dd104L-form')
-		files = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived]
-		loadouted = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
-		
-		out.write(loadouted)
-		
-		if loadout['fcount'] <= 0:
-			with _form:
-					with st.container():
-						
-						col1, col2 = st.columns([0.8, 0.2])
-						col1.caption(f'Процесс 1')
-						# col2.caption(f"Статус:  {_status(1)}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
-						st.selectbox(label='Файл настроек', options=files, index=None, key=f"select_file_1")
-		else:
-			for i in range(1, loadout['fcount']+1):
-				with _form:
-					with st.container():
-						
-						col1, col2 = st.columns([0.8, 0.2])
-						col1.caption(f'Процесс {i}')
-						# col2.caption(f"Статус:  {_status(i)}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
-						st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, key=f"select_file_{i}")
-					
+	if st.session_state.dd104L['editor-flag']:
+		with box:
+			archived = list_sources(st.session_state.dd104L['arcdir'])
 			
-		
-		_form.form_submit_button('Сохранить Конфигурацию', on_click=save_loadout, kwargs={'out':out})
+			_form = st.form('dd104L-form')
+			files = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived]
+			loadouted = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
+			
+			out.write(loadouted)
+			
+			if loadout['fcount'] <= 0:
+				with _form:
+						with st.container():
+							
+							col1, col2 = st.columns([0.8, 0.2])
+							col1.caption(f'Процесс 1')
+							# col2.caption(f"Статус:  {_status(1)}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
+							st.selectbox(label='Файл настроек', options=files, index=None, key=f"select_file_1")
+			else:
+				for i in range(1, loadout['fcount']+1):
+					with _form:
+						with st.container():
+							
+							col1, col2 = st.columns([0.8, 0.2])
+							col1.caption(f'Процесс {i}')
+							# col2.caption(f"Статус:  {_status(i)}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
+							st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, key=f"select_file_{i}")
+						
+				
+			
+			_form.form_submit_button('Сохранить Конфигурацию', on_click=save_loadout, kwargs={'out':out})
 		
 
 
@@ -644,9 +645,9 @@ def render_tx(servicename): #TODO: expand on merge with rx
 				
 				if procs.button("Применить", disabled=st.session_state.dd104L['proc_submit_disabled'] if 'proc_submit_disabled' in st.session_state.dd104L else True):
 					_apply_process_ops(aout)
-# 			
 			
-					
+			
+			
 			
 			
 			
@@ -663,7 +664,8 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		#containers
 		ld.subheader('Конфигурации')
 		bt.subheader('Операции')
-		cf.subheader('Настройка Конфигурации')
+		c3c1, c3c2 = cf.columns([0.8, 0.2])
+		c3c1.subheader('Настройка Конфигурации')
 		outs.subheader('Вывод')
 		
 		out = outs.empty()
@@ -677,26 +679,34 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		ldbuttons = bt.container(height=600)
 		
 		#filling
-		for i in loadouts:
-			if loadouter.button(f"{i['name']}"):
-				st.session_state.dd104L['selected_ld'] = i
-				
-		
-		if 'selected_ld' in st.session_state.dd104L and st.session_state.dd104L['selected_ld']:
-			_create_form(st.session_state.dd104L['selected_ld'], formbox, out)
-		
 		with ldbuttons:
 			
 			add = st.button('Добавить процесс', disabled=True if not 'selected_ld' in st.session_state.dd104L else False, use_container_width=True, on_click=_add_process, kwargs={'out':out, 'box':formbox})
-			
 		
-		if loadouter.button(f"Новая Конфигурация"):
+		c1c1, c1c2 = loadouter.columns([0.8, 0.2])
+		if c1c1.button(f"Новая Конфигурация"):
+			st.session_state.dd104L['newlbox-flag'] = True
 			newlbox = loadouter.empty()
-			with newlbox.container():
-				_form_nld = st.form('newloadoutform')
-				with _form_nld:
-					st.text_input(label='Имя конфигурации', key='new_loadout_name')
-					submit = st.form_submit_button('Создать', on_click=_new_loadout)
+			c1c2.button("❌", on_click=close_box, kwargs={'box':newlbox, 'bname':'newlbox'}, key='newlbox-close')
+			if st.session_state.dd104L['newlbox-flag']:
+				with newlbox.container():
+					_form_nld = st.form('newloadoutform')
+					with _form_nld:
+						st.text_input(label='Имя конфигурации', key='new_loadout_name')
+						submit = st.form_submit_button('Создать', on_click=_new_loadout)
+		
+		for i in loadouts:
+			if loadouter.button(f"{i['name']}"):
+				st.session_state.dd104L['selected_ld'] = i
+				st.session_state.dd104L['editor-flag'] = True
+				
+		
+		if 'selected_ld' in st.session_state.dd104L and st.session_state.dd104L['selected_ld'] and st.session_state.dd104L['editor-flag']:
+			c3c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
+			_create_form(st.session_state.dd104L['selected_ld'], formbox, out)
+		
+		
+		
 
 def render_rx(servicename):
 	pass
