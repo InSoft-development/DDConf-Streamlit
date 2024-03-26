@@ -259,45 +259,46 @@ def save_loadout(out:st.empty):
 	out.empty()
 	out.write(sanitize())
 	print(st.session_state)
-	ld = Path(st.session_state.dd104L['loaddir']) / st.session_state.dd104L['selected_ld']['name']
-	if not ld.is_dir():
-		try:
-			makedirs(ld)
-		except Exception as e:
-			msg = f"dd104L: Критическая ошибка: директория {ld.parent} недоступна для записи, подробности:\n{str(e)}"
-			syslog.syslog(syslog.LOG_CRIT, msg)
-			raise e
-		
-	try:
-		
-		# this bitch doesn't work
-		# stat = subprocess.run(f'rm -rf {ld}/*'.split(), text=True, capture_output=True)
-		
-		for f in listdir(ld):
-			print(f"deleting {str(ld/f)}")
-			(ld/f).unlink()
-		
-	except Exception as e:
-		msg = f"dd104L: Критическая ошибка: не удалось очистить директорию {ld}, подробности:\n{str(e)}"
-		print(msg)
-		syslog.syslog(syslog.LOG_CRIT, msg)
-		raise e
-		
-	for i in range(1, len(st.session_state.dd104L['selected_ld']['selectors'])+1):
-		filepath = Path(st.session_state.dd104L['arcdir']) / st.session_state.dd104L['selected_ld']['selectors'][f'select_file_{i}'].split('(')[-1][:-1:]
-		
-		if filepath.is_file():
+	if st.session_state.dd104L['selected_ld']['selectors'][f'select_file_{i}']: #could be None
+		ld = Path(st.session_state.dd104L['loaddir']) / st.session_state.dd104L['selected_ld']['name']
+		if not ld.is_dir():
 			try:
-				(ld/f"dd104client{i}.ini").symlink_to(filepath)
-				print(f'\nfile {(ld/(f"dd104client{i}.ini" if i>1 else "dd104client.ini"))} was created!')
+				makedirs(ld)
 			except Exception as e:
-				msg = f"dd104L: Критическая ошибка: не удалось создать ссылку на файл {filepath} в директории {ld}, подробности:\n{str(e)}"
+				msg = f"dd104L: Критическая ошибка: директория {ld.parent} недоступна для записи, подробности:\n{str(e)}"
 				syslog.syslog(syslog.LOG_CRIT, msg)
 				raise e
-		else:
-			msg = f"dd104L: Критическая ошибка: файл {filepath} не найден!"
+			
+		try:
+			
+			# this bitch doesn't work
+			# stat = subprocess.run(f'rm -rf {ld}/*'.split(), text=True, capture_output=True)
+			
+			for f in listdir(ld):
+				print(f"deleting {str(ld/f)}")
+				(ld/f).unlink()
+			
+		except Exception as e:
+			msg = f"dd104L: Критическая ошибка: не удалось очистить директорию {ld}, подробности:\n{str(e)}"
+			print(msg)
 			syslog.syslog(syslog.LOG_CRIT, msg)
-			raise FileNotFoundError(msg)
+			raise e
+			
+		for i in range(1, len(st.session_state.dd104L['selected_ld']['selectors'])+1):
+			filepath = Path(st.session_state.dd104L['arcdir']) / st.session_state.dd104L['selected_ld']['selectors'][f'select_file_{i}'].split('(')[-1][:-1:]
+			
+			if filepath.is_file():
+				try:
+					(ld/f"dd104client{i}.ini").symlink_to(filepath)
+					print(f'\nfile {(ld/(f"dd104client{i}.ini" if i>1 else "dd104client.ini"))} was created!')
+				except Exception as e:
+					msg = f"dd104L: Критическая ошибка: не удалось создать ссылку на файл {filepath} в директории {ld}, подробности:\n{str(e)}"
+					syslog.syslog(syslog.LOG_CRIT, msg)
+					raise e
+			else:
+				msg = f"dd104L: Критическая ошибка: файл {filepath} не найден!"
+				syslog.syslog(syslog.LOG_CRIT, msg)
+				raise FileNotFoundError(msg)
 		
 	
 
