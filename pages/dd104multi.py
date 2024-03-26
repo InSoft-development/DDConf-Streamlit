@@ -476,8 +476,6 @@ def _create_form(formbox: st.container, filepath: str, output: st.empty):
 	output.empty()
 	
 	try:
-		if not st.session_state.dd104m['editor-flag']:
-			st.session_state.dd104m['editor-flag'] = True
 		data = load_from_file(filepath)
 		with formbox.container():
 			c1, c2 = st.columns([0.8, 0.2])
@@ -564,10 +562,12 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	for source in filelist:
 		if filebox.button(f"{source['savename']}; {source['savetime']}", key=f"src-{source['filename']}"):
 			st.session_state.dd104m['selected_file'] = source['filename']
+			if not st.session_state.dd104m['editor-flag']:
+				st.session_state.dd104m['editor-flag'] = True
 	
 	
 	
-	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file']:
+	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file'] and st.session_state.dd104m['editor-flag']:
 		#dict_cleanup(st.session_state, ['dd104m', 'dd104'])
 		_create_form(formbox, st.session_state.dd104m['selected_file'], output)
 
