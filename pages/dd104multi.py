@@ -532,11 +532,6 @@ def render_tx(servicename): #TODO: expand on merge with rx
 	col3.subheader(f"Статус Операции:")
 	output = col3.empty()
 	
-	
-	for source in filelist:
-		if filebox.button(f"{source['savename']}; {source['savetime']}", key=f"src-{source['filename']}"):
-			st.session_state.dd104m['selected_file'] = source['filename']
-	
 	if filebox.button(f"Новый Файл"):
 		newfbox = col1.empty()
 		with newfbox.container():
@@ -544,6 +539,11 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			with _form:
 				st.text_input(label='Имя файла', key='new_filename')
 				submit = st.form_submit_button('Создать', on_click=_new_file)
+	
+	for source in filelist:
+		if filebox.button(f"{source['savename']}; {source['savetime']}", key=f"src-{source['filename']}"):
+			st.session_state.dd104m['selected_file'] = source['filename']
+	
 		
 	
 	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file']:

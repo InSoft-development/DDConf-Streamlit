@@ -22,6 +22,8 @@ from shutil import copy2, copyfileobj, unpack_archive
 # 	# so we have to do a hard exit.
 # 	_exit(e.code)
 
+st.set_page_config(layout="wide")
+
 def render():
 	st.title(body='Сервис конфигурации Диода Данных')
 	st.empty()
