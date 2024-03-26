@@ -681,7 +681,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		#filling
 		with ldbuttons:
 			
-			add = st.button('Добавить процесс', disabled=True if not 'selected_ld' in st.session_state.dd104L else False, use_container_width=True, on_click=_add_process, kwargs={'out':out, 'box':formbox})
+			add = st.button('Добавить процесс', disabled=st.session_state.dd104L['editor-flag'], use_container_width=True, on_click=_add_process, kwargs={'out':out, 'box':formbox})
 		
 		c1c1, c1c2 = loadouter.columns([0.8, 0.2])
 		if c1c1.button(f"Новая Конфигурация"):
