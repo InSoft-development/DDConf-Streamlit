@@ -538,8 +538,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		filebox = col1.container(height=600)
 	
 	c2c1, c2c2 = col2.columns([0.9, 0.1])
-	if st.session_state.dd104m['editor-flag']:
-		c2c1.subheader("Редактор Файла Конфигурации")
+	c2c1.subheader("Редактор Файла Конфигурации")
 	
 	formbox = col2.container()
 	# f = formbox.form("dd104multi-form")
