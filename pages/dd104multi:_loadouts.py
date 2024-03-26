@@ -588,9 +588,9 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			ald, aop, ast, aouts = st.columns([0.2, 0.2, 0.3, 0.3], gap='medium')
 			
 			ald.subheader("Конфигурации")
-			aop.subheader("Операции")
+			aop.subheader("Операции над Активной Конфигурацией")
 			aouts.subheader("Вывод")
-			ast.subheader("Статус")
+			ast.subheader("Статус Активной Конфигурации")
 			
 			astat = ast.container(height=600)
 			loads = ald.container(height=600)
@@ -613,7 +613,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 				with c_load:
 					st.button(f"Загрузить конфигурацию {st.session_state.dd104L['activator_selected_ld']['name']}", on_click=activate_ld, kwargs={'name':st.session_state.dd104L['activator_selected_ld']['name'], 'out':aout})
 			
-			options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104L['active_ld']['name'])[i]})" for i in range(1, st.session_state.dd104L['active_ld']['fcount']+1)] if st.session_state.dd104L['active_ld'] else []
+			options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104L['active_ld']['name'])[i]})" for i in range(1, st.session_state.dd104L['active_ld']['fcount']+1)] if 'active_ld' in st.session_state.dd104L.keys() and st.session_state.dd104L['active_ld'] else []
 			
 			with astat:
 				if st.session_state.dd104L['active_ld']:
