@@ -697,15 +697,16 @@ def render_tx(servicename): #TODO: expand on merge with rx
 						st.text_input(label='Имя конфигурации', key='new_loadout_name')
 						submit = st.form_submit_button('Создать', on_click=_new_loadout)
 		
+		if 'selected_ld' in st.session_state.dd104L and st.session_state.dd104L['selected_ld'] and st.session_state.dd104L['editor-flag']:
+			c3c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
+			_create_form(st.session_state.dd104L['selected_ld'], formbox, out)
+		
 		for i in loadouts:
 			if loadouter.button(f"{i['name']}"):
 				st.session_state.dd104L['selected_ld'] = i
 				st.session_state.dd104L['editor-flag'] = True
 				
 		
-		if 'selected_ld' in st.session_state.dd104L and st.session_state.dd104L['selected_ld'] and st.session_state.dd104L['editor-flag']:
-			c3c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
-			_create_form(st.session_state.dd104L['selected_ld'], formbox, out)
 		
 		
 		
