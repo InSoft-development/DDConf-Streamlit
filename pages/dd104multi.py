@@ -80,10 +80,10 @@ def _archive_d(filepath:str, location=f'/etc/dd/dd104/archive.d'):
 			makedirs(location)
 		
 		try:
-			filename = Path(filepath).name[:-4:] if Path(filepath).name.count('.') == 1 else Path(filepath).name.replace('.','_')[:-4:] #filepath.split('/')[-1].split('.')
+			filename = Path(filepath).name if Path(filepath).name.count('.') == 1 else Path(filepath).name.replace('.','_') #filepath.split('/')[-1].split('.')
 			rtime = time.localtime(time.time())
 			utime = f"{rtime.tm_year}-{rtime.tm_mon}-{rtime.tm_mday}-{rtime.tm_hour}-{rtime.tm_min}-{rtime.tm_sec}"
-			copy2(filepath, f"{location}/{filename}-{utime}.{filename[1]}")
+			copy2(filepath, f"{location}/{filename[:-4:]}-{utime}.{filename[-3::]}")
 		except Exception as e:
 			syslog.syslog(syslog.LOG_CRIT, f"dd104m: провал при создании архивного файла конфигурации, операция не может быть продолжена.")
 			raise e
