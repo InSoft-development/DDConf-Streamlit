@@ -506,7 +506,7 @@ def activate_ld(name:str, out:st.empty()): #TODO
 
 def close_box(box:st.empty, bname='editor'):
 	box.empty()
-	st.session_state.dd104m[f'{bname}-flag'] = False
+	st.session_state.dd104L[f'{bname}-flag'] = False
 
 def _create_form(loadout:dict, box:st.empty, out:st.empty):
 	box.empty()
