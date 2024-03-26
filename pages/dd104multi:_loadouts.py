@@ -616,7 +616,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 			options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104L['active_ld']['name'])[i]})" for i in range(1, st.session_state.dd104L['active_ld']['fcount']+1)] if 'active_ld' in st.session_state.dd104L.keys() and st.session_state.dd104L['active_ld'] else []
 			
 			with astat:
-				if st.session_state.dd104L['active_ld']:
+				if 'active_ld' in st.session_state.dd104L.keys() and st.session_state.dd104L['active_ld']:
 					if options:
 						for proc in options:
 							col1, col2 = st.columns([0.75, 0.25])
