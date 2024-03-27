@@ -474,14 +474,13 @@ def close_box(box:st.empty, bname='editor'):
 
 
 def _create_form(formbox: st.container, filepath: str):
-	output.empty()
+	# output.empty()
 	
 	try:
 		data = load_from_file(filepath)
 		with formbox.container():
 			c1, c2 = st.columns([0.8, 0.2])
 			ff = st.empty()
-			# c2.button("❌", on_click=close_box, kwargs={'box':ff, 'bname':'editor'}, key='editor-close')
 			st.session_state.dd104m['contents'] = {}
 			if st.session_state.dd104m['editor-flag']:
 				with ff.container():
