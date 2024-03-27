@@ -420,11 +420,11 @@ def parse_form(confile: str):
 		raise e
 	else:
 		try:
-			with output:
+			# with output:
 				
-				_save_to_file(parse_from_user(st.session_state.dd104m['contents']), confile, st.session_state.dd104m['contents']['savename'])
-				#_archive(confile)
-				_archive_d(confile)
+			_save_to_file(parse_from_user(st.session_state.dd104m['contents']), confile, st.session_state.dd104m['contents']['savename'])
+			#_archive(confile)
+			_archive_d(confile)
 				
 		except Exception as e:
 			# output.empty()
