@@ -447,6 +447,15 @@ def dict_cleanup(array: dict, to_be_saved=[]):
 	for k in dead_keys:
 		del(array[k])
 
+def _delete_files(filelist:list):
+# 	try:
+# 		for item in filelist:
+# 			
+# 	except Exception as e:
+# 		syslog.syslog(syslog.LOG_CRIT, f"DD104m: Не удалось провести операцию удаления, подробности: {str(e)}")
+# 		raise e
+	pass
+
 def _new_file():
 	filename = st.session_state['new_filename'] if '.ini' in st.session_state['new_filename'][-4::] else f"{st.session_state['new_filename']}.ini"
 	if isfile(f"{st.session_state.dd104m['inidir']}/{filename}"):
@@ -584,49 +593,95 @@ def new_render_tx(servicename):
 	
 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	
-	col1, col2= st.columns([0.4,0.6])
+	edit, create, delete = st.tabs(["Редактор", "Создание Файлов", "Удаление Файлов"])
 	
-	with col1.container():
+	col1, col2= st.columns([0.4,0.6], gap='large')
+	
+	with edit:
 		
-		file_select = st.multiselect("Выберите файл для обработки:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], default=None, key="file_multiselect", placeholder="Не выбрано")
+		edit_select = st.selectbox("Выберите файл для редактирования:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], default=None, key="edit_file_select", placeholder="Не выбрано")
 		
-		c1c1, c1c2, c1c3, c1c4 = st.columns([0.2, 0.05, 0.3, 0.35])
-		
-		
-		if c1c1.button("Новый файл", key="newfbtn"):
-			if not st.session_state.dd104m['newfbox-flag']:
-				st.session_state.dd104m['newfbox-flag'] = True
-			tempbox = st.container()
-			with tempbox:
-				newfbox = st.empty()
-				c1c2.button("❌", on_click=close_box, kwargs={'box':newfbox, 'bname':'newfbox'}, key='newfbox-close')
-				if st.session_state.dd104m['newfbox-flag']:
-					with newfbox.container():
-						_form = st.form('newfileform')
-						with _form:
-							st.text_input(label='Имя файла', key='new_filename')
-							submit = st.form_submit_button('Создать', on_click=_new_file)
-		
-		if c1c3.button("Удалить выбранные файлы", key="delfbtn"):
-			_delete_file(file_select)
-		
-		if c1c4.button("Редактировать выбранный файл", disabled=(len(file_select) != 1), key="editfbtn"):
-			st.session_state.dd104m['selected_file'] = [x for x in file_select if x][0]
+		if st.button("Редактировать выбранный файл", disabled=(len(edit_select) != 1), key="editfbtn"):
+			st.session_state.dd104m['selected_file'] = [source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" == edit_select]
 			if not st.session_state.dd104m['editor-flag']:
 				st.session_state.dd104m['editor-flag'] = True
 		
-		
 		if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file'] and st.session_state.dd104m['editor-flag']:
-			
-			with col2.container():
-				c2c1, c2c2 = st.columns([0.8, 0.2])
-				c2c1.caption("Редактор:")
+		
+			with st.container():
+				c1, c2 = st.columns([0.8, 0.2])
+				c1.caption("Редактор:")
 				formbox = st.container()
 				
 				#WARNING: might cause unknown side-effects
-				c2c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
+				c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
 				
 				_create_form(formbox, st.session_state.dd104m['selected_file'])
+		
+	
+	with create:
+		tempbox = st.container()
+		with tempbox:
+			newfbox = st.empty()
+			with newfbox.container():
+			_form = st.form('newfileform')
+			with _form:
+				st.text_input(label='Имя файла', key='new_filename')
+				submit = st.form_submit_button('Создать', on_click=_new_file)
+	
+	
+	with delete:
+		
+		#TODO: filelist from archive
+		archlist = []
+		
+		delete_select = st.multiselect("Выберите файл(ы) для удаления:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist+archlist], default=None, key="edit_file_select", placeholder="Не выбрано")
+		
+		if st.button("Удалить выбранные файлы", disabled=(len(delete_select)>0), key="delfbtn"):
+			_delete_files([source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in delete_select])
+	
+	
+# 	with col1.container():
+# 		
+# 		file_select = st.multiselect("Выберите файл для обработки:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], default=None, key="file_multiselect", placeholder="Не выбрано")
+# 		
+# 		c1c1, c1c2, c1c3, c1c4 = st.columns([0.2, 0.05, 0.3, 0.35], gap='large')
+# 		
+# 		
+# 		if c1c1.button("Новый файл", key="newfbtn"):
+# 			if not st.session_state.dd104m['newfbox-flag']:
+# 				st.session_state.dd104m['newfbox-flag'] = True
+# 			tempbox = st.container()
+# 			with tempbox:
+# 				newfbox = st.empty()
+# 				c1c2.button("❌", on_click=close_box, kwargs={'box':newfbox, 'bname':'newfbox'}, key='newfbox-close')
+# 				if st.session_state.dd104m['newfbox-flag']:
+# 					with newfbox.container():
+# 						_form = st.form('newfileform')
+# 						with _form:
+# 							st.text_input(label='Имя файла', key='new_filename')
+# 							submit = st.form_submit_button('Создать', on_click=_new_file)
+# 		
+# 		if c1c3.button("Удалить выбранные файлы", key="delfbtn"):
+# 			_delete_files([source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in file_select])
+# 		
+# 		if c1c4.button("Редактировать выбранный файл", disabled=(len(file_select) != 1), key="editfbtn"):
+# 			st.session_state.dd104m['selected_file'] = [source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in file_select][0]
+# 			if not st.session_state.dd104m['editor-flag']:
+# 				st.session_state.dd104m['editor-flag'] = True
+# 		
+# 		
+# 	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file'] and st.session_state.dd104m['editor-flag']:
+# 		
+# 		with st.container():
+# 			c1, c2 = st.columns([0.8, 0.2])
+# 			c1.caption("Редактор:")
+# 			formbox = st.container()
+# 			
+# 			#WARNING: might cause unknown side-effects
+# 			c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
+# 			
+# 			_create_form(formbox, st.session_state.dd104m['selected_file'])
 			
 
 def render_rx(servicename):
