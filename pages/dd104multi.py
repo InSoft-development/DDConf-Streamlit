@@ -17,7 +17,7 @@ INIT_KEYS = ['servicename', 'inidir', 'selected_file']
 
 def init():
 	
-	# st.set_page_config(layout="wide")
+	st.set_page_config(layout="wide")
 	
 	
 	if 'dd104m' not in st.session_state.keys():
@@ -578,13 +578,14 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		c2c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
 		_create_form(formbox, st.session_state.dd104m['selected_file'], output)
 
+
 def new_render_tx(servicename):
 	st.title('Сервис Конфигурации Диода Данных')
 	st.header('Редактор файлов настроек протокола DD104')
 	
 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	
-	col1, col2, col3 = st.columns([0.5,0.5])
+	col1, col2= st.columns([0.5,0.5])
 	
 	with col1.container():
 		
