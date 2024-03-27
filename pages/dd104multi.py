@@ -17,7 +17,7 @@ INIT_KEYS = ['servicename', 'inidir', 'selected_file']
 
 def init():
 	
-	st.set_page_config(layout="wide")
+	# st.set_page_config(layout="wide")
 	
 	
 	if 'dd104m' not in st.session_state.keys():
@@ -578,6 +578,47 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		c2c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
 		_create_form(formbox, st.session_state.dd104m['selected_file'], output)
 
+def new_render_tx(servicename):
+	st.title('Сервис Конфигурации Диода Данных')
+	st.header('Редактор файлов настроек протокола DD104')
+	
+	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
+	
+	col1, col2, col3 = columns([0.5,0.5])
+	
+	with col1.container():
+		
+		file_select = st.multiselect("Выберите файл для обработки:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], default=None, key="file_multiselect", placeholder="Не выбрано")
+		
+		c1c1, c1c2, c1c3 = st.columns([0.3, 0.3, 0.3])
+		c1c1c1, c1c1c2 = c1c1.columns([0.8, 0.2])
+		
+		if c1c1c1.button("Новый файл", key="newfbtn"):
+			if not st.session_state.dd104m['newfbox-flag']:
+				st.session_state.dd104m['newfbox-flag'] = True
+			tempbox = st.container()
+			with tempbox:
+				newfbox = st.empty()
+				c1c1c2.button("❌", on_click=close_box, kwargs={'box':newfbox, 'bname':'newfbox'}, key='newfbox-close')
+				if st.session_state.dd104m['newfbox-flag']:
+					with newfbox.container():
+						_form = st.form('newfileform')
+						with _form:
+							st.text_input(label='Имя файла', key='new_filename')
+							submit = st.form_submit_button('Создать', on_click=_new_file)
+		
+		if c1c2.button("Удалить выбранные файлы", key="delfbtn"):
+			_delete_file(file_select)
+		
+		if c1c3.button("Редактировать выбранный файл", disabled=(len(file_select) != 1), key="editfbtn"):
+			st.session_state.dd104m['selected_file'] = [x for x in file_select if x][0]
+			if not st.session_state.dd104m['editor-flag']:
+				st.session_state.dd104m['editor-flag'] = True
+		
+		
+		
+		
+
 def render_rx(servicename):
 	pass
 
@@ -585,7 +626,7 @@ def render():
 	servicename = st.session_state.dd104m['servicename']
 	mode = _mode.lower()
 	if mode == 'tx':
-		render_tx(servicename)
+		new_render_tx(servicename)
 	elif mode == 'rx':
 		render_rx(servicename)
 
