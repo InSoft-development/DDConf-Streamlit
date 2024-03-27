@@ -403,10 +403,10 @@ def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename'
 	return out
 	
 
-def parse_form(confile: str, output: st.empty):
+def parse_form(confile: str):
 	print(st.session_state)
 	
-	output.empty()
+	# output.empty()
 	
 	try:
 		
@@ -416,7 +416,7 @@ def parse_form(confile: str, output: st.empty):
 	except Exception as e:
 		msg = f"dd104: Провал обработки данных формы,\nПодробности: \n{type(e)}: {str(e)}\n"
 		syslog.syslog(syslog.LOG_CRIT, msg)
-		output.text = msg
+		# output.text = msg
 		raise e
 	else:
 		try:
@@ -427,17 +427,17 @@ def parse_form(confile: str, output: st.empty):
 				_archive_d(confile)
 				
 		except Exception as e:
-			output.empty()
+			# output.empty()
 			msg = f"dd104: Не удалось сохранить данные формы в файл конфигурации,\nПодробности:\n{type(e)}: {str(e)}\n"
 			syslog.syslog(syslog.LOG_CRIT, msg)
-			output.subheader("Ошибка!")
-			output.text(msg)
+			# output.subheader("Ошибка!")
+			# output.text(msg)
 			raise e
-		else:
-			output.subheader("Статус Операции:")
-			output.text("Успех")
-			if output.button("OK"):
-				output.empty()
+		# else:
+		# 	output.subheader("Статус Операции:")
+		# 	output.text("Успех")
+		# 	if output.button("OK"):
+		# 		output.empty()
 
 def dict_cleanup(array: dict, to_be_saved=[]):
 	dead_keys=[]
@@ -473,7 +473,7 @@ def close_box(box:st.empty, bname='editor'):
 	st.session_state.dd104m[f'{bname}-flag'] = False
 
 
-def _create_form(formbox: st.container, filepath: str, output: st.empty):
+def _create_form(formbox: st.container, filepath: str):
 	output.empty()
 	
 	try:
@@ -522,7 +522,7 @@ def _create_form(formbox: st.container, filepath: str, output: st.empty):
 					st.text_input(label=f'Порт Запасного Сервера', key=f'server_port2') 
 				
 				
-				submit = st.form_submit_button(label='Сохранить', on_click=parse_form, kwargs={'confile':filepath, 'output':output})
+				submit = st.form_submit_button(label='Сохранить', on_click=parse_form, kwargs={'confile':filepath})
 			
 
 def render_tx(servicename): #TODO: expand on merge with rx
@@ -576,7 +576,7 @@ def render_tx(servicename): #TODO: expand on merge with rx
 		#dict_cleanup(st.session_state, ['dd104m', 'dd104'])
 		#WARNING: might cause unknown side-effects
 		c2c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
-		_create_form(formbox, st.session_state.dd104m['selected_file'], output)
+		_create_form(formbox, st.session_state.dd104m['selected_file'])
 
 
 def new_render_tx(servicename):
@@ -627,7 +627,7 @@ def new_render_tx(servicename):
 				#WARNING: might cause unknown side-effects
 				c2c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
 				
-				_create_form(formbox, st.session_state.dd104m['selected_file'], output)
+				_create_form(formbox, st.session_state.dd104m['selected_file'])
 			
 
 def render_rx(servicename):
