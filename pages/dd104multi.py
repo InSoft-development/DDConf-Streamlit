@@ -584,7 +584,7 @@ def new_render_tx(servicename):
 	
 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	
-	col1, col2, col3 = columns([0.5,0.5])
+	col1, col2, col3 = st.columns([0.5,0.5])
 	
 	with col1.container():
 		
