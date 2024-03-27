@@ -585,7 +585,7 @@ def new_render_tx(servicename):
 	
 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	
-	col1, col2= st.columns([0.5,0.5])
+	col1, col2= st.columns([0.4,0.6])
 	
 	with col1.container():
 		
@@ -617,8 +617,18 @@ def new_render_tx(servicename):
 				st.session_state.dd104m['editor-flag'] = True
 		
 		
-		
-		
+		if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file'] and st.session_state.dd104m['editor-flag']:
+			
+			with col2.container():
+				c2c1, c2c2 = st.columns([0.8, 0.2])
+				c2c1.caption("Редактор:")
+				formbox = st.container()
+				
+				#WARNING: might cause unknown side-effects
+				c2c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
+				
+				_create_form(formbox, st.session_state.dd104m['selected_file'], output)
+			
 
 def render_rx(servicename):
 	pass
