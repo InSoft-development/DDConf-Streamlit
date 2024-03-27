@@ -592,7 +592,7 @@ def new_render_tx(servicename):
 		file_select = st.multiselect("Выберите файл для обработки:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], default=None, key="file_multiselect", placeholder="Не выбрано")
 		
 		c1c1, c1c2, c1c3 = st.columns([0.3, 0.3, 0.3])
-		c1c1c1, c1c1c2 = c1c1.columns([0.8, 0.2])
+		c1c1c1, c1c1c2 = c1c1.container().columns([0.8, 0.2])
 		
 		if c1c1c1.button("Новый файл", key="newfbtn"):
 			if not st.session_state.dd104m['newfbox-flag']:
