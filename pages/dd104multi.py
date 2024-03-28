@@ -645,7 +645,7 @@ def new_render_tx(servicename):
 			
 			def _deletes():
 				_delete_files([source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in st.session_state.delete_file_select])
-				st.session_state.delete_file_select = None
+				st.session_state.delete_file_select = []
 			
 			delete_select = st.multiselect("Выберите файл(ы) для удаления:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], default=None, key="delete_file_select", placeholder="Не выбрано")
 			
