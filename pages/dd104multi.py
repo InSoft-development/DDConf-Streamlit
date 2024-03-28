@@ -635,7 +635,7 @@ def new_render_tx(servicename):
 		#TODO: filelist from archive
 		archlist = []
 		
-		delete_select = st.multiselect("Выберите файл(ы) для удаления:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist+archlist], default=None, key="edit_file_select", placeholder="Не выбрано")
+		delete_select = st.multiselect("Выберите файл(ы) для удаления:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist+archlist], default=None, key="delete_file_select", placeholder="Не выбрано")
 		
 		if st.button("Удалить выбранные файлы", disabled=(len(delete_select)>0), key="delfbtn"):
 			_delete_files([source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in delete_select])
