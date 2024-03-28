@@ -36,7 +36,7 @@ def init():
 		st.session_state.dd104m['contents'] = {}
 	
 	if 'newfbox-flag' not in st.session_state.dd104m.keys():
-		st.session_state.dd104m['newfbox-flag'] = False
+		st.session_state.dd104m['newfbox-flag'] = True
 	
 	if 'editor-flag' not in st.session_state.dd104m.keys():
 		st.session_state.dd104m['editor-flag'] = False
@@ -623,16 +623,19 @@ def new_render_tx(servicename):
 		
 		with create:
 			tempbox = st.container()
-			with tempbox:
-				newfbox = st.empty()
-				with newfbox.container():
-					_form = st.form('newfileform')
-					with _form:
-						nfn = st.text_input(label='Имя файла', value=None, key='new_filename')
-						submit = st.form_submit_button('Создать')
-						if submit:
-							_new_file()
-							nfn.value = None
+			if 'newfbox_flag' in st.session_state.dd104m.keys() and st.session_state.dd104m['newfbox_flag']:
+				st.session_state.dd104m['newfbox_flag'] = False
+				with tempbox:
+					newfbox = st.empty()
+					with newfbox.container():
+						_form = st.form('newfileform')
+						with _form:
+							st.text_input(label='Имя файла', value=None, key='new_filename')
+							submit = st.form_submit_button('Создать', on_click=_new_file)
+							if submit:
+								_new_file()
+								st.session_state.dd104m['newfbox_flag'] = True
+								newfbox.empty()
 		
 		
 		with delete:
