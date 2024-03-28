@@ -599,9 +599,9 @@ def new_render_tx(servicename):
 	
 	with edit:
 		
-		edit_select = st.selectbox("Выберите файл для редактирования:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], key="edit_file_select", placeholder="Не выбрано")
+		edit_select = st.selectbox("Выберите файл для редактирования:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], index=None, key="edit_file_select", placeholder="Не выбрано")
 		
-		if st.button("Редактировать выбранный файл", disabled=(len(edit_select) != 1), key="editfbtn"):
+		if st.button("Редактировать выбранный файл", disabled=(edit_select != None), key="editfbtn"):
 			st.session_state.dd104m['selected_file'] = [source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" == edit_select]
 			if not st.session_state.dd104m['editor-flag']:
 				st.session_state.dd104m['editor-flag'] = True
