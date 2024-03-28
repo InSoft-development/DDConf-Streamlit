@@ -643,13 +643,13 @@ def new_render_tx(servicename):
 		
 		with delete:
 			
-			#TODO: filelist from archive
-			archlist = []
+			def _deletes():
+				_delete_files([source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in st.session_state.delete_file_select])
+				st.session_state.delete_file_select = None
 			
 			delete_select = st.multiselect("Выберите файл(ы) для удаления:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist+archlist], default=None, key="delete_file_select", placeholder="Не выбрано")
 			
-			if st.button("Удалить выбранные файлы", disabled=(not len(delete_select)>0), key="delfbtn"):
-				_delete_files([source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in delete_select])
+			st.button("Удалить выбранные файлы", disabled=(not len(delete_select)>0), on_click=_deletes(), key="delfbtn")
 	
 	except Exception as e:
 		outputs.empty().write(f'Error: {str(e)}\n\n\n\n{st.session_state}')
