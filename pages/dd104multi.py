@@ -622,6 +622,10 @@ def new_render_tx(servicename):
 			
 		
 		with create:
+			def _submit():
+				_new_file()
+				st.session_state.new_filename = None
+			
 			tempbox = st.container()
 			
 			with tempbox:
@@ -630,15 +634,7 @@ def new_render_tx(servicename):
 					_form = st.form('newfileform')
 					with _form:
 						st.text_input(label='Имя файла', value=None, key='new_filename')
-						submit = st.form_submit_button('Создать')
-						if submit:
-							try:
-								_new_file()
-								st.session_state.new_filename = None
-							except Exception as e:
-								st.write(f'An error has occured: \n{str(e)}')
-							else:
-								st.write('success')
+						submit = st.form_submit_button('Создать', on_click=_submit)
 			
 		
 		
