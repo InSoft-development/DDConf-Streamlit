@@ -636,6 +636,8 @@ def new_render_tx(servicename):
 								_new_file()
 								st.session_state.dd104m['newfbox_flag'] = True
 								newfbox.empty()
+			else:
+				st.session_state.dd104m['newfbox_flag'] = True
 		
 		
 		with delete:
