@@ -403,7 +403,7 @@ def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename'
 	return out
 	
 
-def parse_form(confile: str):
+def parse_form(confile: str, box: st.container):
 	print(st.session_state)
 	
 	# output.empty()
@@ -425,7 +425,7 @@ def parse_form(confile: str):
 			_save_to_file(parse_from_user(st.session_state.dd104m['contents']), confile, st.session_state.dd104m['contents']['savename'])
 			#_archive(confile)
 			_archive_d(confile)
-				
+			close_box(formbox, 'editor')
 		except Exception as e:
 			# output.empty()
 			msg = f"dd104: Не удалось сохранить данные формы в файл конфигурации,\nПодробности:\n{type(e)}: {str(e)}\n"
@@ -530,7 +530,7 @@ def _create_form(formbox: st.container, filepath: str):
 					st.text_input(label=f'Порт Запасного Сервера', key=f'server_port2') 
 				
 				
-				submit = st.form_submit_button(label='Сохранить', on_click=parse_form, kwargs={'confile':filepath})
+				submit = st.form_submit_button(label='Сохранить', on_click=parse_form, kwargs={'confile':filepath, 'box':formbox})
 			
 
 def render_tx(servicename): #TODO: expand on merge with rx
