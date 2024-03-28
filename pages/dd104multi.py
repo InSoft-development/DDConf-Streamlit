@@ -593,7 +593,7 @@ def new_render_tx(servicename):
 	
 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	
-	edit, create, delete = st.tabs(["Редактор", "Создание Файлов", "Удаление Файлов"])
+	edit, create, delete, outputs = st.tabs(["Редактор", "Создание Файлов", "Удаление Файлов", "DEBUG"])
 	
 	col1, col2= st.columns([0.4,0.6], gap='large')
 	
@@ -640,6 +640,8 @@ def new_render_tx(servicename):
 		if st.button("Удалить выбранные файлы", disabled=(len(delete_select)>0), key="delfbtn"):
 			_delete_files([source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in delete_select])
 	
+	with outputs.empty():
+		st.write(st.session_state)
 	
 # 	with col1.container():
 # 		
