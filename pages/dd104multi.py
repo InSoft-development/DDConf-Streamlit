@@ -456,7 +456,7 @@ def _delete_files(filelist:list):
 # 		raise e
 	pass
 
-def _new_file():
+def _new_file(box: st.empty):
 	filename = st.session_state['new_filename'] if '.ini' in st.session_state['new_filename'][-4::] else f"{st.session_state['new_filename']}.ini"
 	if isfile(f"{st.session_state.dd104m['inidir']}/{filename}"):
 		syslog.syslog(syslog.LOG_WARNING, f"dd104m: Файл {st.session_state.dd104m['inidir']}/{filename} уже существует!")
@@ -471,7 +471,8 @@ def _new_file():
 		syslog.syslog(syslog.LOG_CRIT, f"dd104m: Невозможно создать файл {st.session_state.dd104m['inidir']}/{filename}!")
 		raise e
 	else:
-		st.session_state.dd104m['selected_file'] = f"{st.session_state.dd104m['inidir']}/{filename}"
+		# st.session_state.dd104m['selected_file'] = f"{st.session_state.dd104m['inidir']}/{filename}"
+		close_box(box, 'newfbox')
 
 #/Logic
 
@@ -628,7 +629,7 @@ def new_render_tx(servicename):
 					_form = st.form('newfileform')
 					with _form:
 						st.text_input(label='Имя файла', key='new_filename')
-						submit = st.form_submit_button('Создать', on_click=_new_file)
+						submit = st.form_submit_button('Создать', on_click=_new_file, kwargs={'box':newfbox})
 		
 		
 		with delete:
