@@ -425,7 +425,7 @@ def parse_form(confile: str, box: st.container):
 			_save_to_file(parse_from_user(st.session_state.dd104m['contents']), confile, st.session_state.dd104m['contents']['savename'])
 			#_archive(confile)
 			_archive_d(confile)
-			close_box(formbox, 'editor')
+			close_box(box, 'editor')
 		except Exception as e:
 			# output.empty()
 			msg = f"dd104: Не удалось сохранить данные формы в файл конфигурации,\nПодробности:\n{type(e)}: {str(e)}\n"
