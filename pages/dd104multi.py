@@ -649,7 +649,7 @@ def new_render_tx(servicename):
 			
 			delete_select = st.multiselect("Выберите файл(ы) для удаления:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist+archlist], default=None, key="delete_file_select", placeholder="Не выбрано")
 			
-			st.button("Удалить выбранные файлы", disabled=(not len(delete_select)>0), on_click=_deletes(), key="delfbtn")
+			st.button("Удалить выбранные файлы", disabled=(not len(delete_select)>0), on_click=_deletes, key="delfbtn")
 	
 	except Exception as e:
 		outputs.empty().write(f'Error: {str(e)}\n\n\n\n{st.session_state}')
