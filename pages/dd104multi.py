@@ -448,13 +448,16 @@ def dict_cleanup(array: dict, to_be_saved=[]):
 		del(array[k])
 
 def _delete_files(filelist:list):
-# 	try:
-# 		for item in filelist:
-# 			
-# 	except Exception as e:
-# 		syslog.syslog(syslog.LOG_CRIT, f"DD104m: Не удалось провести операцию удаления, подробности: {str(e)}")
-# 		raise e
-	pass
+	errors = ''
+	for item in filelist:
+		try:
+			Path(item).unlink()
+		except Exception as e:
+			errors = errors + f"{str(e)}\n\n"
+	if len(errors) > 0:
+		syslog.syslog(syslog.LOG_CRIT, f"DD104m: Во время проведения операций удаления произошли ошибки, подробности: \n{errors}")
+		st.write(f"DD104m: Во время проведения операций удаления произошли ошибки, подробности: \n{errors}")
+	
 
 def _new_file():
 	filename = st.session_state['new_filename'] if '.ini' in st.session_state['new_filename'][-4::] else f"{st.session_state['new_filename']}.ini"
@@ -646,7 +649,7 @@ def new_render_tx(servicename):
 			delete_select = st.multiselect("Выберите файл(ы) для удаления:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist+archlist], default=None, key="delete_file_select", placeholder="Не выбрано")
 			
 			if st.button("Удалить выбранные файлы", disabled=(not len(delete_select)>0), key="delfbtn"):
-				_delete_files([source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in delete_select])
+				_delete_files([f"{st.session_state.dd104m['inidir']}/{source['filename']}" for source in filelist if f"{source['savename']}; {source['savetime']}" in delete_select])
 	
 	except Exception as e:
 		outputs.empty().write(f'Error: {str(e)}\n\n\n\n{st.session_state}')
