@@ -456,7 +456,7 @@ def _delete_files(filelist:list):
 # 		raise e
 	pass
 
-def _new_file(box: st.empty):
+def _new_file():
 	filename = st.session_state['new_filename'] if '.ini' in st.session_state['new_filename'][-4::] else f"{st.session_state['new_filename']}.ini"
 	if isfile(f"{st.session_state.dd104m['inidir']}/{filename}"):
 		syslog.syslog(syslog.LOG_WARNING, f"dd104m: Файл {st.session_state.dd104m['inidir']}/{filename} уже существует!")
@@ -470,9 +470,9 @@ def _new_file(box: st.empty):
 	except Exception as e:
 		syslog.syslog(syslog.LOG_CRIT, f"dd104m: Невозможно создать файл {st.session_state.dd104m['inidir']}/{filename}!")
 		raise e
-	else:
+	# else:
 		# st.session_state.dd104m['selected_file'] = f"{st.session_state.dd104m['inidir']}/{filename}"
-		close_box(box, 'newfbox')
+		# close_box(box, 'newfbox')
 
 #/Logic
 
@@ -629,7 +629,11 @@ def new_render_tx(servicename):
 					_form = st.form('newfileform')
 					with _form:
 						st.text_input(label='Имя файла', key='new_filename')
-						submit = st.form_submit_button('Создать', on_click=_new_file, kwargs={'box':tempbox})
+						submit = st.form_submit_button('Создать')
+						if submit:
+							_new_file()
+							del(st.session_state['new_filename'])
+							newfbox.empty()
 		
 		
 		with delete:
@@ -648,49 +652,7 @@ def new_render_tx(servicename):
 	
 	with outputs.empty():
 		st.write(st.session_state)
-	
-# 	with col1.container():
-# 		
-# 		file_select = st.multiselect("Выберите файл для обработки:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], default=None, key="file_multiselect", placeholder="Не выбрано")
-# 		
-# 		c1c1, c1c2, c1c3, c1c4 = st.columns([0.2, 0.05, 0.3, 0.35], gap='large')
-# 		
-# 		
-# 		if c1c1.button("Новый файл", key="newfbtn"):
-# 			if not st.session_state.dd104m['newfbox-flag']:
-# 				st.session_state.dd104m['newfbox-flag'] = True
-# 			tempbox = st.container()
-# 			with tempbox:
-# 				newfbox = st.empty()
-# 				c1c2.button("❌", on_click=close_box, kwargs={'box':newfbox, 'bname':'newfbox'}, key='newfbox-close')
-# 				if st.session_state.dd104m['newfbox-flag']:
-# 					with newfbox.container():
-# 						_form = st.form('newfileform')
-# 						with _form:
-# 							st.text_input(label='Имя файла', key='new_filename')
-# 							submit = st.form_submit_button('Создать', on_click=_new_file)
-# 		
-# 		if c1c3.button("Удалить выбранные файлы", key="delfbtn"):
-# 			_delete_files([source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in file_select])
-# 		
-# 		if c1c4.button("Редактировать выбранный файл", disabled=(len(file_select) != 1), key="editfbtn"):
-# 			st.session_state.dd104m['selected_file'] = [source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in file_select][0]
-# 			if not st.session_state.dd104m['editor-flag']:
-# 				st.session_state.dd104m['editor-flag'] = True
-# 		
-# 		
-# 	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file'] and st.session_state.dd104m['editor-flag']:
-# 		
-# 		with st.container():
-# 			c1, c2 = st.columns([0.8, 0.2])
-# 			c1.caption("Редактор:")
-# 			formbox = st.container()
-# 			
-# 			#WARNING: might cause unknown side-effects
-# 			c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
-# 			
-# 			_create_form(formbox, st.session_state.dd104m['selected_file'])
-			
+		
 
 def render_rx(servicename):
 	pass
