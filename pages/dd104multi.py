@@ -597,48 +597,53 @@ def new_render_tx(servicename):
 	
 	col1, col2= st.columns([0.4,0.6], gap='large')
 	
-	with edit:
+	try:
+		with edit:
+			
+			edit_select = st.selectbox("Выберите файл для редактирования:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], index=None, key="edit_file_select", placeholder="Не выбрано")
+			
+			if st.button("Редактировать выбранный файл", disabled=(edit_select == None), key="editfbtn"):
+				st.session_state.dd104m['selected_file'] = [source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" == edit_select]
+				if not st.session_state.dd104m['editor-flag']:
+					st.session_state.dd104m['editor-flag'] = True
+			
+			if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file'] and st.session_state.dd104m['editor-flag']:
+			
+				with st.container():
+					c1, c2 = st.columns([0.8, 0.2])
+					c1.caption("Редактор:")
+					formbox = st.container()
+					
+					#WARNING: might cause unknown side-effects
+					c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
+					
+					_create_form(formbox, st.session_state.dd104m['selected_file'])
+			
 		
-		edit_select = st.selectbox("Выберите файл для редактирования:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], index=None, key="edit_file_select", placeholder="Не выбрано")
+		with create:
+			tempbox = st.container()
+			with tempbox:
+				newfbox = st.empty()
+				with newfbox.container():
+					_form = st.form('newfileform')
+					with _form:
+						st.text_input(label='Имя файла', key='new_filename')
+						submit = st.form_submit_button('Создать', on_click=_new_file)
 		
-		if st.button("Редактировать выбранный файл", disabled=(edit_select == None), key="editfbtn"):
-			st.session_state.dd104m['selected_file'] = [source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" == edit_select]
-			if not st.session_state.dd104m['editor-flag']:
-				st.session_state.dd104m['editor-flag'] = True
 		
-		if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file'] and st.session_state.dd104m['editor-flag']:
-		
-			with st.container():
-				c1, c2 = st.columns([0.8, 0.2])
-				c1.caption("Редактор:")
-				formbox = st.container()
-				
-				#WARNING: might cause unknown side-effects
-				c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
-				
-				_create_form(formbox, st.session_state.dd104m['selected_file'])
-		
+		with delete:
+			
+			#TODO: filelist from archive
+			archlist = []
+			
+			delete_select = st.multiselect("Выберите файл(ы) для удаления:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist+archlist], default=None, key="delete_file_select", placeholder="Не выбрано")
+			
+			if st.button("Удалить выбранные файлы", disabled=(len(delete_select)>0), key="delfbtn"):
+				_delete_files([source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in delete_select])
 	
-	with create:
-		tempbox = st.container()
-		with tempbox:
-			newfbox = st.empty()
-			with newfbox.container():
-				_form = st.form('newfileform')
-				with _form:
-					st.text_input(label='Имя файла', key='new_filename')
-					submit = st.form_submit_button('Создать', on_click=_new_file)
-	
-	
-	with delete:
+	except Exception as e:
+		outputs.empty().write(f'Error: {str(e)}\n\n\n\n{st.session_state}')
 		
-		#TODO: filelist from archive
-		archlist = []
-		
-		delete_select = st.multiselect("Выберите файл(ы) для удаления:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist+archlist], default=None, key="delete_file_select", placeholder="Не выбрано")
-		
-		if st.button("Удалить выбранные файлы", disabled=(len(delete_select)>0), key="delfbtn"):
-			_delete_files([source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in delete_select])
 	
 	with outputs.empty():
 		st.write(st.session_state)
