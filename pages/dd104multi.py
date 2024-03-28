@@ -623,21 +623,18 @@ def new_render_tx(servicename):
 		
 		with create:
 			tempbox = st.container()
-			if 'newfbox_flag' in st.session_state.dd104m.keys() and st.session_state.dd104m['newfbox_flag']:
-				st.session_state.dd104m['newfbox_flag'] = False
-				with tempbox:
-					newfbox = st.empty()
-					with newfbox.container():
-						_form = st.form('newfileform')
-						with _form:
-							st.text_input(label='Имя файла', value=None, key='new_filename')
-							submit = st.form_submit_button('Создать', on_click=_new_file)
-							if submit:
-								_new_file()
-								st.session_state.dd104m['newfbox_flag'] = True
-								newfbox.empty()
-			else:
-				st.session_state.dd104m['newfbox_flag'] = True
+			
+			with tempbox:
+				newfbox = st.empty()
+				with newfbox.container():
+					_form = st.form('newfileform')
+					with _form:
+						st.text_input(label='Имя файла', value=None, key='new_filename')
+						submit = st.form_submit_button('Создать', on_click=_new_file)
+						if submit:
+							_new_file()
+							st.session_state.new_filename = None
+			
 		
 		
 		with delete:
