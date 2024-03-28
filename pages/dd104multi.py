@@ -628,12 +628,11 @@ def new_render_tx(servicename):
 				with newfbox.container():
 					_form = st.form('newfileform')
 					with _form:
-						st.text_input(label='Имя файла', value=None, key='new_filename')
+						nfn = st.text_input(label='Имя файла', value=None, key='new_filename')
 						submit = st.form_submit_button('Создать')
 						if submit:
 							_new_file()
-							del(st.session_state['new_filename'])
-							st.reload()
+							nfn.value = None
 		
 		
 		with delete:
