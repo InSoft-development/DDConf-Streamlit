@@ -172,6 +172,24 @@ def list_loadouts(_dir=INIDIR) -> list: #returns a list of dicts like {'name':''
 			raise e
 	return out
 
+def list_ld(name: str): #returns the dict of files from the archive that are symlinked to from the loadout dir 
+	if not '/' in name:
+		ldpath = Path(st.session_state.dd104m['loaddir'])/name
+	else:
+		ldpath = Path(name)
+	
+	files = {}
+	
+	for i in listdir(ldpath):
+		if (ldpath/i).is_symlink():
+			if i == 'dd104client.ini' or i == 'dd104server.ini':
+				files[1] = str((ldpath/i).resolve())
+			elif 'dd104client' in i or 'dd104server' in i:
+				files[int(i[-5])] = str((ldpath/i).resolve())
+			
+	
+	return files
+
 def get_active(LDIR:str) -> str: 
 	try:
 		LDIR=Path(LDIR)
