@@ -156,7 +156,7 @@ def load_from_file(_path:str) -> dict:
 def list_loadouts(_dir=INIDIR) -> list: #returns a list of dicts like {'name':'', 'fcount':len([]), 'files':['','']}
 	_dir = Path(_dir)
 	if not _dir.is_dir():
-		msg = f"dd104L: Директория сервиса {_dir} недоступна!"
+		msg = f"dd104m: Директория сервиса {_dir} недоступна!"
 		syslog.syslog(syslog.LOG_ERR, msg)
 		raise FileNotFoundError(msg)
 	L = [x for x in listdir(_dir) if (_dir/x).is_dir()]
@@ -345,7 +345,7 @@ def _statparse(data:str) -> dict:
 			# 	output['CGroup'] = f"{output['CGroup']}\n{line}"  
 			i+=1
 	except Exception as e:
-		syslog.syslog(syslog.LOG_CRIT, f'dd104L: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
+		syslog.syslog(syslog.LOG_CRIT, f'dd104m: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
 		raise e
 	return output
 
@@ -707,7 +707,7 @@ def draw_status():
 					col2.caption(f"Статус: {_status(int(proc.split(':')[0]))}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
 					st.caption('Файл настроек:')
 					col1, col2 = st.columns([0.35, 0.65])
-					col2.text(str((Path(st.session_state.dd104L['loaddir'])/f".ACTIVE/{st.session_state.dd104L['servicename']}{proc.split(':')[0]}.ini").resolve().name))
+					col2.text(str((Path(st.session_state.dd104m['loaddir'])/f".ACTIVE/{st.session_state.dd104m['servicename']}{proc.split(':')[0]}.ini").resolve().name))
 			else:
 				with st.empty():
 					st.write("Нет процессов!")
