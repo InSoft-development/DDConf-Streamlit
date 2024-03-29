@@ -603,7 +603,7 @@ def new_render_tx(servicename):
 	
 	edit, create, delete, outputs = st.tabs(["Редактор", "Создание Файлов", "Удаление Файлов", "DEBUG"])
 	
-	statbox = st.container(border=True)
+	statbox = st.container(height=400, border=True)
 	
 	
 	try:
@@ -668,7 +668,8 @@ def new_render_tx(servicename):
 	with outputs.empty():
 		st.write(st.session_state)
 	
-	
+	with statbox:
+		st.write('Placeholder')
 
 def render_rx(servicename):
 	pass
