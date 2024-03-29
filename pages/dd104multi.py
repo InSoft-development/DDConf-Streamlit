@@ -758,9 +758,9 @@ def new_render_tx(servicename):
 		if _index:
 			for l in loadouts:
 				if l['name'] == _index:
-					st.session_state.dd104L['active_ld'] = l
+					st.session_state.dd104m['active_ld'] = l
 		else:
-			st.session_state.dd104L['active_ld'] = None
+			st.session_state.dd104m['active_ld'] = None
 	
 	
 
