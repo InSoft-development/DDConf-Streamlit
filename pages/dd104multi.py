@@ -686,7 +686,7 @@ def new_render_tx(servicename):
 			delete_select = st.multiselect("Выберите файл(ы) для удаления:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], default=None, key="delete_file_select", placeholder="Не выбрано")
 			
 			st.button("Удалить выбранные файлы", disabled=(not len(delete_select)>0), on_click=_deletes, key="delfbtn")
-	
+		
 	except Exception as e:
 		outputs.empty().write(f'Error: {str(e)}\n\n\n\n{st.session_state}')
 		
@@ -710,9 +710,9 @@ def new_render_tx(servicename):
 				draw_status()
 		
 		
-	
-	
-	loadouts = list_loadouts(st.session_state.dd104m['loaddir']) # [{'name':'', 'fcount':'', 'files':[]}, {}]
+		
+		
+		loadouts = list_loadouts(st.session_state.dd104m['loaddir']) # [{'name':'', 'fcount':'', 'files':[]}, {}]
 		st.session_state.dd104m['ld_names'] = [x['name'] for x in loadouts if x and 'name' in x]
 		_index = get_active(st.session_state.dd104m['loaddir'])
 		
