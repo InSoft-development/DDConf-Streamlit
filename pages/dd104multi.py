@@ -15,6 +15,9 @@ INIT_KEYS = ['servicename', 'inidir', 'selected_file']
 
 #Logic
 
+# TODO: MASTERMODE functionality for authorised personnel to change important parameters
+
+
 def init():
 	
 	st.set_page_config(layout="wide")
@@ -145,7 +148,7 @@ def load_from_file(_path:str) -> dict:
 def parse_from_user(data) -> str:
 	mode = _mode.lower()
 	if mode == 'tx':
-		message=f"receiver\naddress={data['recv_addr']}\n\nserver"
+		message=f"receiver\naddress={data['recv_addr'] if 'recv_addr' in data.keys() else '192.168.100.10'}\n\nserver"
 		for i in range(1, data['count']+1):
 			message = message + f"\naddress{i}={data[f'server_addr{i}']}\nport{i}={data[f'server_port{i}']}" 
 		#st.write(message)
@@ -513,10 +516,11 @@ def _create_form(formbox: st.container, filepath: str):
 				st.session_state.dd104m['contents']['count'] = 2 #data['count']
 				
 				st.text_input(label = "Имя версии конфигурации", value=data['old_savename'] if 'old_savename' in data.keys() else "", key='savename')
-				st.text_input(label = "Адрес получателя (НЕ ИЗМЕНЯТЬ БЕЗ ИЗМЕНЕНИЙ АДРЕСАЦИИ ДИОДНОГО СОЕДИНЕНИЯ)", value = data['old_recv_addr'] if 'old_recv_addr' in data.keys() else "", key='recv_addr')
 				
-				# if st.session_state.dd104m['contents']['count'] > 0:
-					
+				# TODO:  MASTERMODE functionality 
+				# st.text_input(label = "Адрес получателя (НЕ ИЗМЕНЯТЬ БЕЗ ИЗМЕНЕНИЙ АДРЕСАЦИИ ДИОДНОГО СОЕДИНЕНИЯ)", value = data['old_recv_addr'] if 'old_recv_addr' in data.keys() else "", key='recv_addr', disabled=MASTERMODE)
+				
+				
 				st.write(f"Основной Сервер (поля обязательны к заполнению)")
 				if f'old_server_addr1' in data.keys():
 					st.text_input(label=f'Адрес Сервера 1', value=data[f'old_server_addr1'], key=f'server_addr1') 
@@ -536,59 +540,59 @@ def _create_form(formbox: st.container, filepath: str):
 				
 				submit = st.form_submit_button(label='Сохранить', on_click=parse_form, kwargs={'confile':filepath, 'box':formbox})
 			
-
-def render_tx(servicename): #TODO: expand on merge with rx
-	
-	#st.markdown(col_css, unsafe_allow_html=True)
-	st.title('Сервис Конфигурации Диода Данных')
-	st.header('Редактор файлов настроек протокола DD104')
-	
-	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
-	
-	col1, col2, col3= st.columns([0.25, 0.375, 0.375], gap='large')
-	with col1:
-		col1.subheader("Выберите файл конфигурации")
-		filebox = col1.container(height=600)
-	
-	c2c1, c2c2 = col2.columns([0.9, 0.1])
-	c2c1.subheader("Редактор Файла Конфигурации")
-	
-	formbox = col2.container()
-	# f = formbox.form("dd104multi-form")
-	
-	col3.subheader(f"Статус Операции:")
-	output = col3.empty()
-	
-	c1c1, c1c2 = filebox.columns([0.8, 0.2])
-	if c1c1.button(f"Новый Файл"):
-		if not st.session_state.dd104m['newfbox-flag']:
-			st.session_state.dd104m['newfbox-flag'] = True
-		tempbox = filebox.container()
-		with tempbox:
-			# c1, c2 = st.columns([0.8, 0.2])
-			newfbox = st.empty()
-			c1c2.button("❌", on_click=close_box, kwargs={'box':newfbox, 'bname':'newfbox'}, key='newfbox-close')
-			if st.session_state.dd104m['newfbox-flag']:
-				with newfbox.container():
-					_form = st.form('newfileform')
-					with _form:
-						st.text_input(label='Имя файла', key='new_filename')
-						submit = st.form_submit_button('Создать', on_click=_new_file)
-	
-	for source in filelist:
-		if filebox.button(f"{source['savename']}; {source['savetime']}", key=f"src-{source['filename']}"):
-			st.session_state.dd104m['selected_file'] = source['filename']
-			if not st.session_state.dd104m['editor-flag']:
-				st.session_state.dd104m['editor-flag'] = True
-			
-	
-	
-	
-	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file'] and st.session_state.dd104m['editor-flag']:
-		#dict_cleanup(st.session_state, ['dd104m', 'dd104'])
-		#WARNING: might cause unknown side-effects
-		c2c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
-		_create_form(formbox, st.session_state.dd104m['selected_file'])
+# 
+# def render_tx(servicename): #TODO: expand on merge with rx
+# 	
+# 	#st.markdown(col_css, unsafe_allow_html=True)
+# 	st.title('Сервис Конфигурации Диода Данных')
+# 	st.header('Редактор файлов настроек протокола DD104')
+# 	
+# 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
+# 	
+# 	col1, col2, col3= st.columns([0.25, 0.375, 0.375], gap='large')
+# 	with col1:
+# 		col1.subheader("Выберите файл конфигурации")
+# 		filebox = col1.container(height=600)
+# 	
+# 	c2c1, c2c2 = col2.columns([0.9, 0.1])
+# 	c2c1.subheader("Редактор Файла Конфигурации")
+# 	
+# 	formbox = col2.container()
+# 	# f = formbox.form("dd104multi-form")
+# 	
+# 	col3.subheader(f"Статус Операции:")
+# 	output = col3.empty()
+# 	
+# 	c1c1, c1c2 = filebox.columns([0.8, 0.2])
+# 	if c1c1.button(f"Новый Файл"):
+# 		if not st.session_state.dd104m['newfbox-flag']:
+# 			st.session_state.dd104m['newfbox-flag'] = True
+# 		tempbox = filebox.container()
+# 		with tempbox:
+# 			# c1, c2 = st.columns([0.8, 0.2])
+# 			newfbox = st.empty()
+# 			c1c2.button("❌", on_click=close_box, kwargs={'box':newfbox, 'bname':'newfbox'}, key='newfbox-close')
+# 			if st.session_state.dd104m['newfbox-flag']:
+# 				with newfbox.container():
+# 					_form = st.form('newfileform')
+# 					with _form:
+# 						st.text_input(label='Имя файла', key='new_filename')
+# 						submit = st.form_submit_button('Создать', on_click=_new_file)
+# 	
+# 	for source in filelist:
+# 		if filebox.button(f"{source['savename']}; {source['savetime']}", key=f"src-{source['filename']}"):
+# 			st.session_state.dd104m['selected_file'] = source['filename']
+# 			if not st.session_state.dd104m['editor-flag']:
+# 				st.session_state.dd104m['editor-flag'] = True
+# 			
+# 	
+# 	
+# 	
+# 	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file'] and st.session_state.dd104m['editor-flag']:
+# 		#dict_cleanup(st.session_state, ['dd104m', 'dd104'])
+# 		#WARNING: might cause unknown side-effects
+# 		c2c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
+# 		_create_form(formbox, st.session_state.dd104m['selected_file'])
 
 
 def new_render_tx(servicename):
@@ -599,10 +603,15 @@ def new_render_tx(servicename):
 	
 	edit, create, delete, outputs = st.tabs(["Редактор", "Создание Файлов", "Удаление Файлов", "DEBUG"])
 	
-	col1, col2= st.columns([0.4,0.6], gap='large')
+	statbox = st.container(border=True)
+	
 	
 	try:
 		with edit:
+			
+			def _close_wrap(box:st.container, bname:str):
+				st.session_state['edit_file_select'] = None
+				close_box(box, bname)
 			
 			edit_select = st.selectbox("Выберите файл для редактирования:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], index=None, key="edit_file_select", placeholder="Не выбрано")
 			
@@ -614,12 +623,13 @@ def new_render_tx(servicename):
 			if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file'] and st.session_state.dd104m['editor-flag']:
 			
 				with st.container():
+					
 					c1, c2 = st.columns([0.8, 0.2])
 					c1.caption("Редактор:")
 					formbox = st.container()
 					
 					#WARNING: might cause unknown side-effects
-					c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
+					c2.button("❌", on_click=_close_wrap, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
 					
 					_create_form(formbox, st.session_state.dd104m['selected_file'])
 			
@@ -657,7 +667,8 @@ def new_render_tx(servicename):
 	
 	with outputs.empty():
 		st.write(st.session_state)
-		
+	
+	with 
 
 def render_rx(servicename):
 	pass
