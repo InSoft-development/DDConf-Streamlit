@@ -426,7 +426,7 @@ def _status(service = 'dd104client.service') -> str:
 					syslog.syslog(syslog.LOG_ERR, msg)
 					return None
 			except Exception as e:
-				syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e.output)}\n')
+				syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
 				raise e
 
 def current_op() -> str:
