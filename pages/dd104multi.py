@@ -791,7 +791,7 @@ def new_render_tx(servicename):
 		
 		
 		
-		col1, col2= st.columns([0.8, 0.2]) # main, status emoji, refresh button
+		col1, col2= st.columns([0.95, 0.05]) # main, status emoji, refresh button
 		
 		col1.subheader("Статус Активной Конфигурации:")
 		tempbox = col1.empty()
