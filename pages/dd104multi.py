@@ -403,30 +403,67 @@ def _delete_services(target='all'): #deletes all services dd104client*.service, 
 			syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при уничтожении файлов сервисов dd104client, подробности:\n {str(e)}\n')
 			raise e
 
+# WARNING: LEGACY
+# def _status(service = 'dd104client.service') -> str:
+# 	try:
+# 		stat = subprocess.run(f"systemctl status {service}".split(), text=True, capture_output=True)
+# 	except Exception as e:
+# 		msg = f"dd104: невозможно получить статус {service}; \nПодробности: {type(e)} - {str(e)}\n"
+# 		syslog.syslog(syslog.LOG_ERR, msg)
+# 		return None
+# 	else:
+# 		if stat.stderr:
+# 			msg = f"dd104: {stat.stderr}\n"
+# 			syslog.syslog(syslog.LOG_ERR, msg)
+# 			return None
+# 		else:
+# 			try:
+# 				data = _statparse(stat)
+# 				if data:
+# 					return data
+# 				else:
+# 					msg = f"dd104: Ошибка: Парсинг статуса {service} передал пустой результат; Если эта ошибка повторяется, напишите в сервис поддержки ООО InControl.\n"
+# 					syslog.syslog(syslog.LOG_ERR, msg)
+# 					return None
+# 			except Exception as e:
+# 				syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
+# 				raise e
 
-def _status(service = 'dd104client.service') -> str:
+def _status(num = 1) -> str:
+	if num>=1:
+		service = f"dd104client{num}.service" if _mode == 'tx' else f"dd104server{num}.service"
+	else:
+		raise RuntimeError(f"dd104m: номер процесса за границей области допустимых значений!")
+	
 	try:
 		stat = subprocess.run(f"systemctl status {service}".split(), text=True, capture_output=True)
 	except Exception as e:
-		msg = f"dd104: невозможно получить статус {service}; \nПодробности: {type(e)} - {str(e)}\n"
+		msg = f"dd104m: невозможно получить статус {service}; \nПодробности: {type(e)} - {str(e)}\n"
 		syslog.syslog(syslog.LOG_ERR, msg)
-		return None
+		return f"🔴"
 	else:
 		if stat.stderr:
-			msg = f"dd104: {stat.stderr}\n"
+			msg = f"dd104m: {stat.stderr}\n"
 			syslog.syslog(syslog.LOG_ERR, msg)
-			return None
+			return f"🔴"
 		else:
 			try:
-				data = _statparse(stat)
+				data = _statparse(stat.stdout)
 				if data:
-					return data
+					if ("stopped" in data['Active'].lower() or 'dead' in data['Active'].lower()) and not 'failed' in data['Active'].lower():
+						return "⚫"
+					elif 'failed' in data['Active'].lower():
+						return f"🔴"
+					elif "running" in data['Active'].lower():
+						return f"🟢"
+					else:
+						raise RuntimeError(data)
 				else:
-					msg = f"dd104: Ошибка: Парсинг статуса {service} передал пустой результат; Если эта ошибка повторяется, напишите в сервис поддержки ООО InControl.\n"
+					msg = f"dd104m: Ошибка: Парсинг статуса {service} передал пустой результат; Если эта ошибка повторяется, напишите в сервис поддержки ООО InControl.\n"
 					syslog.syslog(syslog.LOG_ERR, msg)
-					return None
+					return f"🔴"
 			except Exception as e:
-				syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
+				syslog.syslog(syslog.LOG_CRIT, f'dd104m: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
 				raise e
 
 def current_op() -> str:
