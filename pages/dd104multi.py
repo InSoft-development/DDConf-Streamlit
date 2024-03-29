@@ -10,6 +10,8 @@ from os import W_OK, R_OK, access, makedirs, listdir
 # Globals
 _mode = 'tx'
 INIDIR = '/etc/dd/dd104/configs/'
+ARCDIR = '/etc/dd/dd104/archive.d/'
+LOADOUTDIR = '/etc/dd/dd104/loadouts.d/'
 INIT_KEYS = ['servicename', 'inidir', 'selected_file']
 # /Globals
 
@@ -34,6 +36,12 @@ def init():
 	
 	if 'inidir' not in st.session_state.dd104m.keys():
 		st.session_state.dd104m['inidir'] = INIDIR
+	
+	if 'loaddir' not in st.session_state.dd104m.keys():
+		st.session_state.dd104m['loaddir'] = LOADOUTDIR
+	
+	if 'arcdir' not in st.session_state.dd104m.keys():
+		st.session_state.dd104m['arcdir'] = ARCDIR
 	
 	if 'contents' not in st.session_state.dd104m.keys():
 		st.session_state.dd104m['contents'] = {}
@@ -594,6 +602,25 @@ def _create_form(formbox: st.container, filepath: str):
 # 		c2c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
 # 		_create_form(formbox, st.session_state.dd104m['selected_file'])
 
+def draw_status():
+	statbox = st.container()
+	with statbox:
+		if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld']:
+			options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104m['active_ld']['name'])[i]})" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] 
+			if options:
+				for proc in options:
+					col1, col2 = st.columns([0.75, 0.25])
+					col1.caption(f"Процесс {proc.split(':')[0]}")
+					col2.caption(f"Статус: {_status(int(proc.split(':')[0]))}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
+					st.caption('Файл настроек:')
+					col1, col2 = st.columns([0.35, 0.65])
+					col2.text(str((Path(st.session_state.dd104L['loaddir'])/f".ACTIVE/{st.session_state.dd104L['servicename']}{proc.split(':')[0]}.ini").resolve().name))
+			else:
+				with st.empty():
+					st.write("Нет процессов!")
+		else:
+			with st.empty():
+				st.write("Нет загруженной конфигурации!")
 
 def new_render_tx(servicename):
 	st.title('Сервис Конфигурации Диода Данных')
@@ -604,7 +631,6 @@ def new_render_tx(servicename):
 	edit, create, delete, outputs = st.tabs(["Редактор", "Создание Файлов", "Удаление Файлов", "DEBUG"])
 	
 	statbox = st.container(height=400, border=True)
-	
 	
 	try:
 		with edit:
@@ -669,7 +695,36 @@ def new_render_tx(servicename):
 		st.write(st.session_state)
 	
 	with statbox:
-		st.write('Placeholder')
+		
+		
+		
+		col1, col2= st.columns([0.8, 0.2]) # main, status emoji, refresh button
+		
+		col1.subheader("Статус Активной Конфигурации:")
+		tempbox = col1.empty()
+		with tempbox:
+			draw_status()
+		
+		if col2.button("🔄"):
+			with tempbox:
+				draw_status()
+		
+		
+	
+	
+	loadouts = list_loadouts(st.session_state.dd104m['loaddir']) # [{'name':'', 'fcount':'', 'files':[]}, {}]
+		st.session_state.dd104m['ld_names'] = [x['name'] for x in loadouts if x and 'name' in x]
+		_index = get_active(st.session_state.dd104m['loaddir'])
+		
+		if _index:
+			for l in loadouts:
+				if l['name'] == _index:
+					st.session_state.dd104L['active_ld'] = l
+		else:
+			st.session_state.dd104L['active_ld'] = None
+	
+	
+
 
 def render_rx(servicename):
 	pass
