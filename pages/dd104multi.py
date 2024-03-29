@@ -341,14 +341,13 @@ def _statparse(data:str) -> dict:
 			line = data[i]
 			if ': ' in line:
 				output[line.split(': ')[0].strip(' ')] = ': '.join(line.split(': ')[1::])
-			else:
-				output['CGroup'] = f"{output['CGroup']}\n{line}"  
+			# else:
+			# 	output['CGroup'] = f"{output['CGroup']}\n{line}"  
 			i+=1
 	except Exception as e:
-		syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
+		syslog.syslog(syslog.LOG_CRIT, f'dd104L: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
 		raise e
 	return output
-
 
 #TODO NOT create_services_and_inis, CREATE_SERVICES (the former goes into the caller of this func)
 def _create_services(num:int) -> str: 
