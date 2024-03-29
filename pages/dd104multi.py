@@ -702,11 +702,11 @@ def draw_status():
 			options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104m['active_ld']['name'])[i]})" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] 
 			if options:
 				for proc in options:
-					col1, col2 = st.columns([0.75, 0.25])
+					col1, col2 = st.columns([0.85, 0.15])
 					col1.caption(f"Процесс {proc.split(':')[0]}")
 					col2.caption(f"Статус: {_status(int(proc.split(':')[0]))}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
 					st.caption('Файл настроек:')
-					col1, col2 = st.columns([0.35, 0.65])
+					col1, col2 = st.columns([0.25, 0.75])
 					col2.text(str((Path(st.session_state.dd104m['loaddir'])/f".ACTIVE/{st.session_state.dd104m['servicename']}{proc.split(':')[0]}.ini").resolve().name))
 			else:
 				with st.empty():
