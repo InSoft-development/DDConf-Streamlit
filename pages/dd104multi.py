@@ -153,6 +153,45 @@ def load_from_file(_path:str) -> dict:
 	else:
 		return {'count':1, 'old_savename':'', 'old_savetime':'', 'old_recv_addr':''}
 
+def list_loadouts(_dir=INIDIR) -> list: #returns a list of dicts like {'name':'', 'fcount':len([]), 'files':['','']}
+	_dir = Path(_dir)
+	if not _dir.is_dir():
+		msg = f"dd104L: Директория сервиса {_dir} недоступна!"
+		syslog.syslog(syslog.LOG_ERR, msg)
+		raise FileNotFoundError(msg)
+	L = [x for x in listdir(_dir) if (_dir/x).is_dir()]
+	out = []
+	for f in L:
+		try:
+			files = [x for x in listdir(_dir/f) if isfile(join(_dir/f, x))]
+			
+			out.append({'name':f, 'fcount':len(files), 'files':files})
+		
+		except Exception as e:
+			syslog.syslog(syslog.LOG_CRIT, f'dd104m-loadouts: Ошибка при перечислении файлов директории {_dir}, подробности:\n {str(e)}\n')
+			raise e
+	return out
+
+def get_active(LDIR:str) -> str: 
+	try:
+		LDIR=Path(LDIR)
+		if not LDIR.is_dir():
+			raise RuntimeError(f"Директория {LDIR} недоступна!")
+	except Exception as e:
+		msg = f"dd104m: Ошибка при получении текущей активной конфигурации, подробности:\n{str(e)}"
+		syslog.syslog(syslog.LOG_CRIT, msg)
+		raise e
+	else:
+		if '.ACTIVE' in listdir(LDIR) and (LDIR/'.ACTIVE').is_symlink():
+			try:
+				return (LDIR/'.ACTIVE').resolve().name
+			except Exception as e:
+				msg = f"dd104m: Ошибка чтения указателя активной конфигурации, подробности:\n{str(e)}"
+				syslog.syslog(syslog.LOG_CRIT, msg)
+				raise e
+		else:
+			return None 
+
 def parse_from_user(data) -> str:
 	mode = _mode.lower()
 	if mode == 'tx':
