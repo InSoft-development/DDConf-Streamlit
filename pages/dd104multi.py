@@ -668,7 +668,7 @@ def new_render_tx(servicename):
 	with outputs.empty():
 		st.write(st.session_state)
 	
-	with 
+	
 
 def render_rx(servicename):
 	pass
