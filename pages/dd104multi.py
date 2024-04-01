@@ -874,7 +874,7 @@ def new_render_tx(servicename):
 		edits = edt.container(height=600)
 		loads = col1.container(height=200)
 		col1.subheader("Операции")
-		procs = col1.container(height=260)
+		procs = col1.container(height=250)
 		c_load = col1.container(height=60)
 		col4.subheader("Вывод")
 		_aout = col4.container(height=224)
