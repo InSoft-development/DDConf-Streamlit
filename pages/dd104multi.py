@@ -583,6 +583,77 @@ def _new_file():
 		# close_box(box, 'newfbox')
 
 
+def _edit_svc(path:str): #possible problems: num is anything that comes between dd104<> and .
+	
+	path = Path(path)
+	num = path.name().split('.')[0].split(st.session_state.dd104m['servicename'])[1]
+	text = path.read_text().split('\n')
+	for i in range(0, len(text)):
+		if 'ExecStart=' in text[i] and text[i].strip()[0] != '#':
+			text[i] = f"ExecStart=/opt/dd/{st.session_state.dd104m['servicename']}/{st.session_state.dd104m['servicename']} -c {st.session_state.dd104m['loaddir']}{st.session_state.dd104m['servicename']}{num}.service"
+			break
+	a = path.write_text('\n'.join(text))
+
+
+def processify() -> dict: 
+	#TODO returns {'errors':[], 'failed':[]}
+	# stops all related processes, deletes their files, copies the default files over them, 
+	# edits them to fit in the config file, returns the status of the whole ordeal
+	#
+	errors = []
+	failed = []
+	
+	#stop all dd104 services
+	try:
+		stat = subprocess.run("systemctl stop dd104*.service".split(), capture_output=True, text=True)
+		if stat.stderr:
+			# failed.append("systemctl stop dd104*.service")
+			# errors.append(stat.stderr)
+			raise RuntimeError(stat.stderr)
+	except Exception as e:
+		msg = f"dd104m: Ошибка при остановке процессов, подробности:\n{str(e)}"
+		raise RuntimeError(msg)
+	else:
+		#delete
+		services = [x for x in listdir('/etc/systemd/system/') if st.session_state.dd104m['servicename'] in x]
+		for s in services:
+			try:
+				(Path('/etc/systemd/system/')/s).unlink()
+			except Exception as e:
+				failed.append(s)
+				errors.append(str(e))
+		#copy
+		for i in range(1, st.session_state.dd104m['activator_selected_ld']['fcount']+1):
+			try:
+				copy2(f"/etc/dd/dd104/{st.session_state.dd104m['servicename']}.service.default", f"/etc/systemd/system/{st.session_state.dd104m['servicename']}{i}.service")
+			except Exception as e:
+				msg = f"dd104m: Ошибка при создании файлов сервиса, подробности:\n{str(e)}"
+				syslog.syslog(syslog.LOG_CRIT, msg)
+				errors.append(str(e))
+				failed.append(f"dd104client{i}.service")
+			else:
+				try:
+					_edit_svc(f"/etc/systemd/system/{st.session_state.dd104m['servicename']}{i}.service")
+				except Exception as e:
+					msg = f"dd104m: Ошибка при редактировании файлов сервиса, подробности:\n{str(e)}"
+					syslog.syslog(syslog.LOG_CRIT, msg)
+					errors.append(str(e))
+					failed.append(f"{st.session_state.dd104m['servicename']}{i}.service")
+				else:
+					try:
+						stat = subprocess.run(f"systemctl daemon-reload".split(), capture_output=True, text=True)
+						if stat.stderr:
+							raise RuntimeError(stat.stderr)
+					except Exception as e:
+						msg = f"dd104m: Ошибка при перезагрузке демонов systemctl, подробности:\n{str(e)}"
+						syslog.syslog(syslog.LOG_CRIT, msg)
+						errors.append(str(e))
+						failed.append(f"systemctl daemon-reload")
+	
+	
+	return {'errors':errors, 'failed':failed}
+
+
 def activate_ld(name:str, out:st.empty()): 
 	out.empty()
 	try:
