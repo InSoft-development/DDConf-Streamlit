@@ -865,7 +865,7 @@ def new_render_tx(servicename):
 		
 	
 	with Loadouts.container():
-		col1, col2, edt = st.columns([0.33, 0.3, 0.33], gap='medium')
+		col1, col2, edt = st.columns([0.3, 0.2, 0.5], gap='medium')
 			
 		col1.subheader("Выбор конфигурации")
 		# col4.subheader("Вывод")
