@@ -879,7 +879,7 @@ def new_render_tx(servicename):
 		col2.subheader("Вывод")
 		_aout = col2.container(height=224)
 		aout = _aout.empty()
-		col4.subheader("PLACEHOLDER")
+		col2.subheader("PLACEHOLDER")
 		_extras = col2.container(height=300)
 		# _extras.subheader('PLACEHOLDER')
 		
