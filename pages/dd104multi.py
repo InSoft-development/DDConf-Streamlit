@@ -865,17 +865,17 @@ def new_render_tx(servicename):
 		
 	
 	with Loadouts.container():
-		ald, aop, edt, col4 = st.columns([0.2, 0.2, 0.3, 0.3], gap='medium')
+		col1, edt, col4 = st.columns([0.4, 0.3, 0.3], gap='medium')
 			
-		ald.subheader("Выбор конфигурации")
-		aop.subheader("Операции")
+		col1.subheader("Выбор конфигурации")
 		# col4.subheader("Вывод")
 		edt.subheader("Редактор выбранной конфигурации")
 		
 		edits = edt.container(height=600)
-		loads = ald.container(height=600)
-		procs = aop.container(height=434)
-		c_load = aop.container(height=150)
+		loads = col1.container(height=200)
+		col1.subheader("Операции")
+		procs = col1.container(height=200)
+		c_load = col1.container(height=100)
 		col4.subheader("Вывод")
 		_aout = col4.container(height=224)
 		aout = _aout.empty()
