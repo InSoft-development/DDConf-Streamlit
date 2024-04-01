@@ -53,6 +53,9 @@ def init():
 	if 'editor-flag' not in st.session_state.dd104m.keys():
 		st.session_state.dd104m['editor-flag'] = False
 	
+	if 'newfbox-flag' not in st.session_state.dd104m.keys():
+		st.session_state.dd104m['newloaditor-flag'] = True
+	
 	# dict_cleanup(st.session_state, ['dd104m'])
 
 #WARNING deprecated
@@ -880,7 +883,7 @@ def new_render_tx(servicename):
 		procs = col1.container(height=240)
 		c_load = col1.container(height=110)
 		col2.subheader("Вывод")
-		_aout = col2.container(height=224)
+		_aout = col2.container(height=300)
 		aout = _aout.empty()
 		Nlb = col2.container(height=300)
 		
@@ -898,7 +901,10 @@ def new_render_tx(servicename):
 			c1c1.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
 			if c1c2.button('Новая Конфигурация'):
 				with Nlb:
-					st.subheader("Новая Конфигурация")
+					n1, n2 = st.columns([0.8, 0.2])
+					n1.subheader("Новая Конфигурация")
+					
+					n2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'newloaditor'}, key='newloaditor-close')
 					
 			
 			
