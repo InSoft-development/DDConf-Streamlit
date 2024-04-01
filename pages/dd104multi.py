@@ -721,12 +721,12 @@ def new_render_tx(servicename):
 	
 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	
-	edit, create, delete, outputs = st.tabs(["Редактор", "Создание Файлов", "Удаление Файлов", "DEBUG"])
+	Edit, Create, Delete, Loadouts, Outputs = st.tabs(["Редактор", "Создание Файлов", "Удаление Файлов", "Пресеты", "DEBUG"])
 	
 	statbox = st.container(height=400, border=True)
 	
 	try:
-		with edit:
+		with Edit:
 			
 			def _close_wrap(box:st.container, bname:str):
 				st.session_state['edit_file_select'] = None
@@ -753,7 +753,7 @@ def new_render_tx(servicename):
 					_create_form(formbox, st.session_state.dd104m['selected_file'])
 			
 		
-		with create:
+		with Create:
 			def _submit():
 				_new_file()
 				st.session_state.new_filename = None
@@ -770,7 +770,7 @@ def new_render_tx(servicename):
 			
 		
 		
-		with delete:
+		with Delete:
 			
 			def _deletes():
 				_delete_files([source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in st.session_state.delete_file_select])
@@ -781,15 +781,88 @@ def new_render_tx(servicename):
 			st.button("Удалить выбранные файлы", disabled=(not len(delete_select)>0), on_click=_deletes, key="delfbtn")
 		
 	except Exception as e:
-		outputs.empty().write(f'Error: {str(e)}\n\n\n\n{st.session_state}')
+		Outputs.empty().write(f'Error: {str(e)}\n\n\n\n{st.session_state}')
 		
 	
-	with outputs.empty():
-		st.write(st.session_state)
+	
+	loadouts = list_loadouts(st.session_state.dd104m['loaddir']) # [{'name':'', 'fcount':'', 'files':[]}, {}]
+	st.session_state.dd104m['ld_names'] = [x['name'] for x in loadouts if x and 'name' in x]
+	_index = get_active(st.session_state.dd104m['loaddir'])
+	
+	if _index:
+		for l in loadouts:
+			if l['name'] == _index:
+				st.session_state.dd104m['active_ld'] = l
+	else:
+		st.session_state.dd104m['active_ld'] = None
+		
+	
+	with Loadouts:
+		ald, aop, ast, aouts = st.columns([0.2, 0.2, 0.3, 0.3], gap='medium')
+			
+		ald.subheader("Конфигурации")
+		aop.subheader("Операции")
+		aouts.subheader("Вывод")
+		ast.subheader("Статус Активной Конфигурации")
+		
+		astat = ast.container(height=600)
+		loads = ald.container(height=600)
+		procs = aop.container(height=434)
+		c_load = aop.container(height=150)
+		_aout = aouts.container(height=600)
+		aout = _aout.empty()
+		
+		aout.write(st.session_state)
+		
+		# _processwork(astat, aout)
+		
+		for i in loadouts:
+			if not i['name'] == '.ACTIVE':
+				if loads.button(f"{i['name']}", type='primary' if i['name']==_index else "secondary", key=f"act_{i['name']}"):
+					st.session_state.dd104m['activator_selected_ld'] = i
+					aout.write(st.session_state)
+		
+		if 'activator_selected_ld' in st.session_state.dd104m:
+			with c_load:
+				st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activate_ld, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name'], 'out':aout})
+		
+		options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104m['active_ld']['name'])[i]})" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld'] else []
+		
+		with astat:
+			if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld']:
+				if options:
+					for proc in options:
+						col1, col2 = st.columns([0.75, 0.25])
+						col1.caption(f"Процесс {proc.split(':')[0]}")
+						col2.caption(f"Статус: {_status(int(proc.split(':')[0]))}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
+						st.caption('Файл настроек:')
+						col1, col2 = st.columns([0.35, 0.65])
+						col2.text(str((Path(st.session_state.dd104m['loaddir'])/f".ACTIVE/{st.session_state.dd104m['servicename']}{proc.split(':')[0]}.ini").resolve().name))
+				else:
+					with st.empty():
+						st.write("Нет процессов!")
+			else:
+				with st.empty():
+					st.write("Нет загруженной конфигурации!")
+		
+		
+		
+		with procs:
+			
+			def disabler():
+					st.session_state.dd104m['proc_submit_disabled'] = not ('proclist_select' in st.session_state and st.session_state['proclist_select']) or not ('oplist_select' in st.session_state and st.session_state['oplist_select'])
+				
+			
+			procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'active_ld' in st.session_state.dd104m), key=f"proclist_select", placeholder="Не выбрано", on_change=disabler)
+			
+			opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(not 'active_ld' in st.session_state.dd104m), key="oplist_select", placeholder="Не выбрано", on_change=disabler)
+			
+			
+			if procs.button("Применить", disabled=st.session_state.dd104m['proc_submit_disabled'] if 'proc_submit_disabled' in st.session_state.dd104m else True):
+				_apply_process_ops(aout)
+	
 	
 	with statbox:
-		
-		
 		
 		col1, col2= st.columns([0.95, 0.05], gap='large') # main, status emoji, refresh button
 		
@@ -801,22 +874,9 @@ def new_render_tx(servicename):
 		if col2.button("🔄"):
 			with tempbox:
 				draw_status()
-		
-		
-		
-		
-		loadouts = list_loadouts(st.session_state.dd104m['loaddir']) # [{'name':'', 'fcount':'', 'files':[]}, {}]
-		st.session_state.dd104m['ld_names'] = [x['name'] for x in loadouts if x and 'name' in x]
-		_index = get_active(st.session_state.dd104m['loaddir'])
-		
-		if _index:
-			for l in loadouts:
-				if l['name'] == _index:
-					st.session_state.dd104m['active_ld'] = l
-		else:
-			st.session_state.dd104m['active_ld'] = None
 	
-	
+	with Outputs.empty():
+		st.write(st.session_state)
 
 
 def render_rx(servicename):
