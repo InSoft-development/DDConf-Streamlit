@@ -19,10 +19,11 @@ INIT_KEYS = ['servicename', 'inidir', 'selected_file']
 
 # TODO: MASTERMODE functionality for authorised personnel to change important parameters
 
+st.set_page_config(layout="wide")
 
 def init():
 	
-	st.set_page_config(layout="wide")
+	# st.set_page_config(layout="wide")
 	
 	
 	if 'dd104m' not in st.session_state.keys():
