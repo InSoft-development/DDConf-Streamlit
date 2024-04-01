@@ -815,7 +815,7 @@ def _create_form(formbox: st.container, filepath: str):
 			
 
 
-def _ld_create_form(loadout:dict, box:st.empty, out:st.empty):
+def _ld_create_form(loadout:dict, box:st.empty):
 	box.empty()
 	# out.empty()
 	# out.write(st.session_state)
@@ -1086,7 +1086,7 @@ def new_render_tx(servicename):
 		ld_formbox = st.empty()
 		if 'activator_selected_ld' in st.session_state.dd104m and st.session_state.dd104m['activator_selected_ld'] and st.session_state.dd104m['ld-editor-flag']:
 			ec2.button("❌", on_click=close_box, kwargs={'box':ld_formbox, 'bname':'ld-editor'}, key='ld-editor-close')
-			_ld_create_form(st.session_state.dd104m['activator_selected_ld'], ld_formbox, out)
+			_ld_create_form(st.session_state.dd104m['activator_selected_ld'], ld_formbox)
 	
 	
 	
