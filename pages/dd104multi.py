@@ -586,23 +586,23 @@ def _new_file():
 def activate_ld(name:str, out:st.empty()): 
 	out.empty()
 	try:
-		loadout = Path(st.session_state.dd104L['loaddir'])/name
+		loadout = Path(st.session_state.dd104m['loaddir'])/name
 		if '.ACTIVE' in listdir(loadout.parent):
 			(loadout.parent/'.ACTIVE').unlink()
 		(loadout.parent/'.ACTIVE').symlink_to(loadout, target_is_directory=True)
 		
 		results = processify()
 		if not results['errors']:
-			msg = f"dd104m Конфигурация {name} успешно активирована!"
+			msg = f"dd104m: Конфигурация {name} успешно активирована!"
 			syslog.syslog(syslog.LOG_INFO, msg)
 			out.write(msg)
 		else:
-			msg = f"dd104m При обработке процессов {results['failed']} произошла(-и) ошибка(-и): \n{results['errors']}"
+			msg = f"dd104m: При обработке процессов {results['failed']} произошла(-и) ошибка(-и): \n{results['errors']}"
 			syslog.syslog(syslog.LOG_ERR, msg)
 			out.write(msg)
 		
 	except Exception as e:
-		msg = f"dd104m Ошибка при активации конфигурации, подробности:\n{str(e)}"
+		msg = f"dd104m: Ошибка при активации конфигурации, подробности:\n{str(e)}"
 		syslog.syslog(syslog.LOG_CRIT, msg)
 		out.write(msg)
 		raise e
