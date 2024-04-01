@@ -263,7 +263,7 @@ def sanitize():
 
 def _apply_process_ops(out: st.empty):
 	out.empty()
-	out.write(st.session_state)
+	# out.write(st.session_state)
 	if st.session_state.oplist_select == 'Перезапустить':
 		operation = 'restart'
 	elif st.session_state.oplist_select == 'Остановить':
