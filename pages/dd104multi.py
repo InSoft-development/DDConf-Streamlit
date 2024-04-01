@@ -859,15 +859,15 @@ def new_render_tx(servicename):
 		st.session_state.dd104m['active_ld'] = None
 		
 	
-	with Loadouts:
-		ald, aop, ast, aouts = st.columns([0.2, 0.2, 0.3, 0.3], gap='medium')
+	with Loadouts.container():
+		ald, aop, edt, aouts = st.columns([0.2, 0.2, 0.3, 0.3], gap='medium')
 			
-		ald.subheader("Конфигурации")
+		ald.subheader("Выбор конфигурации")
 		aop.subheader("Операции")
 		aouts.subheader("Вывод")
-		ast.subheader("Статус Активной Конфигурации")
+		edt.subheader("Редактор выбранной конфигурации")
 		
-		astat = ast.container(height=600)
+		edits = edt.container(height=600)
 		loads = ald.container(height=600)
 		procs = aop.container(height=434)
 		c_load = aop.container(height=150)
@@ -878,34 +878,28 @@ def new_render_tx(servicename):
 		
 		# _processwork(astat, aout)
 		
-		for i in loadouts:
-			if not i['name'] == '.ACTIVE':
-				if loads.button(f"{i['name']}", type='primary' if i['name']==_index else "secondary", key=f"act_{i['name']}"):
-					st.session_state.dd104m['activator_selected_ld'] = i
-					aout.write(st.session_state)
+		# for i in loadouts:
+		# 	if not i['name'] == '.ACTIVE':
+		# 		if loads.button(f"{i['name']}", type='primary' if i['name']==_index else "secondary", key=f"act_{i['name']}"):
+		# 			st.session_state.dd104m['activator_selected_ld'] = i
+		# 			aout.write(st.session_state)
+		
+		
+		with loads:
+			
+			def _load():
+				st.session_state.dd104m['activator_selected_ld'] = st.session_state.ld_selector
+				st.session_state.ld_selector = None
+			
+			selector = st.selectbox(options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Выбери те конфигурацию', key='ld_selector')
+			st.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
+			
 		
 		if 'activator_selected_ld' in st.session_state.dd104m:
 			with c_load:
 				st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activate_ld, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name'], 'out':aout})
 		
 		options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104m['active_ld']['name'])[i]})" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld'] else []
-		
-		with astat:
-			if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld']:
-				if options:
-					for proc in options:
-						col1, col2 = st.columns([0.75, 0.25])
-						col1.caption(f"Процесс {proc.split(':')[0]}")
-						col2.caption(f"Статус: {_status(int(proc.split(':')[0]))}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
-						st.caption('Файл настроек:')
-						col1, col2 = st.columns([0.35, 0.65])
-						col2.text(str((Path(st.session_state.dd104m['loaddir'])/f".ACTIVE/{st.session_state.dd104m['servicename']}{proc.split(':')[0]}.ini").resolve().name))
-				else:
-					with st.empty():
-						st.write("Нет процессов!")
-			else:
-				with st.empty():
-					st.write("Нет загруженной конфигурации!")
 		
 		
 		
