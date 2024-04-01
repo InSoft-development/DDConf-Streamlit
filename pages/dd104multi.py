@@ -53,8 +53,11 @@ def init():
 	if 'editor-flag' not in st.session_state.dd104m.keys():
 		st.session_state.dd104m['editor-flag'] = False
 	
-	if 'newfbox-flag' not in st.session_state.dd104m.keys():
+	if 'newloaditor-flag' not in st.session_state.dd104m.keys():
 		st.session_state.dd104m['newloaditor-flag'] = True
+	
+	if 'ld-editor-flag' not in st.session_state.dd104m.keys():
+		st.session_state.dd104m['ld-editor-flag'] = False
 	
 	# dict_cleanup(st.session_state, ['dd104m'])
 
@@ -234,7 +237,62 @@ def _save_to_file(string:str, confile:str, name='unnamed_file_version', return_t
 	if return_timestamp:
 		return utime
 
-def sanitize():
+
+def save_loadout():
+	# out.empty()
+	sanitize()
+	print(st.session_state)
+	
+	valid = True
+	
+	for i in range(1, len(st.session_state.dd104m['activator_selected_ld']['selectors'])+1):
+		if f'select_file_{i}' not in st.session_state.dd104m['activator_selected_ld']['selectors'] or not st.session_state.dd104m['activator_selected_ld']['selectors'][f'select_file_{i}']:
+			valid = False
+	
+	if valid:
+		ld = Path(st.session_state.dd104m['loaddir']) / st.session_state.dd104m['activator_selected_ld']['name']
+		if not ld.is_dir():
+			try:
+				makedirs(ld)
+			except Exception as e:
+				msg = f"dd104m: Критическая ошибка: директория {ld.parent} недоступна для записи, подробности:\n{str(e)}"
+				syslog.syslog(syslog.LOG_CRIT, msg)
+				raise e
+			
+		try:
+			
+			# this bitch doesn't work
+			# stat = subprocess.run(f'rm -rf {ld}/*'.split(), text=True, capture_output=True)
+			
+			for f in listdir(ld):
+				print(f"deleting {str(ld/f)}")
+				(ld/f).unlink()
+			
+		except Exception as e:
+			msg = f"dd104m: Критическая ошибка: не удалось очистить директорию {ld}, подробности:\n{str(e)}"
+			print(msg)
+			syslog.syslog(syslog.LOG_CRIT, msg)
+			raise e
+			
+		for i in range(1, len(st.session_state.dd104m['activator_selected_ld']['selectors'])+1):
+			filepath = Path(st.session_state.dd104m['arcdir']) / st.session_state.dd104m['activator_selected_ld']['selectors'][f'select_file_{i}'].split('(')[-1][:-1:]
+			
+			if filepath.is_file():
+				try:
+					(ld/f"dd104client{i}.ini").symlink_to(filepath)
+					print(f'\nfile {(ld/(f"dd104client{i}.ini" if i>1 else "dd104client.ini"))} was created!')
+				except Exception as e:
+					msg = f"dd104m: Критическая ошибка: не удалось создать ссылку на файл {filepath} в директории {ld}, подробности:\n{str(e)}"
+					syslog.syslog(syslog.LOG_CRIT, msg)
+					raise e
+			else:
+				msg = f"dd104m: Критическая ошибка: файл {filepath} не найден!"
+				syslog.syslog(syslog.LOG_CRIT, msg)
+				raise FileNotFoundError(msg)
+
+
+def sanitize(): #WARNING: merged with sanitize() from DD104L
+	
 	#move stuff from st.session_state to st.<...>.dd104m.contents
 	if 'contents' not in st.session_state.dd104m.keys():
 		st.session_state.dd104m['contents'] = {}
@@ -254,6 +312,7 @@ def sanitize():
 					st.session_state.dd104m['contents'][f"server_port{j}"] = ''
 					break
 	
+	
 	c = st.session_state.dd104m['contents']['count']
 	for i in range(1, c+1):
 		if i <= st.session_state.dd104m['contents']['count']+1:
@@ -262,6 +321,14 @@ def sanitize():
 				del(st.session_state.dd104m['contents'][f"server_addr{i}"])
 				del(st.session_state.dd104m['contents'][f"server_port{i}"])
 	
+	try:
+		st.session_state.dd104m['activator_selected_ld']['selectors'] = {k:v for k,v in st.session_state.items() if 'select_file_' in k}
+		for k in st.session_state.dd104m['activator_selected_ld']['selectors'].keys():
+			del(st.session_state[k])
+	except Exception as e:
+		msg = f"dd104m: Критическая ошибка: невозможно обработать данные сессии, подробности:\n{str(e)}\n"
+		syslog.syslog(syslog.LOG_CRIT, msg)
+		
 
 
 def _apply_process_ops(out: st.empty):
@@ -376,6 +443,27 @@ def _delete_services(target='all'): #deletes all services dd104client*.service, 
 			syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при уничтожении файлов сервисов dd104client, подробности:\n {str(e)}\n')
 			raise e
 
+
+def _new_loadout():
+	if 'new_loadout_name' in st.session_state:
+		loadname = Path(st.session_state.dd104m['loaddir'])/st.session_state['new_loadout_name']
+	else:
+		raise RuntimeError('_new_loadout: session state key "new_loadout_name" not found!')
+	
+	if isdir(loadname):
+		msg = f"dd104m: Директория {loadname} уже существует!"
+		syslog.syslog(syslog.LOG_WARNING, msg)
+		raise FileExistsError(msg)
+	try:
+		loadname.mkdir(parents=True, exist_ok=False)
+		print(f"directory {loadname} was created!")
+	except Exception as e:
+		msg = f"dd104m: Ошибка при создании директории {loadname}, подробности:\n{str(e)}"
+		syslog.syslog(syslog.LOG_CRIT, msg)
+		raise e
+
+
+
 # WARNING: LEGACY
 # def _status(service = 'dd104client.service') -> str:
 # 	try:
@@ -480,6 +568,20 @@ def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename'
 			raise e
 	return out
 	
+
+
+
+def _edit_svc(path:str): #possible problems: num is anything that comes between dd104<> and .
+	
+	path = Path(path)
+	num = path.name().split('.')[0].split(st.session_state.dd104m['servicename'])[1]
+	text = path.read_text().split('\n')
+	for i in range(0, len(text)):
+		if 'ExecStart=' in text[i] and text[i].strip()[0] != '#':
+			text[i] = f"ExecStart=/opt/dd/{st.session_state.dd104m['servicename']}/{st.session_state.dd104m['servicename']} -c {st.session_state.dd104m['loaddir']}{st.session_state.dd104m['servicename']}{num}.ini"
+			break
+	a = path.write_text('\n'.join(text))
+
 
 def parse_form(confile: str, box: st.container):
 	print(st.session_state)
@@ -711,6 +813,46 @@ def _create_form(formbox: st.container, filepath: str):
 				
 				submit = st.form_submit_button(label='Сохранить', on_click=parse_form, kwargs={'confile':filepath, 'box':formbox})
 			
+
+
+def _ld_create_form(loadout:dict, box:st.empty, out:st.empty):
+	box.empty()
+	# out.empty()
+	# out.write(st.session_state)
+	
+	if st.session_state.dd104m['ld-editor-flag']:
+		with box:
+			archived = list_sources(st.session_state.dd104m['arcdir'])
+			
+			_form = st.form('dd104m-ld-form')
+			files = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived]
+			loadouted = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
+			
+			# out.write(loadouted)
+			
+			if loadout['fcount'] <= 0:
+				with _form:
+						with st.container():
+							
+							col1, col2 = st.columns([0.8, 0.2])
+							col1.caption(f'Процесс 1')
+							# col2.caption(f"Статус:  {_status(1)}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
+							st.selectbox(label='Файл настроек', options=files, index=None, key=f"select_file_1")
+			else:
+				for i in range(1, loadout['fcount']+1):
+					with _form:
+						with st.container():
+							
+							col1, col2 = st.columns([0.8, 0.2])
+							col1.caption(f'Процесс {i}')
+							# col2.caption(f"Статус:  {_status(i)}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
+							st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, key=f"select_file_{i}")
+						
+				
+			
+			_form.form_submit_button('Сохранить Конфигурацию', on_click=save_loadout)
+
+
 # 
 # def render_tx(servicename): #TODO: expand on merge with rx
 # 	
@@ -883,7 +1025,7 @@ def new_render_tx(servicename):
 		procs = col1.container(height=240)
 		c_load = col1.container(height=110)
 		col2.subheader("Вывод")
-		_aout = col2.container(height=290)
+		_aout = col2.container(height=285)
 		aout = _aout.empty()
 		Nlb = col2.container(height=300)
 		
@@ -892,6 +1034,7 @@ def new_render_tx(servicename):
 			
 			def _load():
 				st.session_state.dd104m['activator_selected_ld'] = [x for x in loadouts if x['name'] == st.session_state.ld_selector][0]
+				st.session_state.dd104m['ld-editor-flag'] = True
 				st.session_state.ld_selector = None
 			
 			selector = st.selectbox(label="Выберите конфигурацию", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', key='ld_selector')
@@ -902,9 +1045,15 @@ def new_render_tx(servicename):
 			if c1c2.button('Новая Конфигурация'):
 				with Nlb:
 					n1, n2 = st.columns([0.8, 0.2])
-					n1.subheader("Новая Конфигурация")
-					
-					n2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'newloaditor'}, key='newloaditor-close')
+					st.session_state.dd104m['newlbox-flag'] = True
+					newlbox = loadouter.empty()
+					c1c2.button("❌", on_click=close_box, kwargs={'box':newlbox, 'bname':'newlbox'}, key='newlbox-close')
+					if st.session_state.dd104m['newlbox-flag']:
+						with newlbox.container():
+							_form_nld = st.form('newloadoutform')
+							with _form_nld:
+								st.text_input(label='Имя конфигурации', key='new_loadout_name')
+								submit = st.form_submit_button('Создать', on_click=_new_loadout)
 					
 			
 			
@@ -930,6 +1079,15 @@ def new_render_tx(servicename):
 			
 			if procs.button("Применить", disabled=st.session_state.dd104m['proc_submit_disabled'] if 'proc_submit_disabled' in st.session_state.dd104m else True):
 				_apply_process_ops(aout)
+	
+	
+	with edits:
+		ec1, ec2 = st.columns([0.9, 0.1])
+		ld_formbox = st.empty()
+		if 'activator_selected_ld' in st.session_state.dd104m and st.session_state.dd104m['activator_selected_ld'] and st.session_state.dd104m['ld-editor-flag']:
+			ec2.button("❌", on_click=close_box, kwargs={'box':ld_formbox, 'bname':'ld-editor'}, key='ld-editor-close')
+			_ld_create_form(st.session_state.dd104m['activator_selected_ld'], formbox, out)
+	
 	
 	
 	with statbox:
