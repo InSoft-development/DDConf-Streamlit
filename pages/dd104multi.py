@@ -293,7 +293,7 @@ def _apply_process_ops(out: st.empty):
 	
 	with out.container():
 		def _cleaner():
-			st.session_state.proclist_select = None
+			st.session_state.proclist_select = []
 			st.session_state.oplist_select = None
 			out.empty()
 			
