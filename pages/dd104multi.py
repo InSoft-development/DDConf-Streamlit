@@ -871,11 +871,12 @@ def new_render_tx(servicename):
 		loads = ald.container(height=600)
 		procs = aop.container(height=434)
 		c_load = aop.container(height=150)
+		col4.subheader("Вывод")
 		_aout = col4.container(height=300)
-		_aout.subheader('Вывод')
 		aout = _aout.empty()
+		col4.subheader("PLACEHOLDER")
 		_extras = col4.container(height=200)
-		_extras.subheader('PLACEHOLDER')
+		# _extras.subheader('PLACEHOLDER')
 		
 		aout.write(st.session_state)
 		
