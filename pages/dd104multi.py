@@ -881,17 +881,6 @@ def new_render_tx(servicename):
 		aout = _aout.empty()
 		col2.subheader("PLACEHOLDER")
 		_extras = col2.container(height=300)
-		# _extras.subheader('PLACEHOLDER')
-		
-		aout.write(st.session_state)
-		
-		# _processwork(astat, aout)
-		
-		# for i in loadouts:
-		# 	if not i['name'] == '.ACTIVE':
-		# 		if loads.button(f"{i['name']}", type='primary' if i['name']==_index else "secondary", key=f"act_{i['name']}"):
-		# 			st.session_state.dd104m['activator_selected_ld'] = i
-		# 			aout.write(st.session_state)
 		
 		
 		with loads:
