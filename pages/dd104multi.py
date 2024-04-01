@@ -860,19 +860,22 @@ def new_render_tx(servicename):
 		
 	
 	with Loadouts.container():
-		ald, aop, edt, aouts = st.columns([0.2, 0.2, 0.3, 0.3], gap='medium')
+		ald, aop, edt, col4 = st.columns([0.2, 0.2, 0.3, 0.3], gap='medium')
 			
 		ald.subheader("Выбор конфигурации")
 		aop.subheader("Операции")
-		aouts.subheader("Вывод")
+		# col4.subheader("Вывод")
 		edt.subheader("Редактор выбранной конфигурации")
 		
 		edits = edt.container(height=600)
 		loads = ald.container(height=600)
 		procs = aop.container(height=434)
 		c_load = aop.container(height=150)
-		_aout = aouts.container(height=600)
+		_aout = col4.container(height=300)
+		_aout.subheader('Вывод')
 		aout = _aout.empty()
+		_extras = col4.container(height=200)
+		_extras.subheader('PLACEHOLDER')
 		
 		aout.write(st.session_state)
 		
