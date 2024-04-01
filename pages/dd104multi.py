@@ -295,6 +295,8 @@ def _apply_process_ops(out: st.empty):
 		st.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {errs} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно.")
 		if st.button("OK"):
 			out.empty()
+			st.session_state.proclist_select = None
+			st.session_state.oplist.select = None
 
 
 def _statparse(data:str) -> dict:
@@ -872,10 +874,10 @@ def new_render_tx(servicename):
 		procs = aop.container(height=434)
 		c_load = aop.container(height=150)
 		col4.subheader("Вывод")
-		_aout = col4.container(height=300)
+		_aout = col4.container(height=224)
 		aout = _aout.empty()
 		col4.subheader("PLACEHOLDER")
-		_extras = col4.container(height=224)
+		_extras = col4.container(height=300)
 		# _extras.subheader('PLACEHOLDER')
 		
 		aout.write(st.session_state)
