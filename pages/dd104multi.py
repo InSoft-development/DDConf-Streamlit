@@ -294,7 +294,7 @@ def _apply_process_ops(out: st.empty):
 	with out.container():
 		def _cleaner():
 			st.session_state.proclist_select = None
-			st.session_state.oplist.select = None
+			st.session_state.oplist_select = None
 			out.empty()
 			
 		st.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {errs} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно.")
