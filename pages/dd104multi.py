@@ -883,7 +883,7 @@ def new_render_tx(servicename):
 		procs = col1.container(height=240)
 		c_load = col1.container(height=110)
 		col2.subheader("Вывод")
-		_aout = col2.container(height=300)
+		_aout = col2.container(height=290)
 		aout = _aout.empty()
 		Nlb = col2.container(height=300)
 		
