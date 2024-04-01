@@ -865,7 +865,7 @@ def new_render_tx(servicename):
 		
 	
 	with Loadouts.container():
-		col1, edt, col4 = st.columns([0.4, 0.3, 0.3], gap='medium')
+		col1, edt, col4 = st.columns([0.33, 0.33, 0.3], gap='medium')
 			
 		col1.subheader("Выбор конфигурации")
 		# col4.subheader("Вывод")
@@ -874,8 +874,8 @@ def new_render_tx(servicename):
 		edits = edt.container(height=600)
 		loads = col1.container(height=200)
 		col1.subheader("Операции")
-		procs = col1.container(height=200)
-		c_load = col1.container(height=100)
+		procs = col1.container(height=260)
+		c_load = col1.container(height=60)
 		col4.subheader("Вывод")
 		_aout = col4.container(height=224)
 		aout = _aout.empty()
