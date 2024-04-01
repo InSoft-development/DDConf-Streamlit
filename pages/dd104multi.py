@@ -240,7 +240,7 @@ def _save_to_file(string:str, confile:str, name='unnamed_file_version', return_t
 
 def save_loadout():
 	# out.empty()
-	sanitize()
+	ld_sanitize()
 	print(st.session_state)
 	
 	valid = True
@@ -291,7 +291,7 @@ def save_loadout():
 				raise FileNotFoundError(msg)
 
 
-def sanitize(): #WARNING: merged with sanitize() from DD104L
+def sanitize():
 	
 	#move stuff from st.session_state to st.<...>.dd104m.contents
 	if 'contents' not in st.session_state.dd104m.keys():
@@ -321,6 +321,10 @@ def sanitize(): #WARNING: merged with sanitize() from DD104L
 				del(st.session_state.dd104m['contents'][f"server_addr{i}"])
 				del(st.session_state.dd104m['contents'][f"server_port{i}"])
 	
+		
+
+#WARNING: do not merge or we die
+def ld_sanitize():
 	try:
 		st.session_state.dd104m['activator_selected_ld']['selectors'] = {k:v for k,v in st.session_state.items() if 'select_file_' in k}
 		for k in st.session_state.dd104m['activator_selected_ld']['selectors'].keys():
@@ -328,7 +332,6 @@ def sanitize(): #WARNING: merged with sanitize() from DD104L
 	except Exception as e:
 		msg = f"dd104m: Критическая ошибка: невозможно обработать данные сессии, подробности:\n{str(e)}\n"
 		syslog.syslog(syslog.LOG_CRIT, msg)
-		
 
 
 def _apply_process_ops(out: st.empty):
