@@ -872,10 +872,10 @@ def new_render_tx(servicename):
 		edt.subheader("Редактор выбранной конфигурации")
 		
 		edits = edt.container(height=600)
-		loads = col1.container(height=200)
+		loads = col1.container(height=160)
 		col1.subheader("Операции")
 		procs = col1.container(height=240)
-		c_load = col1.container(height=70)
+		c_load = col1.container(height=110)
 		col4.subheader("Вывод")
 		_aout = col4.container(height=224)
 		aout = _aout.empty()
