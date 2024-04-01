@@ -784,11 +784,11 @@ def draw_status():
 
 def new_render_tx(servicename):
 	st.title('Сервис Конфигурации Диода Данных')
-	st.header('Редактор файлов настроек протокола DD104')
+	st.header('Страница настройки протокола DD104')
 	
 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	
-	Filetab, Presettab, Outputs = st.tabs(['Файлы', "Пресеты", 'DEBUG'])
+	Filetab, Presettab, Outputs = st.tabs(['Файлы конфигураций', "Пресеты", 'DEBUG'])
 	
 	Edit, Create, Delete = Filetab.tabs(["Редактор", "Создание Файлов", "Удаление Файлов"])
 	
@@ -869,10 +869,9 @@ def new_render_tx(servicename):
 		
 	
 	with Loadouts.container():
-		col1, col2, edt = st.columns([0.3, 0.2, 0.5], gap='medium')
+		col1, col2, edt = st.columns([0.3, 0.3, 0.4], gap='medium')
 			
 		col1.subheader("Выбор конфигурации")
-		# col4.subheader("Вывод")
 		edt.subheader("Редактор выбранной конфигурации")
 		
 		edits = edt.container(height=600)
@@ -884,8 +883,6 @@ def new_render_tx(servicename):
 		_aout = col2.container(height=224)
 		aout = _aout.empty()
 		Nlb = col2.container(height=300)
-		# col2.subheader("PLACEHOLDER")
-		# _extras = col2.container(height=300)
 		
 		
 		with loads:
