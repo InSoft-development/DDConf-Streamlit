@@ -875,7 +875,7 @@ def new_render_tx(servicename):
 		_aout = col4.container(height=300)
 		aout = _aout.empty()
 		col4.subheader("PLACEHOLDER")
-		_extras = col4.container(height=200)
+		_extras = col4.container(height=224)
 		# _extras.subheader('PLACEHOLDER')
 		
 		aout.write(st.session_state)
