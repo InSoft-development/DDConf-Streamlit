@@ -891,7 +891,7 @@ def new_render_tx(servicename):
 				st.session_state.dd104m['activator_selected_ld'] = st.session_state.ld_selector
 				st.session_state.ld_selector = None
 			
-			selector = st.selectbox(options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Выбери те конфигурацию', key='ld_selector')
+			selector = st.selectbox(label="Выберите конфигурацию", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', key='ld_selector')
 			st.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
 			
 		
