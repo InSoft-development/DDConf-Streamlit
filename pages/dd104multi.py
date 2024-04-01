@@ -19,6 +19,8 @@ INIT_KEYS = ['servicename', 'inidir', 'selected_file']
 
 # TODO: MASTERMODE functionality for authorised personnel to change important parameters
 
+# TODO: move status operations (start/stop/restart process) to status subtab
+
 st.set_page_config(layout="wide")
 
 def init():
@@ -323,7 +325,7 @@ def sanitize():
 	
 		
 
-#WARNING: do not merge or we die
+#WARNING: do not merge w/ sanitize() or we die
 def ld_sanitize():
 	try:
 		st.session_state.dd104m['activator_selected_ld']['selectors'] = {k:v for k,v in st.session_state.items() if 'select_file_' in k}
