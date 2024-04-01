@@ -260,77 +260,42 @@ def sanitize():
 				del(st.session_state.dd104m['contents'][f"server_port{i}"])
 	
 
-def _stop(service: str) -> dict:
-	'''
-	statuses are:
-	0 - success, 1 - subprocess/pipe error, 2 - stderr
-	
-	'''
-	status = {'status':'', 'errors':[]} 
-	try:
-		stat = subprocess.run(f'systemctl stop {service}'.split(), text=True, capture_output=True)
-	except subprocess.CalledProcessError as e:
-		status['status'] = 1
-		status['errors'].append(e.output)
-		syslog.syslog(syslog.LOG_CRIT, str(e.output))
-		return status
-	else:
-		if not stat.stderr:
-			status['status'] = 0
-		else:
-			status['status'] = 2
-			status['errors'].append(stat.stderr)
-			syslog.syslog(syslog.LOG_ERR, f"dd104: Ошибка при остановке {service}: \n{stat.stderr}\n")
-		
-	return status
 
-def _restart(service: str) -> dict:
-	'''
-	statuses are:
-	0 - success, 1 - subprocess/pipe error, 2 - stderr
-	
-	'''
-	status = {'status':'', 'errors':[]} 
-	try:
-		stat = subprocess.run(f'systemctl restart {service}'.split(), text=True, capture_output=True)
-	except subprocess.CalledProcessError as e:
-		status['status'] = 1
-		status['errors'].append(e.output)
-		syslog.syslog(syslog.LOG_CRIT, str(e.output))
-		return status
+def _apply_process_ops(out: st.empty):
+	out.empty()
+	out.write(st.session_state)
+	if st.session_state.oplist_select == 'Перезапустить':
+		operation = 'restart'
+	elif st.session_state.oplist_select == 'Остановить':
+		operation = 'stop'
 	else:
-		if not stat.stderr:
-			status['status'] = 0
-		else:
-			status['status'] = 2
-			status['errors'].append(stat.stderr)
-			syslog.syslog(syslog.LOG_ERR, f"dd104: Ошибка при перезапуске {service}: \n{stat.stderr}\n")
+		operation = 'start'
+	
+	tgts = [x.split(':')[0] for x in st.session_state.proclist_select if ':' in x]
+	
+	#print(f"tgts: {tgts}")
+	
+	errs = []
+	
+	for tgt in tgts:
+		try:
+			a = subprocess.run(f'systemctl {operation} dd104client{tgt}.service'.split(), text=True, capture_output=True)
+			if a.stderr:
+				msg = f"{a.stderr}"
+				errs.append(f"dd104client{tgt}.service")
+				raise RuntimeError(msg)
+		except Exception as e:
+			msg = f"dd104m: Ошибка выполнения операции над процессом dd104client{tgt}.service:\n{str(e)}"
+			print(msg)
+			syslog.syslog(syslog.LOG_CRIT, msg)
+			#raise RuntimeError(msg)
 		
-	return status
+	
+	with out.container():
+		st.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {errs} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно.")
+		if st.button("OK"):
+			out.empty()
 
-def _start(service: str) -> dict:
-	'''
-	statuses are:
-	0 - success, 1 - subprocess/pipe error, 2 - stderr
-	
-	'''
-	status = {'status':'', 'errors':[]} 
-	try:
-		stat = subprocess.run(f'systemctl start {service}'.split(), text=True, capture_output=True)
-	except subprocess.CalledProcessError as e:
-		status['status'] = 1
-		status['errors'].append(e.output)
-		syslog.syslog(syslog.LOG_CRIT, str(e.output))
-		return status
-	else:
-		if not stat.stderr:
-			status['status'] = 0
-		else:
-			status['status'] = 2
-			status['errors'].append(stat.stderr)
-			syslog.syslog(syslog.LOG_ERR, f"dd104: Ошибка при запуске {service}: \n{stat.stderr}\n")
-		
-	return status
 
 def _statparse(data:str) -> dict:
 	try:
