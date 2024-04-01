@@ -788,9 +788,13 @@ def new_render_tx(servicename):
 	
 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	
-	Edit, Create, Delete, Loadouts, Outputs = st.tabs(["Редактор", "Создание Файлов", "Удаление Файлов", "Пресеты", "DEBUG"])
+	Filetab, Presettab, Outputs = st.tabs(['Файлы', "Пресеты", 'DEBUG'])
 	
-	statbox = st.container(height=400, border=True)
+	Edit, Create, Delete = Filetab.tabs(["Редактор", "Создание Файлов", "Удаление Файлов"])
+	
+	Status, Loadouts = Presettab.tabs(['Статус', 'Редактор'])
+	
+	statbox = Status.container(height=400, border=True)
 	
 	try:
 		with Edit:
@@ -879,8 +883,9 @@ def new_render_tx(servicename):
 		col2.subheader("Вывод")
 		_aout = col2.container(height=224)
 		aout = _aout.empty()
-		col2.subheader("PLACEHOLDER")
-		_extras = col2.container(height=300)
+		Nlb = col2.container(height=300)
+		# col2.subheader("PLACEHOLDER")
+		# _extras = col2.container(height=300)
 		
 		
 		with loads:
@@ -890,7 +895,15 @@ def new_render_tx(servicename):
 				st.session_state.ld_selector = None
 			
 			selector = st.selectbox(label="Выберите конфигурацию", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', key='ld_selector')
-			st.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
+			
+			c1c1, c1c2 = st.columns(2)
+			
+			c1c1.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
+			if c1c2.button('Новая Конфигурация'):
+				with Nlb:
+					st.subheader("Новая Конфигурация")
+					
+			
 			
 		
 		if 'activator_selected_ld' in st.session_state.dd104m:
