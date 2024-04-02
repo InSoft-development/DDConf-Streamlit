@@ -1048,15 +1048,17 @@ def new_render_tx(servicename):
 			
 			c1c1.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
 			if c1c2.button('Новая Конфигурация'):
-				nlc1, nlc2 = col2.columns([0.8, 0.2])
+				block_nl = col2.empty()
+				nlc1, nlc2 = block_nl.columns([0.8, 0.2])
 				_nle = nlc1.empty()
 				_nle.subheader("Новая конфигурация")
 				Nlb = col2.container(height=240)
+				nlc2.button("❌", on_click=close_box, kwargs={'box':block_nl, 'bname':'block_nl'}, key='newlbox-close')
 				with Nlb:
 					n1, n2 = st.columns([0.8, 0.2])
 					st.session_state.dd104m['newlbox-flag'] = True
 					newlbox = st.empty()
-					nlc2.button("❌", on_click=close_box, kwargs={'box':newlbox, 'bname':'newlbox'}, key='newlbox-close')
+					# nlc2.button("❌", on_click=close_box, kwargs={'box':newlbox, 'bname':'newlbox'}, key='newlbox-close')
 					if st.session_state.dd104m['newlbox-flag']:
 						with newlbox.container():
 							_form_nld = st.form('newloadoutform')
