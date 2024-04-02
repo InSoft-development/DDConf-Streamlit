@@ -1033,7 +1033,7 @@ def new_render_tx(servicename):
 		
 		edits = edt.container(height=600)
 		loads = col1.container(height=160)
-		newbox = col1.container(height=110)
+		newbox = col1.container(height=440)
 		
 		
 		with loads:
