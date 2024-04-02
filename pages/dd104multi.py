@@ -1113,7 +1113,7 @@ def new_render_tx(servicename):
 			
 			procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'active_ld' in st.session_state.dd104m), key=f"proclist_select", placeholder="Не выбрано")
 			
-			opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(len(procselect) > 0), key="oplist_select", placeholder="Не выбрано", on_change=_apply_process_ops, kwargs={'out':outbox})
+			opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(len(procselect) == 0), key="oplist_select", placeholder="Не выбрано", on_change=_apply_process_ops, kwargs={'out':outbox})
 			
 			
 			
