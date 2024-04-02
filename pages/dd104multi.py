@@ -368,18 +368,19 @@ def _apply_process_ops(out: st.empty):
 			#raise RuntimeError(msg)
 		
 	
-	with out.container():
-		def _cleaner():
-			st.session_state.proclist_select = []
-			st.session_state.oplist_select = None
-			st.session_state.dd104m['proc_submit_disabled'] = True
-			out.empty()
-			
-		with st.container():
-			st.subheader("Результат операции:")
-		
-		st.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {list(errs.keys())} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно. Подробности:    {errs}  ")
-		st.button("OK", on_click=_cleaner)
+	with out:#.container():
+		st.session_state.proclist_select = []
+		st.session_state.oplist_select = None
+		out.empty()
+# 		def _cleaner():
+# 			st.session_state.proclist_select = []
+# 			st.session_state.oplist_select = None
+# 			st.session_state.dd104m['proc_submit_disabled'] = True
+# 			out.empty()
+# 			
+# 		
+# 		st.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {list(errs.keys())} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно. Подробности:    {errs}  ")
+# 		st.button("OK", on_click=_cleaner)
 
 
 def _statparse(data:str) -> dict:
@@ -1045,11 +1046,11 @@ def new_render_tx(servicename):
 				st.session_state.dd104m['ld-editor-flag'] = True
 				# st.session_state.ld_selector = None
 			
-			selector = st.selectbox(label="Выберите конфигурацию", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', key='ld_selector')
+			selector = st.selectbox(label="Выберите конфигурацию", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', on_change=_load, key='ld_selector')
 			
 			c1c1, c1c2 = st.columns(2)
 			
-			c1c1.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
+			# c1c1.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
 			if c1c2.button('Новая Конфигурация'):
 				block_nl = col2.empty()
 				nlc1, nlc2 = block_nl.columns([0.8, 0.2])
@@ -1107,6 +1108,8 @@ def new_render_tx(servicename):
 		
 		col3.subheader("Управление Процессами")
 		procs = col3.container()
+		
+		
 		outbox = col3.empty()
 		
 		with procs:
