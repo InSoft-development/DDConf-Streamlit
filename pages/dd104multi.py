@@ -373,7 +373,7 @@ def _apply_process_ops(out: st.empty):
 			st.session_state.dd104m['proc_submit_disabled'] = True
 			out.empty()
 			
-		st.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {errs.keys()} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно. Подробности:\n\n{errs}\n")
+		st.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {list(errs.keys())} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно. Подробности:\n\n{errs}\n")
 		st.button("OK", on_click=_cleaner)
 
 
