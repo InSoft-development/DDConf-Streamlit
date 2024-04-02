@@ -917,7 +917,8 @@ def _ld_create_form(loadout:dict, box:st.empty):
 # 		c2c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
 # 		_create_form(formbox, st.session_state.dd104m['selected_file'])
 
-def draw_status(filelist:list):
+def draw_status():
+	filelist = list_sources(st.session_state.dd104m['arcdir'])
 	statbox = st.container()
 	with statbox:
 		if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld']:
