@@ -1032,7 +1032,7 @@ def new_render_tx(servicename):
 		col2.subheader("Вывод")
 		_aout = col2.container(height=285)
 		aout = _aout.empty()
-		Nlb = col2.container(height=300)
+		# Nlb = col2.container(height=300)
 		
 		
 		with loads:
@@ -1048,6 +1048,9 @@ def new_render_tx(servicename):
 			
 			c1c1.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
 			if c1c2.button('Новая Конфигурация'):
+				_nle = col2.empty()
+				_nle.subheader("Новая конфигурация")
+				Nlb = col2.container(height=240)
 				with Nlb:
 					n1, n2 = st.columns([0.8, 0.2])
 					st.session_state.dd104m['newlbox-flag'] = True
