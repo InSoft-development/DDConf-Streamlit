@@ -949,7 +949,7 @@ def new_render_tx(servicename):
 	
 	Edit, Create, Delete = Filetab.tabs(["Редактор", "Создание Файлов", "Удаление Файлов"])
 	
-	Status, Loadouts = Presettab.tabs(['Статус', 'Редактор'])
+	Status, Loadouts = Presettab.tabs(['Процессы', 'Редактор'])
 	
 	statbox = Status.container()
 	
@@ -1033,13 +1033,7 @@ def new_render_tx(servicename):
 		
 		edits = edt.container(height=600)
 		loads = col1.container(height=160)
-		col1.subheader("Операции")
-		procs = col1.container(height=240)
 		c_load = col1.container(height=110)
-		col2.subheader("Вывод")
-		_aout = col2.container(height=285)
-		aout = _aout.empty()
-		# Nlb = col2.container(height=300)
 		
 		
 		with loads:
@@ -1079,21 +1073,16 @@ def new_render_tx(servicename):
 		if 'activator_selected_ld' in st.session_state.dd104m:
 			with c_load:
 				st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activate_ld, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name'], 'out':aout})
+			
 		
 		
+		with edits:
+			ec1, ec2 = st.columns([0.9, 0.1])
+			ld_formbox = st.empty()
+			if 'activator_selected_ld' in st.session_state.dd104m and st.session_state.dd104m['activator_selected_ld'] and st.session_state.dd104m['ld-editor-flag']:
+				ec2.button("❌", on_click=close_box, kwargs={'box':ld_formbox, 'bname':'ld-editor'}, key='ld-editor-close')
+				_ld_create_form(st.session_state.dd104m['activator_selected_ld'], ld_formbox)
 		
-		
-		
-		
-	
-	
-	with edits:
-		ec1, ec2 = st.columns([0.9, 0.1])
-		ld_formbox = st.empty()
-		if 'activator_selected_ld' in st.session_state.dd104m and st.session_state.dd104m['activator_selected_ld'] and st.session_state.dd104m['ld-editor-flag']:
-			ec2.button("❌", on_click=close_box, kwargs={'box':ld_formbox, 'bname':'ld-editor'}, key='ld-editor-close')
-			_ld_create_form(st.session_state.dd104m['activator_selected_ld'], ld_formbox)
-	
 	
 	
 	with statbox:
