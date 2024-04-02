@@ -1033,7 +1033,7 @@ def new_render_tx(servicename):
 		
 		edits = edt.container(height=600)
 		loads = col1.container(height=160)
-		newbox = col1.container(height=440)
+		# newbox = col1.container(height=440)
 		
 		
 		with loads:
@@ -1049,6 +1049,7 @@ def new_render_tx(servicename):
 			
 			# c1c1.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
 			if c1c1.button('Новая Конфигурация'):
+				newbox = col1.container(height=440)
 				block_nl = newbox.empty()
 				nlc1, nlc2 = block_nl.columns([0.8, 0.2])
 				_nle = nlc1.empty()
