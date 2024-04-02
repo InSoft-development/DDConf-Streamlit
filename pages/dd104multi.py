@@ -1040,7 +1040,7 @@ def new_render_tx(servicename):
 			def _load():
 				st.session_state.dd104m['activator_selected_ld'] = [x for x in loadouts if x['name'] == st.session_state.ld_selector][0]
 				st.session_state.dd104m['ld-editor-flag'] = True
-				st.session_state.ld_selector = None
+				# st.session_state.ld_selector = None
 			
 			selector = st.selectbox(label="Выберите конфигурацию", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', key='ld_selector')
 			
