@@ -1109,7 +1109,7 @@ def new_render_tx(servicename):
 		col1, col2, col3 = st.columns([0.45, 0.05, 0.5], gap='medium') # main, refresh button, proc_ops
 		
 		col1.subheader("Статус Активной Конфигурации:")
-		tempbox = col1.empty()
+		tempbox = col1.container(border=True).empty()
 		with tempbox:
 			draw_status()
 		
@@ -1118,7 +1118,7 @@ def new_render_tx(servicename):
 				draw_status()
 		
 		col3.subheader("Управление Процессами")
-		procs = col3.container()
+		procs = col3.container(border=True)
 		
 		
 		outbox = col3.empty()
