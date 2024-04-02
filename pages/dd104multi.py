@@ -921,7 +921,7 @@ def draw_status(filelist:list):
 	with statbox:
 		if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld']:
 			ldlist = list_ld(st.session_state.dd104m['active_ld']['name'])
-			options = [f"{i}:{f['savename'] for f in filelist if f['filename'] == ldlist[i]}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] 
+			options = [f"{i}:{[f['savename'] for f in filelist if f['filename'] == ldlist[i]][0]}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] 
 			if options:
 				for proc in options:
 					col1, col2 = st.columns([0.85, 0.15])
