@@ -1082,6 +1082,7 @@ def new_render_tx(servicename):
 				def activator_wrap(name:str):
 					activate_ld(name)
 					st.session_state.ld_selector = None
+					del(st.session_state.dd104m['activator_selected_ld'])
 				
 				with c1c2:
 					st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activator_wrap, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']})
