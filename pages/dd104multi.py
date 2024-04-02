@@ -1051,7 +1051,7 @@ def new_render_tx(servicename):
 				with Nlb:
 					n1, n2 = st.columns([0.8, 0.2])
 					st.session_state.dd104m['newlbox-flag'] = True
-					newlbox = loadouter.empty()
+					newlbox = st.empty()
 					c1c2.button("❌", on_click=close_box, kwargs={'box':newlbox, 'bname':'newlbox'}, key='newlbox-close')
 					if st.session_state.dd104m['newlbox-flag']:
 						with newlbox.container():
