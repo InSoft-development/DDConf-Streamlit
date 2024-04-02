@@ -196,7 +196,7 @@ def list_ld(name: str): #returns the dict of files from the archive that are sym
 			if i == 'dd104client.ini' or i == 'dd104server.ini':
 				files[1] = str((ldpath/i).resolve())
 			elif 'dd104client' in i or 'dd104server' in i:
-				files[int(i[-5])] = str((ldpath/i).resolve())
+				files[int(i.split('dd104client')[1].split('.')[0] if 'dd104client' in i else i.split('dd104server')[1].split('.')[0])] = str((ldpath/i).resolve())
 			
 	
 	return files
@@ -916,11 +916,12 @@ def _ld_create_form(loadout:dict, box:st.empty):
 # 		c2c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
 # 		_create_form(formbox, st.session_state.dd104m['selected_file'])
 
-def draw_status():
+def draw_status(filelist:list):
 	statbox = st.container()
 	with statbox:
 		if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld']:
-			options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104m['active_ld']['name'])[i]})" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] 
+			ldlist = list_ld(st.session_state.dd104m['active_ld']['name'])
+			options = [f"{i}:{f['savename'] for f in filelist if f['filename'] == ldlist[i]}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] 
 			if options:
 				for proc in options:
 					col1, col2 = st.columns([0.85, 0.15])
@@ -928,7 +929,7 @@ def draw_status():
 					col2.caption(f"Статус: {_status(int(proc.split(':')[0]))}", help="⚫ - процесс остановлен,\n🔁 - выполняется процедура запуска,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
 					st.caption('Файл настроек:')
 					col1, col2 = st.columns([0.25, 0.75])
-					col2.text(str((Path(st.session_state.dd104m['loaddir'])/f".ACTIVE/{st.session_state.dd104m['servicename']}{proc.split(':')[0]}.ini").resolve().name))
+					col2.text(proc.split(':')[1])
 			else:
 				with st.empty():
 					st.write("Нет процессов!")
@@ -1095,16 +1096,16 @@ def new_render_tx(servicename):
 	
 	with statbox:
 		
-		col1, col2, col3 = st.columns([0.45, 0.05, 0.5], gap='large') # main, status emoji, refresh button
+		col1, col2, col3 = st.columns([0.45, 0.05, 0.5], gap='medium') # main, refresh button, proc_ops
 		
 		col1.subheader("Статус Активной Конфигурации:")
 		tempbox = col1.empty()
 		with tempbox:
-			draw_status()
+			draw_status(filelist)
 		
 		if col2.button("🔄"):
 			with tempbox:
-				draw_status()
+				draw_status(filelist)
 		
 		col3.subheader("Управление Процессами")
 		procs = col3.container()
