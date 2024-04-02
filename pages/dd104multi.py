@@ -246,6 +246,8 @@ def _save_to_file(string:str, confile:str, name='unnamed_file_version', return_t
 def save_loadout():
 	# out.empty()
 	ld_sanitize()
+	#WARNING: this line here is important to the rendering functionale, thank you streamlit
+	st.session_state.dd104m['ld-editor-flag'] = False
 	print(st.session_state)
 	
 	valid = True
@@ -861,9 +863,8 @@ def _ld_create_form(loadout:dict, box:st.empty):
 						
 				
 			
-			if _form.form_submit_button('Сохранить Конфигурацию'):#, on_click=save_loadout)
-				save_loadout()
-				st.session_state.dd104m['ld-editor-flag'] = False
+			_form.form_submit_button('Сохранить Конфигурацию', on_click=save_loadout)
+				
 
 
 # 
@@ -1077,12 +1078,18 @@ def new_render_tx(servicename):
 			
 			
 			if 'activator_selected_ld' in st.session_state.dd104m:
+				
+				def activator_wrap(name:str):
+					activate_ld(name)
+					st.session_state.ld_selector = None
+				
 				with c1c2:
-					st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activate_ld, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']})
+					st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activator_wrap, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']})
 			
 		
 		
 		with edits:
+			
 			ec1, ec2 = st.columns([0.9, 0.1])
 			ld_formbox = st.empty()
 			if 'activator_selected_ld' in st.session_state.dd104m and st.session_state.dd104m['activator_selected_ld'] and st.session_state.dd104m['ld-editor-flag']:
