@@ -350,7 +350,7 @@ def _apply_process_ops(out: st.empty):
 	
 	#print(f"tgts: {tgts}")
 	
-	errs = {]
+	errs = {}
 	
 	for tgt in tgts:
 		try:
