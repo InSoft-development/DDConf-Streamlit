@@ -1080,7 +1080,7 @@ def new_render_tx(servicename):
 			with c_load:
 				st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activate_ld, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name'], 'out':aout})
 		
-		options = [f"{i}: Процесс {i} ({list_ld(st.session_state.dd104m['active_ld']['name'])[i]})" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld'] else []
+		
 		
 		
 		
@@ -1097,6 +1097,12 @@ def new_render_tx(servicename):
 	
 	
 	with statbox:
+		
+		ldlist = list_ld(st.session_state.dd104m['active_ld']['name'])
+		
+		options = [f"{i}: Процесс {i} ({[f['savename'] for f in filelist if f['filename'] == ldlist[i]][0]})" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld'] else []
+		
+		
 		
 		col1, col2, col3 = st.columns([0.45, 0.05, 0.5], gap='medium') # main, refresh button, proc_ops
 		
