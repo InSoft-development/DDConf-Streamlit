@@ -861,7 +861,9 @@ def _ld_create_form(loadout:dict, box:st.empty):
 						
 				
 			
-			_form.form_submit_button('Сохранить Конфигурацию', on_click=save_loadout)
+			if _form.form_submit_button('Сохранить Конфигурацию'):#, on_click=save_loadout)
+				save_loadout()
+				st.session_state.dd104m['ld-editor-flag'] = False
 
 
 # 
