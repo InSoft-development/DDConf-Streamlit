@@ -1049,7 +1049,7 @@ def new_render_tx(servicename):
 			
 			# c1c1.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
 			if c1c1.button('Новая Конфигурация'):
-				newbox = col1.container(height=440)
+				newbox = col1.empty()
 				block_nl = newbox.empty()
 				nlc1, nlc2 = block_nl.columns([0.8, 0.2])
 				_nle = nlc1.empty()
