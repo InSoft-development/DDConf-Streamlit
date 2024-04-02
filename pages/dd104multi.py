@@ -733,7 +733,7 @@ def processify() -> dict:
 	return {'errors':errors, 'failed':failed}
 
 
-def activate_ld(name:str)#, out:st.empty()): 
+def activate_ld(name:str):#, out:st.empty()): 
 	# out.empty()
 	try:
 		loadout = Path(st.session_state.dd104m['loaddir'])/name
