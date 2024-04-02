@@ -1103,7 +1103,7 @@ def new_render_tx(servicename):
 	
 	with statbox:
 		
-		col1, col2= st.columns([0.95, 0.05], gap='large') # main, status emoji, refresh button
+		col1, col2, col3 = st.columns([0.45, 0.05, 0.5], gap='large') # main, status emoji, refresh button
 		
 		col1.subheader("Статус Активной Конфигурации:")
 		tempbox = col1.empty()
