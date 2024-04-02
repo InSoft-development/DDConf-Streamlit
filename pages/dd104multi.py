@@ -519,8 +519,10 @@ def _status(num = 1) -> str:
 			try:
 				data = _statparse(stat.stdout)
 				if data:
-					if ("stopped" in data['Active'].lower() or "start-pre" in data['Active'].lower() or 'dead' in data['Active'].lower()) and not 'failed' in data['Active'].lower():
+					if ("stopped" in data['Active'].lower() or 'dead' in data['Active'].lower()) and not 'failed' in data['Active'].lower():
 						return "⚫"
+					elif "start-pre" in data['Active'].lower():
+						return f"🔁"
 					elif 'failed' in data['Active'].lower():
 						return f"🔴"
 					elif "running" in data['Active'].lower():
@@ -919,7 +921,7 @@ def draw_status():
 				for proc in options:
 					col1, col2 = st.columns([0.85, 0.15])
 					col1.caption(f"Процесс {proc.split(':')[0]}")
-					col2.caption(f"Статус: {_status(int(proc.split(':')[0]))}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
+					col2.caption(f"Статус: {_status(int(proc.split(':')[0]))}", help="⚫ - процесс остановлен,\n🔁 - выполняется процедура запуска,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
 					st.caption('Файл настроек:')
 					col1, col2 = st.columns([0.25, 0.75])
 					col2.text(str((Path(st.session_state.dd104m['loaddir'])/f".ACTIVE/{st.session_state.dd104m['servicename']}{proc.split(':')[0]}.ini").resolve().name))
