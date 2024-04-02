@@ -951,7 +951,7 @@ def new_render_tx(servicename):
 	
 	Status, Loadouts = Presettab.tabs(['Статус', 'Редактор'])
 	
-	statbox = Status.container(height=400)
+	statbox = Status.container()
 	
 	try:
 		with Edit:
