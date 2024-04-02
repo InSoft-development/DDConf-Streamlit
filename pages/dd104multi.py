@@ -733,8 +733,8 @@ def processify() -> dict:
 	return {'errors':errors, 'failed':failed}
 
 
-def activate_ld(name:str, out:st.empty()): 
-	out.empty()
+def activate_ld(name:str)#, out:st.empty()): 
+	# out.empty()
 	try:
 		loadout = Path(st.session_state.dd104m['loaddir'])/name
 		if '.ACTIVE' in listdir(loadout.parent):
@@ -745,16 +745,16 @@ def activate_ld(name:str, out:st.empty()):
 		if not results['errors']:
 			msg = f"dd104m: Конфигурация {name} успешно активирована!"
 			syslog.syslog(syslog.LOG_INFO, msg)
-			out.write(msg)
+			# out.write(msg)
 		else:
 			msg = f"dd104m: При обработке процессов {results['failed']} произошла(-и) ошибка(-и):   {results['errors']}"
 			syslog.syslog(syslog.LOG_ERR, msg)
-			out.write(msg)
+			# out.write(msg)
 		
 	except Exception as e:
 		msg = f"dd104m: Ошибка при активации конфигурации, подробности:  {str(e)}"
 		syslog.syslog(syslog.LOG_CRIT, msg)
-		out.write(msg)
+		# out.write(msg)
 		raise e
 
 #/Logic
@@ -1072,7 +1072,7 @@ def new_render_tx(servicename):
 		
 		if 'activator_selected_ld' in st.session_state.dd104m:
 			with c_load:
-				st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activate_ld, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name'], 'out':aout})
+				st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activate_ld, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']})
 			
 		
 		
