@@ -199,6 +199,7 @@ def list_ld(name: str): #returns the dict of files from the archive that are sym
 				files[int(i.split('dd104client')[1].split('.')[0] if 'dd104client' in i else i.split('dd104server')[1].split('.')[0])] = str((ldpath/i).resolve())
 			
 	
+	print(files)
 	return files
 
 def get_active(LDIR:str) -> str: 
