@@ -1053,7 +1053,7 @@ def new_render_tx(servicename):
 				nlc1, nlc2 = block_nl.columns([0.8, 0.2])
 				_nle = nlc1.empty()
 				_nle.subheader("Новая конфигурация")
-				Nlb = col2.container(height=240)
+				Nlb = col1.container(height=240)
 				nlc2.button("❌", on_click=close_box, kwargs={'box':block_nl, 'bname':'block_nl'}, key='newlbox-close')
 				with Nlb:
 					n1, n2 = st.columns([0.8, 0.2])
