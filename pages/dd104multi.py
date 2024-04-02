@@ -735,6 +735,7 @@ def processify() -> dict:
 
 def activate_ld(name:str):#, out:st.empty()): 
 	# out.empty()
+	st.session_state.dd104m['ld-editor-flag'] = False
 	try:
 		loadout = Path(st.session_state.dd104m['loaddir'])/name
 		if '.ACTIVE' in listdir(loadout.parent):
@@ -1050,14 +1051,13 @@ def new_render_tx(servicename):
 			# c1c1.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
 			if c1c1.button('Новая Конфигурация'):
 				newbox = col1.empty()
-				block_nl = newbox.empty()
+				block_nl = newbox.container()
 				nlc1, nlc2 = block_nl.columns([0.8, 0.2])
-				_nle = nlc1.empty()
-				_nle.subheader("Новая конфигурация")
+				nlc1.subheader("Новая конфигурация")
 				Nlb = newbox.container(height=240)
-				nlc2.button("❌", on_click=close_box, kwargs={'box':block_nl, 'bname':'block_nl'}, key='newlbox-close')
+				nlc2.button("❌", on_click=close_box, kwargs={'box':newbox, 'bname':'newbox'}, key='newbox-close')
 				with Nlb:
-					n1, n2 = st.columns([0.8, 0.2])
+					# n1, n2 = st.columns([0.8, 0.2])
 					st.session_state.dd104m['newlbox-flag'] = True
 					newlbox = st.empty()
 					# nlc2.button("❌", on_click=close_box, kwargs={'box':newlbox, 'bname':'newlbox'}, key='newlbox-close')
