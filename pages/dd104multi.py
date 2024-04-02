@@ -1033,7 +1033,7 @@ def new_render_tx(servicename):
 		
 		edits = edt.container(height=600)
 		loads = col1.container(height=160)
-		c_load = col1.container(height=110)
+		newbox = col1.container(height=110)
 		
 		
 		with loads:
@@ -1048,12 +1048,12 @@ def new_render_tx(servicename):
 			c1c1, c1c2 = st.columns(2)
 			
 			# c1c1.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
-			if c1c2.button('Новая Конфигурация'):
-				block_nl = col1.empty()
+			if c1c1.button('Новая Конфигурация'):
+				block_nl = newbox.empty()
 				nlc1, nlc2 = block_nl.columns([0.8, 0.2])
 				_nle = nlc1.empty()
 				_nle.subheader("Новая конфигурация")
-				Nlb = col1.container(height=240)
+				Nlb = newbox.container(height=240)
 				nlc2.button("❌", on_click=close_box, kwargs={'box':block_nl, 'bname':'block_nl'}, key='newlbox-close')
 				with Nlb:
 					n1, n2 = st.columns([0.8, 0.2])
@@ -1067,12 +1067,12 @@ def new_render_tx(servicename):
 								st.text_input(label='Имя конфигурации', key='new_loadout_name')
 								submit = st.form_submit_button('Создать', on_click=_new_loadout)
 					
+				
 			
 			
-		
-		if 'activator_selected_ld' in st.session_state.dd104m:
-			with c_load:
-				st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activate_ld, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']})
+			if 'activator_selected_ld' in st.session_state.dd104m:
+				with c1c2:
+					st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activate_ld, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']})
 			
 		
 		
