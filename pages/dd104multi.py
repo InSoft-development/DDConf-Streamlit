@@ -1108,7 +1108,7 @@ def new_render_tx(servicename):
 		
 		col1, col2 = st.columns([0.5, 0.5], gap='medium') # main, proc_ops
 		
-		c1c1, c1c2 = col1.columns([0.8, 0.2])
+		c1c1, c1c2 = col1.columns([0.9, 0.1])
 		c1c1.subheader("Статус Активной Конфигурации:")
 		tempbox = col1.container(border=True).empty()
 		with tempbox:
