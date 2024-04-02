@@ -19,7 +19,9 @@ INIT_KEYS = ['servicename', 'inidir', 'selected_file']
 
 # TODO: MASTERMODE functionality for authorised personnel to change important parameters
 
-# TODO: move status operations (start/stop/restart process) to status subtab
+# TODO: move status operations (start/stop/restart process) to status subtab?
+
+# TODO: services are not getting created for whatever reason
 
 st.set_page_config(layout="wide")
 
@@ -177,7 +179,7 @@ def list_loadouts(_dir=INIDIR) -> list: #returns a list of dicts like {'name':''
 			out.append({'name':f, 'fcount':len(files), 'files':files})
 		
 		except Exception as e:
-			syslog.syslog(syslog.LOG_CRIT, f'dd104m-loadouts: Ошибка при перечислении файлов директории {_dir}, подробности:\n {str(e)}\n')
+			syslog.syslog(syslog.LOG_CRIT, f'dd104m-loadouts: Ошибка при перечислении файлов директории {_dir}, подробности:   {str(e)}  ')
 			raise e
 	return out
 
@@ -205,7 +207,7 @@ def get_active(LDIR:str) -> str:
 		if not LDIR.is_dir():
 			raise RuntimeError(f"Директория {LDIR} недоступна!")
 	except Exception as e:
-		msg = f"dd104m: Ошибка при получении текущей активной конфигурации, подробности:\n{str(e)}"
+		msg = f"dd104m: Ошибка при получении текущей активной конфигурации, подробности:  {str(e)}"
 		syslog.syslog(syslog.LOG_CRIT, msg)
 		raise e
 	else:
@@ -213,7 +215,7 @@ def get_active(LDIR:str) -> str:
 			try:
 				return (LDIR/'.ACTIVE').resolve().name
 			except Exception as e:
-				msg = f"dd104m: Ошибка чтения указателя активной конфигурации, подробности:\n{str(e)}"
+				msg = f"dd104m: Ошибка чтения указателя активной конфигурации, подробности:  {str(e)}"
 				syslog.syslog(syslog.LOG_CRIT, msg)
 				raise e
 		else:
@@ -257,7 +259,7 @@ def save_loadout():
 			try:
 				makedirs(ld)
 			except Exception as e:
-				msg = f"dd104m: Критическая ошибка: директория {ld.parent} недоступна для записи, подробности:\n{str(e)}"
+				msg = f"dd104m: Критическая ошибка: директория {ld.parent} недоступна для записи, подробности:  {str(e)}"
 				syslog.syslog(syslog.LOG_CRIT, msg)
 				raise e
 			
@@ -271,7 +273,7 @@ def save_loadout():
 				(ld/f).unlink()
 			
 		except Exception as e:
-			msg = f"dd104m: Критическая ошибка: не удалось очистить директорию {ld}, подробности:\n{str(e)}"
+			msg = f"dd104m: Критическая ошибка: не удалось очистить директорию {ld}, подробности:  {str(e)}"
 			print(msg)
 			syslog.syslog(syslog.LOG_CRIT, msg)
 			raise e
@@ -282,9 +284,9 @@ def save_loadout():
 			if filepath.is_file():
 				try:
 					(ld/f"dd104client{i}.ini").symlink_to(filepath)
-					print(f'\nfile {(ld/(f"dd104client{i}.ini" if i>1 else "dd104client.ini"))} was created!')
+					print(f'  file {(ld/(f"dd104client{i}.ini" if i>1 else "dd104client.ini"))} was created!')
 				except Exception as e:
-					msg = f"dd104m: Критическая ошибка: не удалось создать ссылку на файл {filepath} в директории {ld}, подробности:\n{str(e)}"
+					msg = f"dd104m: Критическая ошибка: не удалось создать ссылку на файл {filepath} в директории {ld}, подробности:  {str(e)}"
 					syslog.syslog(syslog.LOG_CRIT, msg)
 					raise e
 			else:
@@ -332,7 +334,7 @@ def ld_sanitize():
 		for k in st.session_state.dd104m['activator_selected_ld']['selectors'].keys():
 			del(st.session_state[k])
 	except Exception as e:
-		msg = f"dd104m: Критическая ошибка: невозможно обработать данные сессии, подробности:\n{str(e)}\n"
+		msg = f"dd104m: Критическая ошибка: невозможно обработать данные сессии, подробности:  {str(e)}  "
 		syslog.syslog(syslog.LOG_CRIT, msg)
 
 
@@ -360,7 +362,7 @@ def _apply_process_ops(out: st.empty):
 				errs[f"dd104client{tgt}.service"] = f'{a.stderr}'
 				raise RuntimeError(msg)
 		except Exception as e:
-			msg = f"dd104m: Ошибка выполнения операции над процессом dd104client{tgt}.service:\n{str(e)}"
+			msg = f"dd104m: Ошибка выполнения операции над процессом dd104client{tgt}.service:  {str(e)}"
 			print(msg)
 			syslog.syslog(syslog.LOG_CRIT, msg)
 			#raise RuntimeError(msg)
@@ -373,7 +375,7 @@ def _apply_process_ops(out: st.empty):
 			st.session_state.dd104m['proc_submit_disabled'] = True
 			out.empty()
 			
-		st.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {list(errs.keys())} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно. Подробности:\n\n{errs}\n")
+		st.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {list(errs.keys())} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно. Подробности:    {errs}  ")
 		st.button("OK", on_click=_cleaner)
 
 
@@ -391,9 +393,10 @@ def _statparse(data:str) -> dict:
 			# 	output['CGroup'] = f"{output['CGroup']}\n{line}"  
 			i+=1
 	except Exception as e:
-		syslog.syslog(syslog.LOG_CRIT, f'dd104m: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
+		syslog.syslog(syslog.LOG_CRIT, f'dd104m: Ошибка при парсинге блока статуса сервиса, подробности:   {str(e)}  ')
 		raise e
 	return output
+
 
 #TODO NOT create_services_and_inis, CREATE_SERVICES (the former goes into the caller of this func)
 def _create_services(num:int) -> str: 
@@ -429,7 +432,7 @@ def _create_services(num:int) -> str:
 					f.write(conf)
 					f.close()
 			except Exception as e:
-				syslog.syslog(syslog.LOG_CRIT, f"dd104: Ошибка при создании файла сервиса dd104client{i if i > 1 else ''}, подробности:\n {str(e)}\n")
+				syslog.syslog(syslog.LOG_CRIT, f"dd104: Ошибка при создании файла сервиса dd104client{i if i > 1 else ''}, подробности:   {str(e)}  ")
 				raise e
 		return "Успех"
 
@@ -439,13 +442,13 @@ def _delete_services(target='all'): #deletes all services dd104client*.service, 
 		try:
 			stat = subprocess.run('rm -f /etc/systemd/system/dd104client*.service'.split(), capture_output=True, text=True)
 		except Exception as e:
-			syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при уничтожении файлов сервисов dd104client, подробности:\n {str(e)}\n')
+			syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при уничтожении файлов сервисов dd104client, подробности:   {str(e)}  ')
 			raise e
 	else:
 		try:
 			stat = subprocess.run(f'rm -f /etc/systemd/system/{target}'.split(), capture_output=True, text=True)
 		except Exception as e:
-			syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при уничтожении файлов сервисов dd104client, подробности:\n {str(e)}\n')
+			syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при уничтожении файлов сервисов dd104client, подробности:   {str(e)}  ')
 			raise e
 
 
@@ -463,7 +466,7 @@ def _new_loadout():
 		loadname.mkdir(parents=True, exist_ok=False)
 		print(f"directory {loadname} was created!")
 	except Exception as e:
-		msg = f"dd104m: Ошибка при создании директории {loadname}, подробности:\n{str(e)}"
+		msg = f"dd104m: Ошибка при создании директории {loadname}, подробности:  {str(e)}"
 		syslog.syslog(syslog.LOG_CRIT, msg)
 		raise e
 
@@ -504,12 +507,12 @@ def _status(num = 1) -> str:
 	try:
 		stat = subprocess.run(f"systemctl status {service}".split(), text=True, capture_output=True)
 	except Exception as e:
-		msg = f"dd104m: невозможно получить статус {service}; \nПодробности: {type(e)} - {str(e)}\n"
+		msg = f"dd104m: невозможно получить статус {service};   Подробности: {type(e)} - {str(e)}  "
 		syslog.syslog(syslog.LOG_ERR, msg)
 		return f"🔴"
 	else:
 		if stat.stderr:
-			msg = f"dd104m: {stat.stderr}\n"
+			msg = f"dd104m: {stat.stderr}  "
 			syslog.syslog(syslog.LOG_ERR, msg)
 			return f"🔴"
 		else:
@@ -525,20 +528,20 @@ def _status(num = 1) -> str:
 					else:
 						raise RuntimeError(data)
 				else:
-					msg = f"dd104m: Ошибка: Парсинг статуса {service} передал пустой результат; Если эта ошибка повторяется, напишите в сервис поддержки ООО InControl.\n"
+					msg = f"dd104m: Ошибка: Парсинг статуса {service} передал пустой результат; Если эта ошибка повторяется, напишите в сервис поддержки ООО InControl.  "
 					syslog.syslog(syslog.LOG_ERR, msg)
 					return f"🔴"
 			except Exception as e:
-				syslog.syslog(syslog.LOG_CRIT, f'dd104m: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
+				syslog.syslog(syslog.LOG_CRIT, f'dd104m: Ошибка при парсинге блока статуса сервиса, подробности:   {str(e)}  ')
 				raise e
 
 def current_op() -> str:
 	try:
 		stat = _status(st.session_state.dd104m['servicename'])
 		if not stat:
-			raise RuntimeError(f"Провал при получении статуса сервиса {st.session_state.dd104m['servicename']}.\n")
+			raise RuntimeError(f"Провал при получении статуса сервиса {st.session_state.dd104m['servicename']}.  ")
 	except Exception as e:
-		msg = f"dd104m: не удалось получить статус {st.session_state.dd104m['servicename']}; \nПодробности: \n{type(e)}: {str(e)}\n"
+		msg = f"dd104m: не удалось получить статус {st.session_state.dd104m['servicename']};   Подробности:   {type(e)}: {str(e)}  "
 		return msg
 	else:
 		if 'running' in stat['Active'] or 'failed' in stat['Active']:
@@ -569,7 +572,7 @@ def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename'
 				out.append({'savename':savename, 'savetime':savetime, 'filename':str(_dir/f)})
 				
 		except Exception as e:
-			syslog.syslog(syslog.LOG_CRIT, f'dd104multi: Ошибка: Файл конфигурации {_dir/f} недоступен, подробности:\n {str(e)}\n')
+			syslog.syslog(syslog.LOG_CRIT, f'dd104multi: Ошибка: Файл конфигурации {_dir/f} недоступен, подробности:   {str(e)}  ')
 			raise e
 	return out
 	
@@ -591,7 +594,6 @@ def _edit_svc(path:str): #possible problems: num is anything that comes between 
 def parse_form(confile: str, box: st.container):
 	print(st.session_state)
 	
-	# output.empty()
 	
 	try:
 		
@@ -599,30 +601,20 @@ def parse_form(confile: str, box: st.container):
 		
 		
 	except Exception as e:
-		msg = f"dd104: Провал обработки данных формы,\nПодробности: \n{type(e)}: {str(e)}\n"
+		msg = f"dd104: Провал обработки данных формы,  Подробности:   {type(e)}: {str(e)}  "
 		syslog.syslog(syslog.LOG_CRIT, msg)
-		# output.text = msg
 		raise e
 	else:
 		try:
-			# with output:
 				
 			_save_to_file(parse_from_user(st.session_state.dd104m['contents']), confile, st.session_state.dd104m['contents']['savename'])
 			#_archive(confile)
 			_archive_d(confile)
 			close_box(box, 'editor')
 		except Exception as e:
-			# output.empty()
-			msg = f"dd104: Не удалось сохранить данные формы в файл конфигурации,\nПодробности:\n{type(e)}: {str(e)}\n"
+			msg = f"dd104: Не удалось сохранить данные формы в файл конфигурации,  Подробности:  {type(e)}: {str(e)}  "
 			syslog.syslog(syslog.LOG_CRIT, msg)
-			# output.subheader("Ошибка!")
-			# output.text(msg)
 			raise e
-		# else:
-		# 	output.subheader("Статус Операции:")
-		# 	output.text("Успех")
-		# 	if output.button("OK"):
-		# 		output.empty()
 
 def dict_cleanup(array: dict, to_be_saved=[]):
 	dead_keys=[]
@@ -638,10 +630,10 @@ def _delete_files(filelist:list):
 		try:
 			Path(item).unlink()
 		except Exception as e:
-			errors = errors + f"{str(e)}\n\n"
+			errors = errors + f"{str(e)}    "
 	if len(errors) > 0:
-		syslog.syslog(syslog.LOG_CRIT, f"DD104m: Во время проведения операций удаления произошли ошибки, подробности: \n\n{errors}")
-		st.write(f"DD104m: Во время проведения операций удаления произошли ошибки, подробности: \n\n{errors}")
+		syslog.syslog(syslog.LOG_CRIT, f"DD104m: Во время проведения операций удаления произошли ошибки, подробности:     {errors}")
+		st.write(f"DD104m: Во время проведения операций удаления произошли ошибки, подробности:     {errors}")
 	
 
 def _new_file():
@@ -691,7 +683,7 @@ def processify() -> dict:
 			# errors.append(stat.stderr)
 			raise RuntimeError(stat.stderr)
 	except Exception as e:
-		msg = f"dd104m: Ошибка при остановке процессов, подробности:\n{str(e)}"
+		msg = f"dd104m: Ошибка при остановке процессов, подробности:  {str(e)}"
 		raise RuntimeError(msg)
 	else:
 		#delete
@@ -707,7 +699,7 @@ def processify() -> dict:
 			try:
 				copy2(f"/etc/dd/dd104/{st.session_state.dd104m['servicename']}.service.default", f"/etc/systemd/system/{st.session_state.dd104m['servicename']}{i}.service")
 			except Exception as e:
-				msg = f"dd104m: Ошибка при создании файлов сервиса, подробности:\n{str(e)}"
+				msg = f"dd104m: Ошибка при создании файлов сервиса, подробности:  {str(e)}"
 				syslog.syslog(syslog.LOG_CRIT, msg)
 				errors.append(str(e))
 				failed.append(f"dd104client{i}.service")
@@ -715,7 +707,7 @@ def processify() -> dict:
 				try:
 					_edit_svc(f"/etc/systemd/system/{st.session_state.dd104m['servicename']}{i}.service")
 				except Exception as e:
-					msg = f"dd104m: Ошибка при редактировании файлов сервиса, подробности:\n{str(e)}"
+					msg = f"dd104m: Ошибка при редактировании файлов сервиса, подробности:  {str(e)}"
 					syslog.syslog(syslog.LOG_CRIT, msg)
 					errors.append(str(e))
 					failed.append(f"{st.session_state.dd104m['servicename']}{i}.service")
@@ -725,7 +717,7 @@ def processify() -> dict:
 						if stat.stderr:
 							raise RuntimeError(stat.stderr)
 					except Exception as e:
-						msg = f"dd104m: Ошибка при перезагрузке демонов systemctl, подробности:\n{str(e)}"
+						msg = f"dd104m: Ошибка при перезагрузке демонов systemctl, подробности:  {str(e)}"
 						syslog.syslog(syslog.LOG_CRIT, msg)
 						errors.append(str(e))
 						failed.append(f"systemctl daemon-reload")
@@ -748,12 +740,12 @@ def activate_ld(name:str, out:st.empty()):
 			syslog.syslog(syslog.LOG_INFO, msg)
 			out.write(msg)
 		else:
-			msg = f"dd104m: При обработке процессов {results['failed']} произошла(-и) ошибка(-и): \n{results['errors']}"
+			msg = f"dd104m: При обработке процессов {results['failed']} произошла(-и) ошибка(-и):   {results['errors']}"
 			syslog.syslog(syslog.LOG_ERR, msg)
 			out.write(msg)
 		
 	except Exception as e:
-		msg = f"dd104m: Ошибка при активации конфигурации, подробности:\n{str(e)}"
+		msg = f"dd104m: Ошибка при активации конфигурации, подробности:  {str(e)}"
 		syslog.syslog(syslog.LOG_CRIT, msg)
 		out.write(msg)
 		raise e
@@ -780,7 +772,7 @@ def _create_form(formbox: st.container, filepath: str):
 				with ff.container():
 					_form = st.form("dd104mform")
 	except Exception as e:
-		syslog.syslog(syslog.LOG_CRIT, f'dd104multi: Ошибка заполнения формы: подробности:\n {str(e)}\n')
+		syslog.syslog(syslog.LOG_CRIT, f'dd104multi: Ошибка заполнения формы: подробности:   {str(e)}  ')
 		raise e
 	else:
 		if st.session_state.dd104m['editor-flag']:
@@ -819,6 +811,12 @@ def _create_form(formbox: st.container, filepath: str):
 				submit = st.form_submit_button(label='Сохранить', on_click=parse_form, kwargs={'confile':filepath, 'box':formbox})
 			
 
+def _add_process(box:st.empty):
+	# out.empty()
+	box.empty()
+	# out.write(st.session_state)
+	if 'fcount' in st.session_state.dd104m['activator_selected_ld']:
+		st.session_state.dd104m['activator_selected_ld']['fcount'] += 1
 
 def _ld_create_form(loadout:dict, box:st.empty):
 	box.empty()
