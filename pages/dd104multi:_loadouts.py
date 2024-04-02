@@ -416,7 +416,7 @@ def get_active(LDIR:str) -> str:
 def _edit_svc(path:str): #possible problems: num is anything that comes between dd104<> and .
 	
 	path = Path(path)
-	num = path.name().split('.')[0].split(st.session_state.dd104L['servicename'])[1]
+	num = path.name.split('.')[0].split(st.session_state.dd104L['servicename'])[1]
 	text = path.read_text().split('\n')
 	for i in range(0, len(text)):
 		if 'ExecStart=' in text[i] and text[i].strip()[0] != '#':

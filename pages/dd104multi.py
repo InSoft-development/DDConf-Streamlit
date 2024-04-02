@@ -339,7 +339,7 @@ def ld_sanitize():
 
 
 def _apply_process_ops(out: st.empty):
-	out.empty()
+	# out.empty()
 	# out.write(st.session_state)
 	if st.session_state.oplist_select == 'Перезапустить':
 		operation = 'restart'
@@ -658,7 +658,7 @@ def _new_file():
 def _edit_svc(path:str): #possible problems: num is anything that comes between dd104<> and .
 	
 	path = Path(path)
-	num = path.name().split('.')[0].split(st.session_state.dd104m['servicename'])[1]
+	num = path.name.split('.')[0].split(st.session_state.dd104m['servicename'])[1]
 	text = path.read_text().split('\n')
 	for i in range(0, len(text)):
 		if 'ExecStart=' in text[i] and text[i].strip()[0] != '#':
