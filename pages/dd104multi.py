@@ -350,14 +350,14 @@ def _apply_process_ops(out: st.empty):
 	
 	#print(f"tgts: {tgts}")
 	
-	errs = []
+	errs = {]
 	
 	for tgt in tgts:
 		try:
 			a = subprocess.run(f'systemctl {operation} dd104client{tgt}.service'.split(), text=True, capture_output=True)
 			if a.stderr:
 				msg = f"{a.stderr}"
-				errs.append(f"dd104client{tgt}.service")
+				errs[f"dd104client{tgt}.service"] = f'{a.stderr}'
 				raise RuntimeError(msg)
 		except Exception as e:
 			msg = f"dd104m: Ошибка выполнения операции над процессом dd104client{tgt}.service:\n{str(e)}"
@@ -373,7 +373,7 @@ def _apply_process_ops(out: st.empty):
 			st.session_state.dd104m['proc_submit_disabled'] = True
 			out.empty()
 			
-		st.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {errs} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно.")
+		st.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {errs.keys()} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно. Подробности:\n\n{errs}\n")
 		st.button("OK", on_click=_cleaner)
 
 
