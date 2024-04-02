@@ -1055,7 +1055,7 @@ def new_render_tx(servicename):
 				nlc1, nlc2 = block_nl.columns([0.8, 0.2])
 				nlc1.subheader("Новая конфигурация")
 				nlc2.button("❌", on_click=close_box, kwargs={'box':newbox, 'bname':'newbox'}, key='newbox-close')
-				Nlb = newbox.container(height=240)
+				Nlb = block_nl.container(height=240)
 				with Nlb:
 					# n1, n2 = st.columns([0.8, 0.2])
 					st.session_state.dd104m['newlbox-flag'] = True
