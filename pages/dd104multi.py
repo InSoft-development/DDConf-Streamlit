@@ -1106,22 +1106,23 @@ def new_render_tx(servicename):
 		
 		
 		
-		col1, col2, col3 = st.columns([0.45, 0.05, 0.5], gap='medium') # main, refresh button, proc_ops
+		col1, col2 = st.columns([0.5, 0.5], gap='medium') # main, proc_ops
 		
-		col1.subheader("Статус Активной Конфигурации:")
+		c1c1, c1c2 = col1.columns([0.8, 0.2])
+		c1c1.subheader("Статус Активной Конфигурации:")
 		tempbox = col1.container(border=True).empty()
 		with tempbox:
 			draw_status()
 		
-		if col2.button("🔄"):
+		if c1c2.button("🔄"):
 			with tempbox:
 				draw_status()
 		
-		col3.subheader("Управление Процессами")
-		procs = col3.container(border=True)
+		col2.subheader("Управление Процессами")
+		procs = col2.container(border=True)
 		
 		
-		outbox = col3.empty()
+		outbox = col2.empty()
 		
 		with procs:
 			
