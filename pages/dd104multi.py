@@ -375,6 +375,9 @@ def _apply_process_ops(out: st.empty):
 			st.session_state.dd104m['proc_submit_disabled'] = True
 			out.empty()
 			
+		with st.container():
+			st.subheader("Результат операции:")
+		
 		st.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {list(errs.keys())} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно. Подробности:    {errs}  ")
 		st.button("OK", on_click=_cleaner)
 
@@ -1077,19 +1080,7 @@ def new_render_tx(servicename):
 		
 		
 		
-		with procs:
-			
-			def disabler():
-					st.session_state.dd104m['proc_submit_disabled'] = not ('proclist_select' in st.session_state and st.session_state['proclist_select']) or not ('oplist_select' in st.session_state and st.session_state['oplist_select'])
-				
-			
-			procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'active_ld' in st.session_state.dd104m), key=f"proclist_select", placeholder="Не выбрано", on_change=disabler)
-			
-			opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(not 'active_ld' in st.session_state.dd104m), key="oplist_select", placeholder="Не выбрано", on_change=disabler)
-			
-			
-			if procs.button("Применить", disabled=st.session_state.dd104m['proc_submit_disabled'] if 'proc_submit_disabled' in st.session_state.dd104m else True):
-				_apply_process_ops(aout)
+		
 	
 	
 	with edits:
@@ -1113,6 +1104,19 @@ def new_render_tx(servicename):
 		if col2.button("🔄"):
 			with tempbox:
 				draw_status()
+		
+		col3.subheader("Управление Процессами")
+		procs = col3.container()
+		outbox = col3.empty()
+		
+		with procs:
+			
+			procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'active_ld' in st.session_state.dd104m), key=f"proclist_select", placeholder="Не выбрано")
+			
+			opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(len(procselect) > 0), key="oplist_select", placeholder="Не выбрано", on_change=_apply_process_ops, kwargs={'out':outbox})
+			
+			
+			
 	
 	with Outputs.empty():
 		st.write(st.session_state)
