@@ -1033,16 +1033,19 @@ def new_render_tx(servicename):
 		edt.subheader("Редактор выбранной конфигурации")
 		
 		edits = edt.container(height=600)
-		loads = col1.container(height=160)
+		loads = col1.container(height=200)
 		# newbox = col1.container(height=440)
 		
 		
 		with loads:
 			
 			def _load():
-				st.session_state.dd104m['activator_selected_ld'] = [x for x in loadouts if x['name'] == st.session_state.ld_selector][0]
-				st.session_state.dd104m['ld-editor-flag'] = True
-				# st.session_state.ld_selector = None
+				if st.session_state.ld_selector:
+					st.session_state.dd104m['activator_selected_ld'] = [x for x in loadouts if x['name'] == st.session_state.ld_selector][0]
+					st.session_state.dd104m['ld-editor-flag'] = True
+					# st.session_state.ld_selector = None
+				
+			
 			
 			selector = st.selectbox(label="Выберите конфигурацию", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', on_change=_load, key='ld_selector')
 			
