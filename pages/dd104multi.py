@@ -927,15 +927,15 @@ def draw_status():
 	with statbox:
 		if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld']:
 			ldlist = list_ld(st.session_state.dd104m['active_ld']['name'])
-			options = [f"{i}:{[f['savename']+'@'+f['savetime'] for f in filelist if f['filename'] == ldlist[i]][0]}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] 
+			options = [f"{i}: {[f['savename']+'@'+f['savetime'] for f in filelist if f['filename'] == ldlist[i]][0]}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] 
 			if options:
 				for proc in options:
 					col1, col2 = st.columns([0.85, 0.15])
-					col1.caption(f"Процесс {proc.split(':')[0]}")
-					col2.caption(f"Статус: {_status(int(proc.split(':')[0]))}", help="⚫ - процесс остановлен,\n🔁 - выполняется процедура запуска,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
+					col1.caption(f"Процесс {proc.split(': ')[0]}")
+					col2.caption(f"Статус: {_status(int(proc.split(': ')[0]))}", help="⚫ - процесс остановлен,\n🔁 - выполняется процедура запуска,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
 					col1, col2 = st.columns([0.4, 0.6])
 					col1.caption('Файл настроек:')
-					col2.text(proc.split(':')[1])
+					col2.text(proc.split(': ')[1])
 			else:
 				with st.empty():
 					st.write("Нет процессов!")
