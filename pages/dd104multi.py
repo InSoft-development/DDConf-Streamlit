@@ -955,7 +955,7 @@ def draw_table_status():
 			
 			for i in options:
 				Data['Процесс'].append(i.split(': ')[0])
-				Data["Статус"].append(_status(int(i.split(': ')[0]))
+				Data["Статус"].append(_status(int(i.split(': ')[0])))
 				Data['Файл настроек'].append(i.split(': ')[1])
 		
 			with st.container():
