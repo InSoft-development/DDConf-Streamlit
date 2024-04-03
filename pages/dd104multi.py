@@ -1107,18 +1107,18 @@ def new_render_tx(servicename):
 	with LSelectBox:
 		def _load():
 			if st.session_state.stat_ld_selector:
-				st.session_state.dd104m['stat_selected_ld'] = [x for x in loadouts if x['name'] == st.session_state.stat_ld_selector][0]
+				st.session_state.dd104m['activator_selected_ld'] = [x for x in loadouts if x['name'] == st.session_state.stat_ld_selector][0]
 		
 		selector = st.selectbox(label="Выберите конфигурацию", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', on_change=_load, key='stat_ld_selector')
 		
-		if 'stat_selected_ld' in st.session_state.dd104m:
+		if 'activator_selected_ld' in st.session_state.dd104m:
 			
 			def activator_wrap(name:str):
 				activate_ld(name)
 				st.session_state.stat_ld_selector = None
-				del(st.session_state.dd104m['stat_selected_ld'])
+				del(st.session_state.dd104m['activator_selected_ld'])
 			
-			st.button(f"Загрузить конфигурацию {st.session_state.dd104m['stat_selected_ld']['name']}", on_click=activator_wrap, kwargs={'name':st.session_state.dd104m['stat_selected_ld']['name']})
+			st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activator_wrap, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']})
 	
 	with statbox:
 		
