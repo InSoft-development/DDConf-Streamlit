@@ -947,9 +947,9 @@ def draw_status():
 def draw_table_status():
 	filelist = list_sources(st.session_state.dd104m['arcdir'])
 	
-	columns = []
+	Data = {'Процесс':[1,2,3],'Статус':[st.write("red[bad]"), "green[good]", 'neutral'],'Файл настроек:':['-','-','-']}
 	
-	statable = st.table(data = {'1':[1,2,3], '2':[4,5,6]})
+	statable = st.table(data = Data)
 	
 
 
