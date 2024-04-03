@@ -956,6 +956,7 @@ def new_render_tx(servicename):
 	Status, Loadouts = Presettab.tabs(['Процессы', 'Редактор'])
 	
 	statbox = Status.container()
+	LSelectBox = Status.container()
 	
 	try:
 		with Edit:
@@ -1103,6 +1104,21 @@ def new_render_tx(servicename):
 				_ld_create_form(st.session_state.dd104m['activator_selected_ld'], ld_formbox)
 		
 	
+	with LSelectBox:
+		def _load():
+			if st.session_state.stat_ld_selector:
+				st.session_state.dd104m['stat_selected_ld'] = [x for x in loadouts if x['name'] == st.session_state.stat_ld_selector][0]
+		
+		selector = st.selectbox(label="Выберите конфигурацию", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', on_change=_load, key='stat_ld_selector')
+		
+		if 'activator_selected_ld' in st.session_state.dd104m:
+			
+			def activator_wrap(name:str):
+				activate_ld(name)
+				st.session_state.stat_ld_selector = None
+				del(st.session_state.dd104m['stat_selected_ld'])
+			
+			st.button(f"Загрузить конфигурацию {st.session_state.dd104m['stat_selected_ld']['name']}", on_click=activator_wrap, kwargs={'name':st.session_state.dd104m['stat_selected_ld']['name']})
 	
 	with statbox:
 		
@@ -1139,7 +1155,8 @@ def new_render_tx(servicename):
 			opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(len(procselect) == 0), key="oplist_select", placeholder="Не выбрано", on_change=_apply_process_ops, kwargs={'out':outbox})
 			
 			
-			
+		
+	
 	
 	with Outputs.empty():
 		st.write(st.session_state)
