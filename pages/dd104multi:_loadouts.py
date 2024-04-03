@@ -172,6 +172,8 @@ def _status(num = 1) -> str:
 				if data:
 					if ("stopped" in data['Active'].lower() or 'dead' in data['Active'].lower()) and not 'failed' in data['Active'].lower():
 						return "⚫"
+					elif 'activating' in data['Active'].lower():
+						return f"asdf"
 					elif 'failed' in data['Active'].lower():
 						return f"🔴"
 					elif "running" in data['Active'].lower():
