@@ -505,44 +505,78 @@ def _new_loadout():
 # 				syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
 # 				raise e
 
-def _status(num = 1) -> str:
+def _status(num = 1, way='emoji') -> str:
 	if num>=1:
 		service = f"dd104client{num}.service" if _mode == 'tx' else f"dd104server{num}.service"
 	else:
 		raise RuntimeError(f"dd104m: номер процесса за границей области допустимых значений!")
 	
-	try:
-		stat = subprocess.run(f"systemctl status {service}".split(), text=True, capture_output=True)
-	except Exception as e:
-		msg = f"dd104m: невозможно получить статус {service};   Подробности: {type(e)} - {str(e)}  "
-		syslog.syslog(syslog.LOG_ERR, msg)
-		return f"🔴"
-	else:
-		if stat.stderr:
-			msg = f"dd104m: {stat.stderr}  "
+	if way == 'emoji':
+		try:
+			stat = subprocess.run(f"systemctl status {service}".split(), text=True, capture_output=True)
+		except Exception as e:
+			msg = f"dd104m: невозможно получить статус {service};   Подробности: {type(e)} - {str(e)}  "
 			syslog.syslog(syslog.LOG_ERR, msg)
 			return f"🔴"
 		else:
-			try:
-				data = _statparse(stat.stdout)
-				if data:
-					if ("stopped" in data['Active'].lower() or 'dead' in data['Active'].lower()) and not 'failed' in data['Active'].lower():
-						return "⚫"
-					elif "activating" in data['Active'].lower():
-						return f"🔁"
-					elif 'failed' in data['Active'].lower():
-						return f"🔴"
-					elif "running" in data['Active'].lower():
-						return f"🟢"
+			if stat.stderr:
+				msg = f"dd104m: {stat.stderr}  "
+				syslog.syslog(syslog.LOG_ERR, msg)
+				return f"🔴"
+			else:
+				try:
+					data = _statparse(stat.stdout)
+					if data:
+						if ("stopped" in data['Active'].lower() or 'dead' in data['Active'].lower()) and not 'failed' in data['Active'].lower():
+							return "⚫"
+						elif "activating" in data['Active'].lower():
+							return f"🔁"
+						elif 'failed' in data['Active'].lower():
+							return f"🔴"
+						elif "running" in data['Active'].lower():
+							return f"🟢"
+						else:
+							raise RuntimeError(data)
 					else:
-						raise RuntimeError(data)
-				else:
-					msg = f"dd104m: Ошибка: Парсинг статуса {service} передал пустой результат; Если эта ошибка повторяется, напишите в сервис поддержки ООО InControl.  "
-					syslog.syslog(syslog.LOG_ERR, msg)
-					return f"🔴"
-			except Exception as e:
-				syslog.syslog(syslog.LOG_CRIT, f'dd104m: Ошибка при парсинге блока статуса сервиса, подробности:   {str(e)}  ')
-				raise e
+						msg = f"dd104m: Ошибка: Парсинг статуса {service} передал пустой результат; Если эта ошибка повторяется, напишите в сервис поддержки ООО InControl.  "
+						syslog.syslog(syslog.LOG_ERR, msg)
+						return f"🔴"
+				except Exception as e:
+					syslog.syslog(syslog.LOG_CRIT, f'dd104m: Ошибка при парсинге блока статуса сервиса, подробности:   {str(e)}  ')
+					raise e
+	elif way == 'text':
+		try:
+			stat = subprocess.run(f"systemctl status {service}".split(), text=True, capture_output=True)
+		except Exception as e:
+			msg = f"dd104m: невозможно получить статус {service};   Подробности: {type(e)} - {str(e)}  "
+			syslog.syslog(syslog.LOG_ERR, msg)
+			return f"Ошибка! Подробности: {msg}"
+		else:
+			if stat.stderr:
+				msg = f"dd104m: {stat.stderr}  "
+				syslog.syslog(syslog.LOG_ERR, msg)
+				return f"Ошибка! Подробности: {msg}"
+			else:
+				try:
+					data = _statparse(stat.stdout)
+					if data:
+						if ("stopped" in data['Active'].lower() or 'dead' in data['Active'].lower()) and not 'failed' in data['Active'].lower():
+							return "Остановлен"
+						elif "activating" in data['Active'].lower():
+							return f"Запускается"
+						elif 'failed' in data['Active'].lower():
+							return f"Краш"
+						elif "running" in data['Active'].lower():
+							return f"Запущен"
+						else:
+							raise RuntimeError(data)
+					else:
+						msg = f"dd104m: Ошибка: Парсинг статуса {service} передал пустой результат; Если эта ошибка повторяется, напишите в сервис поддержки ООО InControl.  "
+						syslog.syslog(syslog.LOG_ERR, msg)
+						return f"Ошибка! Подробности: {msg}"
+				except Exception as e:
+					syslog.syslog(syslog.LOG_CRIT, f'dd104m: Ошибка при парсинге блока статуса сервиса, подробности:   {str(e)}  ')
+					raise e
 
 def current_op() -> str:
 	try:
@@ -955,7 +989,7 @@ def draw_table_status():
 			
 			for i in options:
 				Data['Процесс'].append(i.split(': ')[0])
-				Data["Статус"].append(_status(int(i.split(': ')[0])))
+				Data["Статус"].append(_status(int(i.split(': ')[0]), 'text'))
 				Data['Файл настроек'].append(i.split(': ')[1])
 		
 			with st.container():
