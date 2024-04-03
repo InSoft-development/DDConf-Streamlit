@@ -1091,10 +1091,15 @@ def new_render_tx(servicename):
 		
 		with edits:
 			
+			def closer_wrap(box:st.empty, bname:str):
+				close_box(box, bname)
+				st.session_state.ld_selector = None
+				del(st.session_state.dd104m['activator_selected_ld'])
+			
 			ec1, ec2 = st.columns([0.9, 0.1])
 			ld_formbox = st.empty()
 			if 'activator_selected_ld' in st.session_state.dd104m and st.session_state.dd104m['activator_selected_ld'] and st.session_state.dd104m['ld-editor-flag']:
-				ec2.button("❌", on_click=close_box, kwargs={'box':ld_formbox, 'bname':'ld-editor'}, key='ld-editor-close')
+				ec2.button("❌", on_click=closer_wrap, kwargs={'box':ld_formbox, 'bname':'ld-editor'}, key='ld-editor-close')
 				_ld_create_form(st.session_state.dd104m['activator_selected_ld'], ld_formbox)
 		
 	
@@ -1105,7 +1110,7 @@ def new_render_tx(servicename):
 		
 		arclist = list_sources(st.session_state.dd104m['arcdir'])
 		
-		options = [f"{i}: Процесс {i} - {[f['savename']+' (' + f['savetime']+')' for f in arclist if f['filename'] == ldlist[i]][0]})" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld'] else []
+		options = [f"{i}: Процесс {i} - {[f['savename']+' (' + f['savetime']+')' for f in arclist if f['filename'] == ldlist[i]][0]}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld'] else []
 		
 		
 		
