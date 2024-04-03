@@ -1111,7 +1111,7 @@ def new_render_tx(servicename):
 		
 		selector = st.selectbox(label="Выберите конфигурацию", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', on_change=_load, key='stat_ld_selector')
 		
-		if 'activator_selected_ld' in st.session_state.dd104m:
+		if 'stat_selected_ld' in st.session_state.dd104m:
 			
 			def activator_wrap(name:str):
 				activate_ld(name)
