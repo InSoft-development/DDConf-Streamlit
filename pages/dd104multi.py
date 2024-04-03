@@ -1086,7 +1086,7 @@ def new_render_tx(servicename):
 					del(st.session_state.dd104m['activator_selected_ld'])
 				
 				with c1c2:
-					st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activator_wrap, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']})
+					st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activator_wrap, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']}, key='load_ld_activator_btn')
 			
 		
 		
@@ -1118,7 +1118,7 @@ def new_render_tx(servicename):
 				st.session_state.stat_ld_selector = None
 				del(st.session_state.dd104m['activator_selected_ld'])
 			
-			st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activator_wrap, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']})
+			st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activator_wrap, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']}, key='stat_ld_activator_btn')
 	
 	with statbox:
 		
