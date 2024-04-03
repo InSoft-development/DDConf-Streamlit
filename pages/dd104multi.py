@@ -1091,7 +1091,7 @@ def new_render_tx(servicename):
 				_ld_create_form(st.session_state.dd104m['selected_ld'], ld_formbox)
 		
 	
-	with LSelectBox.columns(2)[0]:
+	with LSelectBox.columns(2)[1]:
 		def _load():
 			if st.session_state.stat_ld_selector:
 				st.session_state.dd104m['activator_selected_ld'] = [x for x in loadouts if x['name'] == st.session_state.stat_ld_selector][0]
