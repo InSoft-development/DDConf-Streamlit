@@ -943,6 +943,16 @@ def draw_status():
 			with st.empty():
 				st.write("Нет загруженной конфигурации!")
 
+
+def draw_table_status():
+	filelist = list_sources(st.session_state.dd104m['arcdir'])
+	
+	columns = []
+	
+	statable = st.table(data = [1,2,3])
+	
+
+
 def new_render_tx(servicename):
 	st.title('Сервис Конфигурации Диода Данных')
 	st.header('Страница настройки протокола DD104')
@@ -1149,6 +1159,8 @@ def new_render_tx(servicename):
 	
 	with Outputs.empty():
 		st.write(st.session_state)
+	with Outputs.empty():
+		draw_table_status()
 
 
 def render_rx(servicename):
