@@ -1157,11 +1157,11 @@ def new_render_tx(servicename):
 		c1c1.subheader("Статус Активной Конфигурации:")
 		tempbox = col1.container(border=True).empty()
 		with tempbox:
-			draw_status()
+			draw_table_status()
 		
 		if c1c2.button("🔄"):
 			with tempbox:
-				draw_status()
+				draw_table_status()
 		
 		col2.subheader("Управление Процессами")
 		procs = col2.container(border=True)
