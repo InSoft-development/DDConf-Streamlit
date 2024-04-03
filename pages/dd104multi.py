@@ -333,8 +333,8 @@ def sanitize():
 #WARNING: do not merge w/ sanitize() or we die
 def ld_sanitize():
 	try:
-		st.session_state.dd104m['activator_selected_ld']['selectors'] = {k:v for k,v in st.session_state.items() if 'select_file_' in k}
-		for k in st.session_state.dd104m['activator_selected_ld']['selectors'].keys():
+		st.session_state.dd104m['selected_ld']['selectors'] = {k:v for k,v in st.session_state.items() if 'select_file_' in k}
+		for k in st.session_state.dd104m['selected_ld']['selectors'].keys():
 			del(st.session_state[k])
 	except Exception as e:
 		msg = f"dd104m: Критическая ошибка: невозможно обработать данные сессии, подробности:  {str(e)}  "
