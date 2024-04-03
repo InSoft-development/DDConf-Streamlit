@@ -252,12 +252,12 @@ def save_loadout():
 	
 	valid = True
 	
-	for i in range(1, len(st.session_state.dd104m['activator_selected_ld']['selectors'])+1):
-		if f'select_file_{i}' not in st.session_state.dd104m['activator_selected_ld']['selectors'] or not st.session_state.dd104m['activator_selected_ld']['selectors'][f'select_file_{i}']:
+	for i in range(1, len(st.session_state.dd104m['selected_ld']['selectors'])+1):
+		if f'select_file_{i}' not in st.session_state.dd104m['selected_ld']['selectors'] or not st.session_state.dd104m['selected_ld']['selectors'][f'select_file_{i}']:
 			valid = False
 	
 	if valid:
-		ld = Path(st.session_state.dd104m['loaddir']) / st.session_state.dd104m['activator_selected_ld']['name']
+		ld = Path(st.session_state.dd104m['loaddir']) / st.session_state.dd104m['selected_ld']['name']
 		if not ld.is_dir():
 			try:
 				makedirs(ld)
@@ -281,8 +281,8 @@ def save_loadout():
 			syslog.syslog(syslog.LOG_CRIT, msg)
 			raise e
 			
-		for i in range(1, len(st.session_state.dd104m['activator_selected_ld']['selectors'])+1):
-			filepath = Path(st.session_state.dd104m['arcdir']) / st.session_state.dd104m['activator_selected_ld']['selectors'][f'select_file_{i}'].split('(')[-1][:-1:]
+		for i in range(1, len(st.session_state.dd104m['selected_ld']['selectors'])+1):
+			filepath = Path(st.session_state.dd104m['arcdir']) / st.session_state.dd104m['selected_ld']['selectors'][f'select_file_{i}'].split('(')[-1][:-1:]
 			
 			if filepath.is_file():
 				try:
