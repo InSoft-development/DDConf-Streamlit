@@ -945,11 +945,33 @@ def draw_status():
 
 
 def draw_table_status():
-	filelist = list_sources(st.session_state.dd104m['arcdir'])
-	
-	Data = {'Процесс':[1,2,3],"Статус (⚫ - процесс остановлен,\n🔁 - выполняется процедура запуска,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.)":["", "green[good]", 'neutral'],'Файл настроек:':['-','-','-']}
-	
-	statable = st.table(data = Data)
+	if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld']:
+		ldlist = list_ld(st.session_state.dd104m['active_ld']['name'])
+		filelist = list_sources(st.session_state.dd104m['arcdir'])
+		options = [f"{i}: {[f['savename']+' ('+f['savetime']+')' for f in filelist if f['filename'] == ldlist[i]][0]}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] 
+		
+		if options:
+			Data = {'Процесс':[],"Статус":[],'Файл настроек':[]}
+			
+			for i in options:
+				Data['Процесс'].append(i.split(': ')[0])
+				Data["Статус"].append(_status(int(i.split(': ')[0]))
+				Data['Файл настроек'].append(i.split(': ')[1])
+		
+			with st.container():
+				st.table(data = Data)
+		
+		else:
+			with st.empty():
+				st.write("Нет процессов!")
+	else:
+		with st.empty():
+			st.write("Нет загруженной конфигурации!")
+		
+		
+		
+		
+		
 	
 
 
