@@ -1159,9 +1159,13 @@ def new_render_tx(servicename):
 			
 			ec1, ec2 = st.columns([0.9, 0.1])
 			ld_formbox = st.empty()
-			add = st.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_add_process, kwargs={'box':ld_formbox})
+			
 			if 'selected_ld' in st.session_state.dd104m and st.session_state.dd104m['selected_ld'] and st.session_state.dd104m['ld-editor-flag']:
+				
 				ec2.button("❌", on_click=closer_wrap, kwargs={'box':ld_formbox, 'bname':'ld-editor'}, key='ld-editor-close')
+				
+				add = st.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_add_process, kwargs={'box':ld_formbox})
+				
 				_ld_create_form(st.session_state.dd104m['selected_ld'], ld_formbox)
 			
 			
