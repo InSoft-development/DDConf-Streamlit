@@ -1045,7 +1045,7 @@ def new_render_tx(servicename):
 			
 			def _load():
 				if st.session_state.ld_selector:
-					st.session_state.dd104m['activator_selected_ld'] = [x for x in loadouts if x['name'] == st.session_state.ld_selector][0]
+					st.session_state.dd104m['selected_ld'] = [x for x in loadouts if x['name'] == st.session_state.ld_selector][0]
 					st.session_state.dd104m['ld-editor-flag'] = True
 					# st.session_state.ld_selector = None
 				
@@ -1074,19 +1074,6 @@ def new_render_tx(servicename):
 							with _form_nld:
 								st.text_input(label='Имя конфигурации', key='new_loadout_name')
 								submit = st.form_submit_button('Создать', on_click=_new_loadout)
-					
-				
-			
-			
-			if 'activator_selected_ld' in st.session_state.dd104m:
-				
-				def activator_wrap(name:str):
-					activate_ld(name)
-					st.session_state.ld_selector = None
-					del(st.session_state.dd104m['activator_selected_ld'])
-				
-				with c1c2:
-					st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activator_wrap, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']}, key='load_ld_activator_btn')
 			
 		
 		
@@ -1095,19 +1082,21 @@ def new_render_tx(servicename):
 			def closer_wrap(box:st.empty, bname:str):
 				close_box(box, bname)
 				st.session_state.ld_selector = None
-				del(st.session_state.dd104m['activator_selected_ld'])
+				del(st.session_state.dd104m['selected_ld'])
 			
 			ec1, ec2 = st.columns([0.9, 0.1])
 			ld_formbox = st.empty()
-			if 'activator_selected_ld' in st.session_state.dd104m and st.session_state.dd104m['activator_selected_ld'] and st.session_state.dd104m['ld-editor-flag']:
+			if 'selected_ld' in st.session_state.dd104m and st.session_state.dd104m['selected_ld'] and st.session_state.dd104m['ld-editor-flag']:
 				ec2.button("❌", on_click=closer_wrap, kwargs={'box':ld_formbox, 'bname':'ld-editor'}, key='ld-editor-close')
-				_ld_create_form(st.session_state.dd104m['activator_selected_ld'], ld_formbox)
+				_ld_create_form(st.session_state.dd104m['selected_ld'], ld_formbox)
 		
 	
-	with LSelectBox:
+	with LSelectBox.columns(2)[0]:
 		def _load():
 			if st.session_state.stat_ld_selector:
 				st.session_state.dd104m['activator_selected_ld'] = [x for x in loadouts if x['name'] == st.session_state.stat_ld_selector][0]
+		
+		st.subheader('Выбор конфигурации для активации')
 		
 		selector = st.selectbox(label="Выберите конфигурацию", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', on_change=_load, key='stat_ld_selector')
 		
