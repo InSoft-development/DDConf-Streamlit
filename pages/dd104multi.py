@@ -869,11 +869,12 @@ def _ld_create_form(loadout:dict, box:st.empty):
 	with _form:
 		if st.session_state.dd104m['ld-editor-flag']:
 			
+			cont = st.container()
 			sbtn, smsg = st.columns([0.3,0.7])
 			Statusbox = smsg.empty()
 			
 			if loadout['fcount'] <= 0:
-				with _form:
+				with cont:
 					
 					col1, col2 = st.columns([0.8, 0.2])
 					col1.caption(f'Процесс 1')
@@ -898,7 +899,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 						st.session_state.dd104m['ld-assign-validation-flag'] = False
 				
 				for i in range(1, loadout['fcount']+1):
-					with _form:
+					with cont:
 						
 						col1, col2 = st.columns([0.6, 0.4])
 						col1.caption(f'Процесс {i}')
