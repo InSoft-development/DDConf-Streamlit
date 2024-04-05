@@ -866,7 +866,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 		with box:
 			archived = list_sources(st.session_state.dd104m['arcdir'])
 			
-			_form = st.form('dd104m-ld-form')
+			_form = st.container
 			files = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived]
 			loadouted = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
 			
@@ -911,7 +911,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 						
 				
 			
-			_form.form_submit_button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
+			_form.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
 				
 
 
