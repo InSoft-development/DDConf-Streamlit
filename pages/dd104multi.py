@@ -866,7 +866,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 		with box:
 			archived = list_sources(st.session_state.dd104m['arcdir'])
 			
-			_form = st.container
+			_form = st.container()
 			files = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived]
 			loadouted = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
 			
