@@ -855,9 +855,7 @@ def _add_process(box:st.empty):
 
 def _ld_create_form(loadout:dict, box:st.empty):
 	
-	def save_wrap():
-		save_loadout()
-		st.session_state.ld_selector = None
+	
 	
 	archived = list_sources(st.session_state.dd104m['arcdir'])
 	files = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived]
@@ -910,7 +908,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 						
 				
 			
-			sbtn.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
+			# sbtn.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
 				
 
 
@@ -1174,7 +1172,9 @@ def new_render_tx(servicename):
 				if 'fcount' in st.session_state.dd104m['selected_ld'] and st.session_state.dd104m['selected_ld']['fcount'] > 0:
 					st.session_state.dd104m['selected_ld']['fcount'] -= 1
 			
-			
+			def save_wrap():
+				save_loadout()
+				st.session_state.ld_selector = None
 			# add = st.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_add_process, kwargs={'box':ld_formbox})
 			
 			ec1, ec2 = st.columns([0.9, 0.1])
@@ -1184,10 +1184,12 @@ def new_render_tx(servicename):
 				
 				ec2.button("❌", on_click=closer_wrap, kwargs={'box':ld_formbox, 'bname':'ld-editor'}, key='ld-editor-close')
 				
-				btn_l, btn_r = st.columns([0.3, 0.7])
+				btn_l, btn_m, btn_r = st.columns([3])
 				
 				
-				add = btn_l.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_add_process, kwargs={'box':ld_formbox}, key='add-process-btn')
+				save = btn_l.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
+				
+				add = btn_m.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_add_process, kwargs={'box':ld_formbox}, key='add-process-btn')
 				
 				rm = btn_r.button('Удалить последний процесс из списка', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_rm_process, kwargs={'box':ld_formbox}, key='rm-process-btn')
 				
