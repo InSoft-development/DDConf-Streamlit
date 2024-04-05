@@ -853,7 +853,7 @@ def _add_process(box:st.empty):
 		st.session_state.dd104m['activator_selected_ld']['fcount'] += 1
 
 
-def _ld_create_form(loadout:dict, box:st.empty, fstat:st.container()):
+def _ld_create_form(loadout:dict, box:st.empty):
 	
 	
 	
