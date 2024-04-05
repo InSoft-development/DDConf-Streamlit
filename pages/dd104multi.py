@@ -599,7 +599,7 @@ def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename'
 		msg = f"dd104: Директория сервиса {_dir} недоступна!"
 		syslog.syslog(syslog.LOG_ERR, msg)
 		raise FileNotFoundError(msg)
-	L = [x for x in listdir(_dir) if (_dir/x).is_file() and ''.join(x[-3::]) == 'ini']
+	L = [x for x in listdir(_dir) if (_dir/x).is_file() and (_dir/x).name.split('.')[-1] == 'ini']
 	out = []
 	for f in L:
 		try:
@@ -885,7 +885,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 							col1, col2 = st.columns([0.8, 0.2])
 							col1.caption(f'Процесс {i}')
 							# col2.caption(f"Статус:  {_status(i)}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
-							st.selectbox(label='Файл настроек', options=[x for x in files if x not in [loadouted[0:i]+loadouted[i+1:] if i <len(loadouted) else loadouted[0:i]]], index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, key=f"select_file_{i}")
+							st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, key=f"select_file_{i}")
 						
 				
 			
@@ -1091,8 +1091,8 @@ def new_render_tx(servicename):
 	with Loadouts.container():
 		col1, edt = st.columns([0.3, 0.7], gap='medium')
 			
-		col1.subheader("Выбор конфигурации")
-		edt.subheader("Редактор выбранной конфигурации")
+		col1.subheader("Выбор пресета")
+		edt.subheader("Редактор выбранного пресета")
 		
 		edits = edt.container(height=600)
 		loads = col1.container(height=200)
@@ -1109,16 +1109,16 @@ def new_render_tx(servicename):
 				
 			
 			
-			selector = st.selectbox(label="Выберите конфигурацию", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', on_change=_load, key='ld_selector')
+			selector = st.selectbox(label="Выберите пресет", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', on_change=_load, key='ld_selector')
 			
 			c1c1, c1c2 = st.columns(2)
 			
 			# c1c1.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
-			if c1c1.button('Новая Конфигурация'):
+			if c1c1.button('Новый пресет'):
 				newbox = col1.empty()
 				block_nl = newbox.container()
 				nlc1, nlc2 = block_nl.columns([0.8, 0.2])
-				nlc1.subheader("Новая конфигурация")
+				nlc1.subheader("Новый пресет")
 				nlc2.button("❌", on_click=close_box, kwargs={'box':newbox, 'bname':'newbox'}, key='newbox-close')
 				Nlb = block_nl.container(height=240)
 				with Nlb:
@@ -1130,7 +1130,7 @@ def new_render_tx(servicename):
 						with newlbox.container():
 							_form_nld = st.form('newloadoutform')
 							with _form_nld:
-								st.text_input(label='Имя конфигурации', key='new_loadout_name')
+								st.text_input(label='Имя пресета', key='new_loadout_name')
 								submit = st.form_submit_button('Создать', on_click=_new_loadout)
 			
 		
@@ -1179,9 +1179,9 @@ def new_render_tx(servicename):
 			if st.session_state.stat_ld_selector:
 				st.session_state.dd104m['activator_selected_ld'] = [x for x in loadouts if x['name'] == st.session_state.stat_ld_selector][0]
 		
-		st.subheader('Выбор конфигурации для активации')
+		st.subheader('Выбор пресета для активации')
 		
-		selector = st.selectbox(label="Выберите конфигурацию", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', on_change=_load, key='stat_ld_selector')
+		selector = st.selectbox(label="Выберите пресет", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', on_change=_load, key='stat_ld_selector')
 		
 		if 'activator_selected_ld' in st.session_state.dd104m:
 			
@@ -1190,7 +1190,7 @@ def new_render_tx(servicename):
 				st.session_state.stat_ld_selector = None
 				del(st.session_state.dd104m['activator_selected_ld'])
 			
-			st.button(f"Загрузить конфигурацию {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activator_wrap, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']}, key='stat_ld_activator_btn')
+			st.button(f"Загрузить пресет {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activator_wrap, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']}, key='stat_ld_activator_btn')
 	
 	with statbox:
 		
