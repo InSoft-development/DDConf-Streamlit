@@ -864,7 +864,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 	loadouted = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
 	
 	# box.empty()
-	_form = box.container()
+	_form = box.container(border=True)
 	
 	with _form:
 		if st.session_state.dd104m['ld-editor-flag']:
