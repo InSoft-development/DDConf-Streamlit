@@ -1184,7 +1184,7 @@ def new_render_tx(servicename):
 				
 				ec2.button("❌", on_click=closer_wrap, kwargs={'box':ld_formbox, 'bname':'ld-editor'}, key='ld-editor-close')
 				
-				btn_l, btn_m, btn_r = st.columns([3])
+				btn_l, btn_m, btn_r = st.columns(3)
 				
 				
 				save = btn_l.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
