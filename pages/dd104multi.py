@@ -880,7 +880,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 					st.selectbox(label='Файл настроек', options=files, index=None, key=f"select_file_1")
 			else:
 				
-				def validate(out:st.empty):
+				def validate():
 					
 					existing = set()
 					length = 0
@@ -904,7 +904,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 						
 						# options = [x for x in files if x not in [v for k,v in st.session_state.items() if 'select_file_' in k]]
 						
-						st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, kwargs={'out':fstat}, key=f"select_file_{i}")
+						st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, key=f"select_file_{i}")
 						
 				
 			
