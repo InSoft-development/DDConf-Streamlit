@@ -890,7 +890,7 @@ def _ld_create_form(loadout:dict, box:st.empty, fstat:st.container()):
 							if v not in existing:
 								existing.add(v)
 							else:
-								out.write(":red[Внимание: обнаружены дублирующиеся значения]")
+								# out.write(":red[Внимание: обнаружены дублирующиеся значения]")
 								st.session_state.dd104m['ld-assign-validation-flag'] = True
 								break
 					if length == len(existing):
@@ -1193,7 +1193,9 @@ def new_render_tx(servicename):
 				
 				rm = btn_r.button('Удалить последний процесс из списка', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_rm_process, kwargs={'box':ld_formbox}, key='rm-process-btn')
 				
-				_ld_create_form(st.session_state.dd104m['selected_ld'], ld_formbox, ec1.container())
+				_ld_create_form(st.session_state.dd104m['selected_ld'], ld_formbox)
+				if st.session_state.dd104m['ld-assign-validation-flag']:
+					ec1.empty().write(':red[Внимание: обнаружены дублирующиеся значения]')
 			
 			
 		
