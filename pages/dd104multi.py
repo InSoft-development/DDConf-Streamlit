@@ -621,19 +621,6 @@ def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename'
 	
 
 
-
-def _edit_svc(path:str): #possible problems: num is anything that comes between dd104<> and .
-	
-	path = Path(path)
-	num = path.name().split('.')[0].split(st.session_state.dd104m['servicename'])[1]
-	text = path.read_text().split('\n')
-	for i in range(0, len(text)):
-		if 'ExecStart=' in text[i] and text[i].strip()[0] != '#':
-			text[i] = f"ExecStart=/opt/dd/{st.session_state.dd104m['servicename']}/{st.session_state.dd104m['servicename']} -c {st.session_state.dd104m['loaddir']}{st.session_state.dd104m['servicename']}{num}.ini"
-			break
-	a = path.write_text('\n'.join(text))
-
-
 def parse_form(confile: str, box: st.container):
 	print(st.session_state)
 	
@@ -863,6 +850,11 @@ def _add_process(box:st.empty):
 		st.session_state.dd104m['activator_selected_ld']['fcount'] += 1
 
 def _ld_create_form(loadout:dict, box:st.empty):
+	
+	def save_wrap():
+		save_loadout()
+		st.session_state.ld_selector = None
+	
 	box.empty()
 	# out.empty()
 	# out.write(st.session_state)
@@ -897,7 +889,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 						
 				
 			
-			_form.form_submit_button('Сохранить Конфигурацию', on_click=save_loadout)
+			_form.form_submit_button('Сохранить Конфигурацию', on_click=save_wrap)
 				
 
 
