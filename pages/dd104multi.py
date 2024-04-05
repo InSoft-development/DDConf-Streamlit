@@ -853,7 +853,7 @@ def _add_process(box:st.empty):
 		st.session_state.dd104m['activator_selected_ld']['fcount'] += 1
 
 
-def _ld_create_form(loadout:dict, box:st.empty):
+def _ld_create_form(loadout:dict, box:st.empty, fstat:st.empty):
 	
 	
 	
@@ -868,8 +868,8 @@ def _ld_create_form(loadout:dict, box:st.empty):
 		if st.session_state.dd104m['ld-editor-flag']:
 			
 			cont = st.container()
-			sbtn, smsg = st.columns([0.3,0.7])
-			Statusbox = smsg.empty()
+			# sbtn, smsg = st.columns([0.3,0.7])
+			# Statusbox = smsg.empty()
 			
 			if loadout['fcount'] <= 0:
 				with cont:
@@ -904,7 +904,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 						
 						# options = [x for x in files if x not in [v for k,v in st.session_state.items() if 'select_file_' in k]]
 						
-						st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, kwargs={'out':Statusbox}, key=f"select_file_{i}")
+						st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, kwargs={'out':fstat}, key=f"select_file_{i}")
 						
 				
 			
@@ -1184,7 +1184,7 @@ def new_render_tx(servicename):
 				
 				ec2.button("❌", on_click=closer_wrap, kwargs={'box':ld_formbox, 'bname':'ld-editor'}, key='ld-editor-close')
 				
-				btn_l, btn_m, btn_r = st.columns(3)
+				btn_l, fstat, btn_m, btn_r = st.columns([0.2, 0.4, 0.2, 0.2])
 				
 				
 				save = btn_l.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
@@ -1193,7 +1193,7 @@ def new_render_tx(servicename):
 				
 				rm = btn_r.button('Удалить последний процесс из списка', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_rm_process, kwargs={'box':ld_formbox}, key='rm-process-btn')
 				
-				_ld_create_form(st.session_state.dd104m['selected_ld'], ld_formbox)
+				_ld_create_form(st.session_state.dd104m['selected_ld'], ld_formbox, fstat.empty())
 			
 			
 		
