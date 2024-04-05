@@ -564,19 +564,19 @@ def _status(num = 1, way='emoji') -> str:
 					data = _statparse(stat.stdout)
 					if data:
 						if ("stopped" in data['Active'].lower() or 'dead' in data['Active'].lower()) and not 'failed' in data['Active'].lower():
-							return "Остановлен"
+							return ":gray[Остановлен]"
 						elif "activating" in data['Active'].lower():
-							return f"Запускается"
+							return f":yellow[Запускается]"
 						elif 'failed' in data['Active'].lower():
-							return f"Краш"
+							return f":red[Отказ]"
 						elif "running" in data['Active'].lower():
-							return f"Запущен"
+							return f":green[Запущен]"
 						else:
 							raise RuntimeError(data)
 					else:
 						msg = f"dd104m: Ошибка: Парсинг статуса {service} передал пустой результат; Если эта ошибка повторяется, напишите в сервис поддержки ООО InControl.  "
 						syslog.syslog(syslog.LOG_ERR, msg)
-						return f"Ошибка! Подробности: {msg}"
+						return f":red[Ошибка! Подробности: {msg}]"
 				except Exception as e:
 					syslog.syslog(syslog.LOG_CRIT, f'dd104m: Ошибка при парсинге блока статуса сервиса, подробности:   {str(e)}  ')
 					raise e
