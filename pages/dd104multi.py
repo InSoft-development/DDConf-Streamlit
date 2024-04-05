@@ -898,7 +898,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 						
 						col1, col2 = st.columns([0.6, 0.4])
 						col1.caption(f'Процесс {i}')
-						vstat = col2.empty()
+						vstat = col2.container()
 						
 						# options = [x for x in files if x not in [v for k,v in st.session_state.items() if 'select_file_' in k]]
 						
