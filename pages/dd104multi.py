@@ -885,7 +885,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 							col1, col2 = st.columns([0.8, 0.2])
 							col1.caption(f'Процесс {i}')
 							# col2.caption(f"Статус:  {_status(i)}", help="⚫ - процесс остановлен,\n🟢 - процесс запущен,\n🔴 - ошибка/процесс остановлен с ошибкой.")
-							st.selectbox(label='Файл настроек', options=[x for x in files if x not in loadouted[0:i]+loadouted[i:]]], index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, key=f"select_file_{i}")
+							st.selectbox(label='Файл настроек', options=[x for x in files if x not in loadouted[0:i]+loadouted[i:]], index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, key=f"select_file_{i}")
 						
 				
 			
