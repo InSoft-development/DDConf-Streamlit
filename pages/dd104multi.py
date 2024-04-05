@@ -1187,11 +1187,11 @@ def new_render_tx(servicename):
 				btn_l, btn_m, btn_r = st.columns(3)
 				
 				
-				save = btn_l.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
+				save = btn_l.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'], use_container_width=True, key='save-ld-btn')
 				
-				add = btn_m.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_add_process, kwargs={'box':ld_formbox}, key='add-process-btn')
+				add = btn_m.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_add_process, kwargs={'box':ld_formbox}, use_container_width=True, key='add-process-btn')
 				
-				rm = btn_r.button('Удалить последний процесс из списка', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_rm_process, kwargs={'box':ld_formbox}, key='rm-process-btn')
+				rm = btn_r.button('Удалить последний процесс из списка', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_rm_process, kwargs={'box':ld_formbox}, use_container_width=True, key='rm-process-btn')
 				
 				_ld_create_form(st.session_state.dd104m['selected_ld'], ld_formbox)
 				if st.session_state.dd104m['ld-assign-validation-flag']:
