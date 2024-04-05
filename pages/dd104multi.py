@@ -869,6 +869,9 @@ def _ld_create_form(loadout:dict, box:st.empty):
 	with _form:
 		if st.session_state.dd104m['ld-editor-flag']:
 			
+			sbtn, smsg = st.columns([0.3,0.7])
+			Statusbox = smsg.empty()
+			
 			if loadout['fcount'] <= 0:
 				with _form:
 					
@@ -878,7 +881,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 					st.selectbox(label='Файл настроек', options=files, index=None, key=f"select_file_1")
 			else:
 				
-				def validate():
+				def validate(out:st.empty):
 					
 					existing = set()
 					length = 0
@@ -888,7 +891,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 							if v not in existing:
 								existing.add(v)
 							else:
-								st.toast(":red[ПОВТОРЯЮЩЕЕСЯ ЗНАЧЕНИЕ]")
+								out.write(":red[ПОВТОРЯЮЩЕЕСЯ ЗНАЧЕНИЕ]")
 								st.session_state.dd104m['ld-assign-validation-flag'] = True
 								break
 					if length == len(existing):
@@ -902,11 +905,11 @@ def _ld_create_form(loadout:dict, box:st.empty):
 						
 						# options = [x for x in files if x not in [v for k,v in st.session_state.items() if 'select_file_' in k]]
 						
-						st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, key=f"select_file_{i}")
+						st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, kwargs={'out':Statusbox}, key=f"select_file_{i}")
 						
 				
 			
-			st.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
+			sbtn.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
 				
 
 
