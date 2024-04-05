@@ -564,8 +564,8 @@ def _status(num = 1, way='emoji') -> str:
 					data = _statparse(stat.stdout)
 					if data:
 						if ("stopped" in data['Active'].lower() or 'dead' in data['Active'].lower()) and not 'failed' in data['Active'].lower():
-							# return ":gray[Остановлен]"
-							return "Остановлен"
+							return ''':gray[Остановлен]'''
+							# return '''Остановлен'''
 						elif "activating" in data['Active'].lower():
 							# return f":yellow[Запускается]"
 							return "Запускается"
@@ -574,7 +574,7 @@ def _status(num = 1, way='emoji') -> str:
 							return "Отказ"
 						elif "running" in data['Active'].lower():
 							# return f":green[Запущен]"
-							return "Запущен"
+							return '''Запущен'''
 						else:
 							raise RuntimeError(data)
 					else:
