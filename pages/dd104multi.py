@@ -859,28 +859,23 @@ def _ld_create_form(loadout:dict, box:st.empty):
 		save_loadout()
 		st.session_state.ld_selector = None
 	
-	# box.empty()
-	# out.empty()
-	# out.write(st.session_state)
+	archived = list_sources(st.session_state.dd104m['arcdir'])
+	files = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived]
+	loadouted = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
 	
-	if st.session_state.dd104m['ld-editor-flag']:
-		with box:
-			archived = list_sources(st.session_state.dd104m['arcdir'])
-			
-			_form = st.container()
-			files = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived]
-			loadouted = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
-			
-			# out.write(loadouted)
+	# box.empty()
+	_form = box.container()
+	
+	with _form:
+		if st.session_state.dd104m['ld-editor-flag']:
 			
 			if loadout['fcount'] <= 0:
 				with _form:
-						with st.container():
-							
-							col1, col2 = st.columns([0.8, 0.2])
-							col1.caption(f'Процесс 1')
-							
-							st.selectbox(label='Файл настроек', options=files, index=None, key=f"select_file_1")
+					
+					col1, col2 = st.columns([0.8, 0.2])
+					col1.caption(f'Процесс 1')
+					
+					st.selectbox(label='Файл настроек', options=files, index=None, key=f"select_file_1")
 			else:
 				
 				def validate(out:st.empty()):
@@ -900,19 +895,18 @@ def _ld_create_form(loadout:dict, box:st.empty):
 				
 				for i in range(1, loadout['fcount']+1):
 					with _form:
-						with st.container():
-							
-							col1, col2 = st.columns([0.6, 0.4])
-							col1.caption(f'Процесс {i}')
-							vstat = col2.empty()
-							
-							# options = [x for x in files if x not in [v for k,v in st.session_state.items() if 'select_file_' in k]]
-							
-							st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, kwargs={'out':vstat}, key=f"select_file_{i}")
+						
+						col1, col2 = st.columns([0.6, 0.4])
+						col1.caption(f'Процесс {i}')
+						vstat = col2.empty()
+						
+						# options = [x for x in files if x not in [v for k,v in st.session_state.items() if 'select_file_' in k]]
+						
+						st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, kwargs={'out':vstat}, key=f"select_file_{i}")
 						
 				
 			
-			_form.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
+			st.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
 				
 
 
