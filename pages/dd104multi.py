@@ -875,9 +875,9 @@ def _ld_create_form(loadout:dict, box:st.empty):
 				with cont:
 					
 					col1, col2 = st.columns([0.8, 0.2])
-					col1.caption(f'Процесс 1')
+					# col1.caption(f'Процесс 1')
 					
-					st.selectbox(label='Файл настроек', options=files, index=None, key=f"select_file_1")
+					st.selectbox(label=f'Файл настроек процесса 1', options=files, index=None, key=f"select_file_1")
 			else:
 				
 				def validate():
@@ -900,11 +900,11 @@ def _ld_create_form(loadout:dict, box:st.empty):
 					with cont:
 						
 						col1, col2 = st.columns([0.6, 0.4])
-						col1.caption(f'Процесс {i}')
+						# col1.caption(f'Процесс {i}')
 						
 						# options = [x for x in files if x not in [v for k,v in st.session_state.items() if 'select_file_' in k]]
 						
-						st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, key=f"select_file_{i}")
+						st.selectbox(label=f'Файл настроек процесса {i}', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, key=f"select_file_{i}")
 						
 				
 			
