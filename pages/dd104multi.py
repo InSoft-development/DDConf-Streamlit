@@ -985,6 +985,7 @@ def draw_table_status():
 				Data['Файл настроек'].append(i.split(': ')[1])
 		
 			with st.container():
+				st.caption(f"Пресет: {st.session_state.dd104m['active_ld']['name']}")
 				st.table(data = Data)
 		
 		else:
