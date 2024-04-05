@@ -878,7 +878,8 @@ def _ld_create_form(loadout:dict, box:st.empty):
 					st.selectbox(label='Файл настроек', options=files, index=None, key=f"select_file_1")
 			else:
 				
-				def validate(out:st.empty()):
+				def validate():
+					
 					existing = set()
 					length = 0
 					for k,v in st.session_state.items():
@@ -887,7 +888,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 							if v not in existing:
 								existing.add(v)
 							else:
-								out.markdown("red[ПОВТОРЯЮЩЕЕСЯ ЗНАЧЕНИЕ]")
+								st.toast(":red[ПОВТОРЯЮЩЕЕСЯ ЗНАЧЕНИЕ]")
 								st.session_state.dd104m['ld-assign-validation-flag'] = True
 								break
 					if length == len(existing):
@@ -898,11 +899,10 @@ def _ld_create_form(loadout:dict, box:st.empty):
 						
 						col1, col2 = st.columns([0.6, 0.4])
 						col1.caption(f'Процесс {i}')
-						vstat = col2.container()
 						
 						# options = [x for x in files if x not in [v for k,v in st.session_state.items() if 'select_file_' in k]]
 						
-						st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, kwargs={'out':vstat}, key=f"select_file_{i}")
+						st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, key=f"select_file_{i}")
 						
 				
 			
