@@ -853,7 +853,7 @@ def _add_process(box:st.empty):
 		st.session_state.dd104m['activator_selected_ld']['fcount'] += 1
 
 
-def _ld_create_form(loadout:dict, box:st.empty, fstat:st.empty):
+def _ld_create_form(loadout:dict, box:st.empty, fstat:st.container()):
 	
 	
 	
@@ -890,7 +890,7 @@ def _ld_create_form(loadout:dict, box:st.empty, fstat:st.empty):
 							if v not in existing:
 								existing.add(v)
 							else:
-								out.write(":red[ПОВТОРЯЮЩЕЕСЯ ЗНАЧЕНИЕ]")
+								out.write(":red[Внимание: обнаружены дублирующиеся значения]")
 								st.session_state.dd104m['ld-assign-validation-flag'] = True
 								break
 					if length == len(existing):
@@ -1184,7 +1184,7 @@ def new_render_tx(servicename):
 				
 				ec2.button("❌", on_click=closer_wrap, kwargs={'box':ld_formbox, 'bname':'ld-editor'}, key='ld-editor-close')
 				
-				btn_l, fstat, btn_m, btn_r = st.columns([0.2, 0.4, 0.2, 0.2])
+				btn_l, btn_m, btn_r = st.columns(3)
 				
 				
 				save = btn_l.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
@@ -1193,7 +1193,7 @@ def new_render_tx(servicename):
 				
 				rm = btn_r.button('Удалить последний процесс из списка', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_rm_process, kwargs={'box':ld_formbox}, key='rm-process-btn')
 				
-				_ld_create_form(st.session_state.dd104m['selected_ld'], ld_formbox, fstat.empty())
+				_ld_create_form(st.session_state.dd104m['selected_ld'], ld_formbox, ec1.container())
 			
 			
 		
