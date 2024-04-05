@@ -1173,9 +1173,9 @@ def new_render_tx(servicename):
 				btn_l, btn_r = st.columns([0.3, 0.7])
 				
 				
-				add = btn_l.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_add_process, kwargs={'box':ld_formbox})
+				add = btn_l.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_add_process, kwargs={'box':ld_formbox}, key='add-process-btn')
 				
-				rm = btn_r.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_rm_process, kwargs={'box':ld_formbox})
+				rm = btn_r.button('Удалить последний процесс из списка', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_rm_process, kwargs={'box':ld_formbox}, key='rm-process-btn')
 				
 				_ld_create_form(st.session_state.dd104m['selected_ld'], ld_formbox)
 			
