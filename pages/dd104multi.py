@@ -63,6 +63,9 @@ def init():
 	if 'ld-editor-flag' not in st.session_state.dd104m.keys():
 		st.session_state.dd104m['ld-editor-flag'] = False
 	
+	if 'ld-assign-validation-flag' not in st.session_state.dd104m.keys():
+		st.session_state.dd104m['ld-assign-validation-flag'] = False
+	
 	# dict_cleanup(st.session_state, ['dd104m'])
 
 #WARNING deprecated
@@ -878,20 +881,37 @@ def _ld_create_form(loadout:dict, box:st.empty):
 							
 							st.selectbox(label='Файл настроек', options=files, index=None, key=f"select_file_1")
 			else:
+				
+				def validate(out:st.empty()):
+					existing = set()
+					length = 0
+					for k,v in st.session_state.items():
+						if 'select_file_' in k and v:
+							length += 1
+							if v not in existing:
+								existing.add(v)
+							else:
+								out.markdown("red[ПОВТОРЯЮЩЕЕСЯ ЗНАЧЕНИЕ]")
+								st.session_state.dd104m['ld-assign-validation-flag'] = True
+								break
+					if length == len(existing):
+						st.session_state.dd104m['ld-assign-validation-flag'] = False
+				
 				for i in range(1, loadout['fcount']+1):
 					with _form:
 						with st.container():
 							
-							col1, col2 = st.columns([0.8, 0.2])
+							col1, col2 = st.columns([0.6, 0.4])
 							col1.caption(f'Процесс {i}')
+							vstat = col2.empty()
 							
-							options = [x for x in files if x not in [v for k,v in st.session_state.items() if 'select_file_' in k]]
+							# options = [x for x in files if x not in [v for k,v in st.session_state.items() if 'select_file_' in k]]
 							
-							st.selectbox(label='Файл настроек', options=options, index=options.index(loadouted[i-1]) if i<=len(loadouted) else None, key=f"select_file_{i}")
+							st.selectbox(label='Файл настроек', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, kwargs={'out':vstat}, key=f"select_file_{i}")
 						
 				
 			
-			_form.form_submit_button('Сохранить Конфигурацию', on_click=save_wrap)
+			_form.form_submit_button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
 				
 
 
