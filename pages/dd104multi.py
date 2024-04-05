@@ -1155,6 +1155,12 @@ def new_render_tx(servicename):
 				if 'fcount' in st.session_state.dd104m['selected_ld']:
 					st.session_state.dd104m['selected_ld']['fcount'] += 1
 			
+			def _rm_process(box:st.empty):
+				box.empty()
+				if 'fcount' in st.session_state.dd104m['selected_ld'] and st.session_state.dd104m['selected_ld']['fcount'] > 0:
+					st.session_state.dd104m['selected_ld']['fcount'] -= 1
+			
+			
 			# add = st.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_add_process, kwargs={'box':ld_formbox})
 			
 			ec1, ec2 = st.columns([0.9, 0.1])
@@ -1164,7 +1170,12 @@ def new_render_tx(servicename):
 				
 				ec2.button("❌", on_click=closer_wrap, kwargs={'box':ld_formbox, 'bname':'ld-editor'}, key='ld-editor-close')
 				
-				add = st.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_add_process, kwargs={'box':ld_formbox})
+				btn_l, btn_r = st.columns([0.3, 0.7])
+				
+				
+				add = btn_l.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_add_process, kwargs={'box':ld_formbox})
+				
+				rm = btn_r.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_rm_process, kwargs={'box':ld_formbox})
 				
 				_ld_create_form(st.session_state.dd104m['selected_ld'], ld_formbox)
 			
