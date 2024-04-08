@@ -1252,11 +1252,24 @@ def new_render_tx(servicename):
 		
 		with procs:
 			
+			def _allwrap(op='stop'):
+				global options, outbox
+				
+				st.session_state.proclist_select = options
+				st.session_state.oplist_select = op
+				_apply_process_ops(outbox)
+				st.session_state.proclist_select = []
+				st.session_state.oplist_select = None
+				
+			
 			procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'active_ld' in st.session_state.dd104m), key=f"proclist_select", placeholder="Не выбрано")
 			
 			opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(len(procselect) == 0), key="oplist_select", placeholder="Не выбрано", on_change=_apply_process_ops, kwargs={'out':outbox})
 			
-			
+			btn_l, btn_m, btn_r = st.columns([0.3, 0.3, 0.3])
+			btn_l.button("Остановить все процессы", on_click=_allwrap, kwargs={'op':'Остановить'}, key="stat-stop-all-btn")
+			btn_m.button("Запустить все процессы", on_click=_allwrap, kwargs={'op':'Запустить'}, key="stat-start-all-btn")
+			btn_r.button("Перезапустить все процессы", on_click=_allwrap, kwargs={'op':'Перезапустить'}, key="stat-restart-all-btn")
 		
 	
 	
