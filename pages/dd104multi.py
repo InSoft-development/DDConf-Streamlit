@@ -1031,7 +1031,7 @@ def new_render_tx(servicename):
 	
 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	
-	Filetab, Presettab, Outputs = st.tabs(['Файлы конфигураций', "Пресеты", 'DEBUG'])
+	Filetab, Presettab = st.tabs(['Файлы конфигураций', "Пресеты"])
 	
 	Edit, Create, Delete = Filetab.tabs(["Редактор", "Создание Файлов", "Удаление Файлов"])
 	
@@ -1260,10 +1260,10 @@ def new_render_tx(servicename):
 		
 	
 	
-	with Outputs.empty():
-		st.write(st.session_state)
-	with Outputs.empty():
-		draw_table_status()
+	# with Outputs.empty():
+	# 	st.write(st.session_state)
+	# with Outputs.empty():
+	# 	draw_table_status()
 
 
 def render_rx(servicename):
