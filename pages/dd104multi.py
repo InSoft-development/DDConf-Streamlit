@@ -287,8 +287,11 @@ def save_loadout():
 			syslog.syslog(syslog.LOG_CRIT, msg)
 			raise e
 			
+		files = list_sources(st.session_state.dd104m['arcdir'])
 		for i in range(1, len(st.session_state.dd104m['selected_ld']['selectors'])+1):
-			filepath = Path(st.session_state.dd104m['arcdir']) / st.session_state.dd104m['selected_ld']['selectors'][f'select_file_{i}'].split('(')[-1][:-1:]
+			# filepath = Path(st.session_state.dd104m['arcdir']) / st.session_state.dd104m['selected_ld']['selectors'][f'select_file_{i}'].split('(')[-1][:-1:]
+			
+			filepath = Path([x['filename'] for x in files if st.session_state.dd104m['selected_ld']['selectors'][f'select_file_{i}'] == f"{x['savename']} ({x['savetime']})"][0])
 			
 			if filepath.is_file():
 				try:
