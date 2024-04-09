@@ -694,7 +694,7 @@ def _edit_svc(path:str): #possible problems: num is anything that comes between 
 	text = path.read_text().split('\n')
 	for i in range(0, len(text)):
 		if 'ExecStart=' in text[i] and text[i].strip()[0] != '#':
-			text[i] = f"ExecStart=/opt/dd/{st.session_state.dd104m['servicename']}/{st.session_state.dd104m['servicename']} -c {st.session_state.dd104m['loaddir']}{st.session_state.dd104m['servicename']}{num}.service"
+			text[i] = f"ExecStart=/opt/dd/{st.session_state.dd104m['servicename']}/{st.session_state.dd104m['servicename']} -c {st.session_state.dd104m['loaddir']}/.ACTIVE/{st.session_state.dd104m['servicename']}{num}.service"
 			break
 	a = path.write_text('\n'.join(text))
 
