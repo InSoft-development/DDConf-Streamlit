@@ -234,11 +234,12 @@ def parse_from_user(data) -> str:
 		#st.write(message)
 		return message
 
-def _save_to_file(string:str, confile:str, name='unnamed_file_version', return_timestamp=False) -> None:
+def _save_to_file(string:str, old_confile:str, name='unnamed_file_version', return_timestamp=False) -> None:
 	rtime = time.localtime(time.time())
 	utime = f"{rtime.tm_year}-{rtime.tm_mon}-{rtime.tm_mday}@{rtime.tm_hour}:{rtime.tm_min}:{rtime.tm_sec}"
 	# print(utime)
-	with Path(confile).open("w") as f:
+	if ()
+	with (Path(old_confile.parent)/name).open("w") as f:
 		f.write(f"# Файл сгенерирован Сервисом Конфигурации Диода Данных;\n# savename: {name if name else 'unnamed_file_version'}\n# savetime: {utime}\n")
 		f.write(string)
 	
@@ -482,32 +483,6 @@ def _new_loadout():
 
 
 
-# WARNING: LEGACY
-# def _status(service = 'dd104client.service') -> str:
-# 	try:
-# 		stat = subprocess.run(f"systemctl status {service}".split(), text=True, capture_output=True)
-# 	except Exception as e:
-# 		msg = f"dd104: невозможно получить статус {service}; \nПодробности: {type(e)} - {str(e)}\n"
-# 		syslog.syslog(syslog.LOG_ERR, msg)
-# 		return None
-# 	else:
-# 		if stat.stderr:
-# 			msg = f"dd104: {stat.stderr}\n"
-# 			syslog.syslog(syslog.LOG_ERR, msg)
-# 			return None
-# 		else:
-# 			try:
-# 				data = _statparse(stat)
-# 				if data:
-# 					return data
-# 				else:
-# 					msg = f"dd104: Ошибка: Парсинг статуса {service} передал пустой результат; Если эта ошибка повторяется, напишите в сервис поддержки ООО InControl.\n"
-# 					syslog.syslog(syslog.LOG_ERR, msg)
-# 					return None
-# 			except Exception as e:
-# 				syslog.syslog(syslog.LOG_CRIT, f'dd104: Ошибка при парсинге блока статуса сервиса, подробности:\n {str(e)}\n')
-# 				raise e
-
 def _status(num = 1, way='emoji') -> str:
 	if num>=1:
 		service = f"dd104client{num}.service" if _mode == 'tx' else f"dd104server{num}.service"
@@ -643,7 +618,7 @@ def parse_form(confile: str, box: st.container):
 		raise e
 	else:
 		try:
-				
+			
 			_save_to_file(parse_from_user(st.session_state.dd104m['contents']), confile, st.session_state.dd104m['contents']['savename'])
 			#_archive(confile)
 			_archive_d(confile)
@@ -673,11 +648,14 @@ def _delete_files(filelist:list):
 		st.write(f"DD104m: Во время проведения операций удаления произошли ошибки, подробности:     {errors}")
 	
 
+
+
 def _new_file():
 	filename = st.session_state['new_filename'] if '.ini' in st.session_state['new_filename'][-4::] else f"{st.session_state['new_filename']}.ini"
 	if isfile(f"{st.session_state.dd104m['inidir']}/{filename}"):
 		syslog.syslog(syslog.LOG_WARNING, f"dd104m: Файл {st.session_state.dd104m['inidir']}/{filename} уже существует!")
 		raise FileExistsError
+		
 	try:
 		f = open(f"{st.session_state.dd104m['inidir']}/{filename}", 'w')
 		f.write('#')
@@ -916,59 +894,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 				
 
 
-# 
-# def render_tx(servicename): #TODO: expand on merge with rx
-# 	
-# 	#st.markdown(col_css, unsafe_allow_html=True)
-# 	st.title('Сервис Конфигурации Диода Данных')
-# 	st.header('Редактор файлов настроек протокола DD104')
-# 	
-# 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
-# 	
-# 	col1, col2, col3= st.columns([0.25, 0.375, 0.375], gap='large')
-# 	with col1:
-# 		col1.subheader("Выберите файл конфигурации")
-# 		filebox = col1.container(height=600)
-# 	
-# 	c2c1, c2c2 = col2.columns([0.9, 0.1])
-# 	c2c1.subheader("Редактор Файла Конфигурации")
-# 	
-# 	formbox = col2.container()
-# 	# f = formbox.form("dd104multi-form")
-# 	
-# 	col3.subheader(f"Статус Операции:")
-# 	output = col3.empty()
-# 	
-# 	c1c1, c1c2 = filebox.columns([0.8, 0.2])
-# 	if c1c1.button(f"Новый Файл"):
-# 		if not st.session_state.dd104m['newfbox-flag']:
-# 			st.session_state.dd104m['newfbox-flag'] = True
-# 		tempbox = filebox.container()
-# 		with tempbox:
-# 			# c1, c2 = st.columns([0.8, 0.2])
-# 			newfbox = st.empty()
-# 			c1c2.button("❌", on_click=close_box, kwargs={'box':newfbox, 'bname':'newfbox'}, key='newfbox-close')
-# 			if st.session_state.dd104m['newfbox-flag']:
-# 				with newfbox.container():
-# 					_form = st.form('newfileform')
-# 					with _form:
-# 						st.text_input(label='Имя файла', key='new_filename')
-# 						submit = st.form_submit_button('Создать', on_click=_new_file)
-# 	
-# 	for source in filelist:
-# 		if filebox.button(f"{source['savename']}; {source['savetime']}", key=f"src-{source['filename']}"):
-# 			st.session_state.dd104m['selected_file'] = source['filename']
-# 			if not st.session_state.dd104m['editor-flag']:
-# 				st.session_state.dd104m['editor-flag'] = True
-# 			
-# 	
-# 	
-# 	
-# 	if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file'] and st.session_state.dd104m['editor-flag']:
-# 		#dict_cleanup(st.session_state, ['dd104m', 'dd104'])
-# 		#WARNING: might cause unknown side-effects
-# 		c2c2.button("❌", on_click=close_box, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
-# 		_create_form(formbox, st.session_state.dd104m['selected_file'])
+
 
 def draw_status():
 	filelist = list_sources(st.session_state.dd104m['arcdir'])
@@ -1027,11 +953,11 @@ def draw_table_status():
 
 def new_render_tx(servicename):
 	st.title('Сервис Конфигурации Диода Данных')
-	st.header('Страница настройки протокола DD104')
+	st.header('Настройка протокола DD104')
 	
 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
 	
-	Filetab, Presettab = st.tabs(['Файлы конфигураций', "Пресеты"])
+	Filetab, Presettab = st.tabs(['Файлы конфигураций', "Профили Запуска"])
 	
 	Edit, Create, Delete = Filetab.tabs(["Редактор", "Создание Файлов", "Удаление Файлов"])
 	
@@ -1040,63 +966,67 @@ def new_render_tx(servicename):
 	statbox = Status.container()
 	LSelectBox = Status.container()
 	
-	try:
-		with Edit:
-			
-			def _close_wrap(box:st.container, bname:str):
-				st.session_state['edit_file_select'] = None
-				close_box(box, bname)
-			
-			edit_select = st.selectbox("Выберите файл для редактирования:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], index=None, key="edit_file_select", placeholder="Не выбрано")
-			
-			if st.button("Редактировать выбранный файл", disabled=(edit_select == None), key="editfbtn"):
-				st.session_state.dd104m['selected_file'] = [source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" == edit_select][0]
-				if not st.session_state.dd104m['editor-flag']:
-					st.session_state.dd104m['editor-flag'] = True
-			
-			if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file'] and st.session_state.dd104m['editor-flag']:
-			
-				with st.container():
-					
-					c1, c2 = st.columns([0.8, 0.2])
-					c1.caption("Редактор:")
-					formbox = st.container()
-					
-					#WARNING: might cause unknown side-effects
-					c2.button("❌", on_click=_close_wrap, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
-					
-					_create_form(formbox, st.session_state.dd104m['selected_file'])
-			
+	with Edit:
 		
-		with Create:
-			def _submit():
+		def _close_wrap(box:st.container, bname:str):
+			st.session_state['edit_file_select'] = None
+			close_box(box, bname)
+		
+		edit_select = st.selectbox("Выберите файл для редактирования:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], index=None, key="edit_file_select", placeholder="Не выбрано")
+		
+		if st.button("Редактировать выбранный файл", disabled=(edit_select == None), key="editfbtn"):
+			st.session_state.dd104m['selected_file'] = [source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" == edit_select][0]
+			if not st.session_state.dd104m['editor-flag']:
+				st.session_state.dd104m['editor-flag'] = True
+		
+		if 'selected_file' in st.session_state.dd104m and st.session_state.dd104m['selected_file'] and st.session_state.dd104m['editor-flag']:
+		
+			with st.container():
+				
+				c1, c2 = st.columns([0.8, 0.2])
+				c1.caption("Редактор:")
+				formbox = st.container()
+				
+				#WARNING: might cause unknown side-effects
+				c2.button("❌", on_click=_close_wrap, kwargs={'box':formbox, 'bname':'editor'}, key='editor-close')
+				
+				_create_form(formbox, st.session_state.dd104m['selected_file'])
+		
+	
+	with Create:
+		def _submit(out:st.empty):
+			try:
 				_new_file()
-				st.session_state.new_filename = None
+			# except FileExistsError:
+# 				
+			except Exception as e:
+				out.markdown(f":red[при выполнении операции произошла ошибка: {str(e)}]")
 			
-			tempbox = st.container()
-			
-			with tempbox:
-				newfbox = st.empty()
-				with newfbox.container():
-					_form = st.form('newfileform')
-					with _form:
-						st.text_input(label='Имя файла', value=None, key='new_filename')
-						submit = st.form_submit_button('Создать', on_click=_submit)
-			
+			st.session_state.new_filename = None
 		
+		tempbox = st.container()
 		
-		with Delete:
-			
-			def _deletes():
-				_delete_files([source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in st.session_state.delete_file_select])
-				st.session_state.delete_file_select = []
-			
-			delete_select = st.multiselect("Выберите файл(ы) для удаления:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], default=None, key="delete_file_select", placeholder="Не выбрано")
-			
-			st.button("Удалить выбранные файлы", disabled=(not len(delete_select)>0), on_click=_deletes, key="delfbtn")
+		with tempbox:
+			outs = st.empty()
+			newfbox = st.empty()
+			with newfbox.container():
+				_form = st.form('newfileform')
+				with _form:
+					st.text_input(label='Имя файла', value=None, key='new_filename')
+					submit = st.form_submit_button('Создать', on_click=_submit, kwargs={'out':outs})
 		
-	except Exception as e:
-		Outputs.empty().write(f'Error: {str(e)}\n\n\n\n{st.session_state}')
+	
+	
+	with Delete:
+		
+		def _deletes():
+			_delete_files([source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" in st.session_state.delete_file_select])
+			st.session_state.delete_file_select = []
+		
+		delete_select = st.multiselect("Выберите файл(ы) для удаления:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], default=None, key="delete_file_select", placeholder="Не выбрано")
+		
+		st.button("Удалить выбранные файлы", disabled=(not len(delete_select)>0), on_click=_deletes, key="delfbtn")
+		
 		
 	
 	
@@ -1115,8 +1045,8 @@ def new_render_tx(servicename):
 	with Loadouts.container():
 		col1, edt = st.columns([0.3, 0.7], gap='medium')
 			
-		col1.subheader("Выбор пресета")
-		edt.subheader("Редактор выбранного пресета")
+		col1.subheader("Выбор профиля")
+		edt.subheader("Редактор выбранного профиля")
 		
 		edits = edt.container(height=600)
 		loads = col1.container(height=200)
@@ -1133,16 +1063,16 @@ def new_render_tx(servicename):
 				
 			
 			
-			selector = st.selectbox(label="Выберите пресет", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', on_change=_load, key='ld_selector')
+			selector = st.selectbox(label="Выберите профиль", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', on_change=_load, key='ld_selector')
 			
 			c1c1, c1c2 = st.columns(2)
 			
 			# c1c1.button("Выбрать", key='act_selector', disabled=(not selector), on_click=_load)
-			if c1c1.button('Новый пресет'):
+			if c1c1.button('Новый профиль запуска'):
 				newbox = col1.empty()
 				block_nl = newbox.container()
 				nlc1, nlc2 = block_nl.columns([0.8, 0.2])
-				nlc1.subheader("Новый пресет")
+				nlc1.subheader("Новый профиль запуска")
 				nlc2.button("❌", on_click=close_box, kwargs={'box':newbox, 'bname':'newbox'}, key='newbox-close')
 				Nlb = block_nl.container(height=240)
 				with Nlb:
@@ -1154,7 +1084,7 @@ def new_render_tx(servicename):
 						with newlbox.container():
 							_form_nld = st.form('newloadoutform')
 							with _form_nld:
-								st.text_input(label='Имя пресета', key='new_loadout_name')
+								st.text_input(label='Имя профиля', key='new_loadout_name')
 								submit = st.form_submit_button('Создать', on_click=_new_loadout)
 			
 		
@@ -1191,7 +1121,7 @@ def new_render_tx(servicename):
 				btn_l, btn_m, btn_r = st.columns(3)
 				
 				
-				save = btn_l.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'], use_container_width=True, key='save-ld-btn')
+				save = btn_l.button('Сохранить Профиль Запуска', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'], use_container_width=True, key='save-ld-btn')
 				
 				add = btn_m.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_add_process, kwargs={'box':ld_formbox}, use_container_width=True, key='add-process-btn')
 				
@@ -1209,9 +1139,9 @@ def new_render_tx(servicename):
 			if st.session_state.stat_ld_selector:
 				st.session_state.dd104m['activator_selected_ld'] = [x for x in loadouts if x['name'] == st.session_state.stat_ld_selector][0]
 		
-		st.subheader('Выбор пресета для активации')
+		st.subheader('Выбор профиля для активации')
 		
-		selector = st.selectbox(label="Выберите пресет", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', on_change=_load, key='stat_ld_selector')
+		selector = st.selectbox(label="Выберите профиль запуска", options=[x['name'] for x in loadouts if x['name'] != '.ACTIVE'], index=None, placeholder='Не выбрано', on_change=_load, key='stat_ld_selector')
 		
 		if 'activator_selected_ld' in st.session_state.dd104m:
 			
@@ -1220,7 +1150,7 @@ def new_render_tx(servicename):
 				st.session_state.stat_ld_selector = None
 				del(st.session_state.dd104m['activator_selected_ld'])
 			
-			st.button(f"Загрузить пресет {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activator_wrap, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']}, key='stat_ld_activator_btn')
+			st.button(f"Загрузить профиль {st.session_state.dd104m['activator_selected_ld']['name']}", on_click=activator_wrap, kwargs={'name':st.session_state.dd104m['activator_selected_ld']['name']}, key='stat_ld_activator_btn')
 	
 	with statbox:
 		
