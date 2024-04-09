@@ -1021,12 +1021,16 @@ def new_render_tx(servicename):
 	with Create:
 		
 		def _validate():
-			if st.session_state.new_filename and st.session_state.new_filename in savenames:
-				st.session_state.dd104m['NewFileStat']['Flag'] = True
-				st.session_state.dd104m['NewFileStat']['Error'] = f"Файл с такой меткой уже существует"
+			if st.session_state.new_filename:
+				if st.session_state.new_filename in savenames:
+					st.session_state.dd104m['NewFileStat']['Flag'] = True
+					st.session_state.dd104m['NewFileStat']['Error'] = f"Файл с такой меткой уже существует"
+				else:
+					st.session_state.dd104m['NewFileStat']['Flag'] = False
+					st.session_state.dd104m['NewFileStat']['Error'] = ''
 			else:
-				st.session_state.dd104m['NewFileStat']['Flag'] = False
-				st.session_state.dd104m['NewFileStat']['Error'] = ''
+				st.session_state.dd104m['NewFileStat']['Flag'] = True
+				st.session_state.dd104m['NewFileStat']['Error'] = f"Метка файла не может быть пустой"
 		
 		def _submit():
 			try:
