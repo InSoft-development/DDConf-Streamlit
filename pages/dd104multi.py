@@ -1028,7 +1028,7 @@ def new_render_tx(servicename):
 				st.session_state.dd104m['NewFileStat']['Flag'] = False
 				st.session_state.dd104m['NewFileStat']['Error'] = ''
 		
-		def _submit(out:st.empty):
+		def _submit():
 			try:
 				_new_file()
 			except FileExistsError:
@@ -1054,7 +1054,7 @@ def new_render_tx(servicename):
 					if st.session_state.dd104m['NewFileStat']['Flag']:
 						st.markdown(f":red[{st.session_state.dd104m['NewFileStat']['Error']}; файл не был создан.]")
 					st.text_input(label='Метка файла', value=None, on_change=_validate, key='new_filename')
-					submit = st.button('Создать', disabled=st.session_state.dd104m['NewFileStat']['Flag'], on_click=_submit, kwargs={'out':outs}, key='new-file-submit-btn')
+					submit = st.button('Создать', disabled=st.session_state.dd104m['NewFileStat']['Flag'], on_click=_submit, key='new-file-submit-btn')
 		
 	
 	
