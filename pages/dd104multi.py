@@ -856,8 +856,8 @@ def _ld_create_form(loadout:dict, box:st.empty):
 	
 	
 	archived = list_sources(st.session_state.dd104m['arcdir'])
-	files = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived]
-	loadouted = [f"{x['savename']} ({x['savetime']}) ({x['filename']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
+	files = [f"{x['savename']} ({x['savetime']})" for x in archived]
+	loadouted = [f"{x['savename']} ({x['savetime']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
 	
 	# box.empty()
 	_form = box.container(border=True)
@@ -1013,8 +1013,8 @@ def new_render_tx(servicename):
 		def _submit(out:st.empty):
 			try:
 				_new_file()
-			# except FileExistsError:
-# 				
+			except FileExistsError:
+				out.markdown(":red[Файл настроек с такой меткой уже существует!]")
 			except Exception as e:
 				out.markdown(f":red[при выполнении операции произошла ошибка: {str(e)}]")
 			
@@ -1028,7 +1028,7 @@ def new_render_tx(servicename):
 			with newfbox.container():
 				_form = st.form('newfileform')
 				with _form:
-					st.text_input(label='Имя файла', value=None, key='new_filename')
+					st.text_input(label='Метка файла', value=None, key='new_filename')
 					submit = st.form_submit_button('Создать', on_click=_submit, kwargs={'out':outs})
 		
 	
