@@ -901,7 +901,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 					
 					col2.checkbox(label="Использовать файлы из архива", value=st.session_state.dd104m['ld-archive-use-flag'][0] if 0 in st.session_state.dd104m['ld-archive-use-flag'].keys() else False, on_change=checker, label_visibility="collapsed", key=f'ld-archive-use-cbox-0')
 					
-					col1.selectbox(label=f'Файл настроек процесса 1', options=[files if (0 in st.session_state[f'ld-archive-use-flag'].keys() and not st.session_state[f'ld-archive-use-flag'][0]) else files+arch_files], index=None, on_change=validate, key=f"select_file_0")
+					col1.selectbox(label=f'Файл настроек процесса 1', options=[files if (0 in st.session_state.dd104m[f'ld-archive-use-flag'].keys() and not st.session_state.dd104m[f'ld-archive-use-flag'][0]) else files+arch_files], index=None, on_change=validate, key=f"select_file_0")
 						
 			else:
 				
@@ -920,7 +920,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 						
 						col2.checkbox(label="Использовать файлы из архива", value=(st.session_state.dd104m['ld-archive-use-flag'][i] if i in st.session_state.dd104m['ld-archive-use-flag'].keys() else False), on_change=checker, label_visibility="collapsed", key=f'ld-archive-use-cbox-{i}')
 						
-						col1.selectbox(label=f'Файл настроек процесса {i}', options=[files if (i in st.session_state[f'ld-archive-use-flag'].keys() and not st.session_state[f'ld-archive-use-flag'][i]) else files+arch_files], index=[files if (i in st.session_state[f'ld-archive-use-flag'].keys() and not st.session_state[f'ld-archive-use-flag'][i]) else files+arch_files].index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, key=f"select_file_{i}")
+						col1.selectbox(label=f'Файл настроек процесса {i}', options=[files if (i in st.session_state.dd104m[f'ld-archive-use-flag'].keys() and not st.session_state.dd104m[f'ld-archive-use-flag'][i]) else files+arch_files], index=[files if (i in st.session_state.dd104m[f'ld-archive-use-flag'].keys() and not st.session_state.dd104m[f'ld-archive-use-flag'][i]) else files+arch_files].index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, key=f"select_file_{i}")
 						
 
 
