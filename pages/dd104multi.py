@@ -901,7 +901,7 @@ def _ld_create_form(loadout:dict, box:st.empty):
 					
 					col1, col2 = st.columns([0.8, 0.2])
 					
-					col2.checkbox(label="Использовать файлы из архива", value=st.session_state.dd104m['ld-archive-use-flag'][0] if 0 in st.session_state.dd104m['ld-archive-use-flag'].keys() else False, on_change=checker, kwargs={'i':i}, label_visibility="collapsed", key=f'ld-archive-use-cbox-0')
+					col2.checkbox(label="Использовать файлы из архива", value=st.session_state.dd104m['ld-archive-use-flag'][0] if 0 in st.session_state.dd104m['ld-archive-use-flag'].keys() else False, on_change=checker, kwargs={'i':0}, label_visibility="collapsed", key=f'ld-archive-use-cbox-0')
 					
 					col1.selectbox(label=f'Файл настроек процесса 1', options=[files if (0 in st.session_state.dd104m[f'ld-archive-use-flag'].keys() and not st.session_state.dd104m[f'ld-archive-use-flag'][0]) else files+arch_files], index=None, on_change=validate, key=f"select_file_0")
 						
