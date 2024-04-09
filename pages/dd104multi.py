@@ -682,7 +682,7 @@ def _new_file(extpath=None):
 			f = open(str(extpath), 'w')
 			f.write('#')
 			f.close()
-			utime = _save_to_file("", str(extpath), f"{Path(extpath).name[:Path(expath).name.rindex('.'):]}", return_timestamp=True)
+			utime = _save_to_file("", str(extpath), f"{Path(extpath).name[:Path(extpath).name.rindex('.'):]}", return_timestamp=True)
 			
 		except Exception as e:
 			syslog.syslog(syslog.LOG_CRIT, f"dd104m: Невозможно создать файл {str(extpath)}!")
@@ -1022,6 +1022,7 @@ def new_render_tx(servicename):
 				out.markdown(f":red[при выполнении операции произошла ошибка: {str(e)}]")
 			
 			st.session_state.new_filename = None
+		
 		
 		tempbox = st.container()
 		
