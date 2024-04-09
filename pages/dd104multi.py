@@ -64,7 +64,7 @@ def init():
 		st.session_state.dd104m['ld-editor-flag'] = False
 	
 	if 'ld-archive-use-flag' not in st.session_state.dd104m.keys():
-		st.session_state.dd104m['ld-archive-use-flag'] = []
+		st.session_state.dd104m['ld-archive-use-flag'] = {}
 	
 	if 'ld-assign-validation-flag' not in st.session_state.dd104m.keys():
 		st.session_state.dd104m['ld-assign-validation-flag'] = False
