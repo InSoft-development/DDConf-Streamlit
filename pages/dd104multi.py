@@ -979,6 +979,8 @@ def new_render_tx(servicename):
 	st.header('Настройка протокола DD104')
 	
 	filelist = list_sources(st.session_state.dd104m['inidir']) #[{'savename':'', 'savetime':'', 'filename':''}, {}] 
+	savenames = [x['savename'] for x in filelist]
+	
 	
 	Filetab, Presettab = st.tabs(['Файлы конфигураций', "Профили Запуска"])
 	
@@ -1017,14 +1019,21 @@ def new_render_tx(servicename):
 		
 	
 	with Create:
-		def _submit(out:st.empty):
-			try:
+		
+		def _validate():
+			if st.session_state.new_filename and st.session_state.new_filename in savenames:
+				st.session_state.dd104m['NewFileStat']['Flag'] = True
+				st.session_state.dd104m['NewFileStat']['Error'] = f"Файл с такой меткой уже существует"
+			else:
 				st.session_state.dd104m['NewFileStat']['Flag'] = False
 				st.session_state.dd104m['NewFileStat']['Error'] = ''
+		
+		def _submit(out:st.empty):
+			try:
 				_new_file()
 			except FileExistsError:
 				st.session_state.dd104m['NewFileStat']['Flag'] = True
-				st.session_state.dd104m['NewFileStat']['Error'] = f"Файл с такой меткой уже существует!"
+				st.session_state.dd104m['NewFileStat']['Error'] = f"Файл с такой меткой уже существует"
 			except Exception as e:
 				st.session_state.dd104m['NewFileStat']['Flag'] = True
 				st.session_state.dd104m['NewFileStat']['Error'] = f"При выполнении операции произошла ошибка: {str(e)}"
@@ -1036,15 +1045,16 @@ def new_render_tx(servicename):
 		tempbox = st.container()
 		
 		with tempbox:
-			outs = st.empty()
 			newfbox = st.empty()
-			if st.session_state.dd104m['NewFileStat']['Flag']:
-				outs.markdown(f":red[{st.session_state.dd104m['NewFileStat']['Error']}; файл не был создан.]")
-			with newfbox.container():
-				_form = st.form('newfileform')
+			# if st.session_state.dd104m['NewFileStat']['Flag']:
+			# 	outs.markdown(f":red[{st.session_state.dd104m['NewFileStat']['Error']}; файл не был создан.]")
+			with newfbox:
+				_form = st.container()
 				with _form:
-					st.text_input(label='Метка файла', value=None, key='new_filename')
-					submit = st.form_submit_button('Создать', on_click=_submit, kwargs={'out':outs})
+					if st.session_state.dd104m['NewFileStat']['Flag']:
+						st.markdown(f":red[{st.session_state.dd104m['NewFileStat']['Error']}; файл не был создан.]")
+					st.text_input(label='Метка файла', value=None, on_change=_validate, key='new_filename')
+					submit = st.button('Создать', disabled=st.session_state.dd104m['NewFileStat']['Flag'], on_click=_submit, kwargs={'out':outs}, key='new-file-submit-btn')
 		
 	
 	
