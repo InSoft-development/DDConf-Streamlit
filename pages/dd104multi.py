@@ -238,10 +238,12 @@ def _save_to_file(string:str, old_confile:str, name='unnamed_file_version', retu
 	rtime = time.localtime(time.time())
 	utime = f"{rtime.tm_year}-{rtime.tm_mon}-{rtime.tm_mday}@{rtime.tm_hour}:{rtime.tm_min}:{rtime.tm_sec}"
 	# print(utime)
-	if ()
-	with (Path(old_confile.parent)/name).open("w") as f:
+	if not (Path(old_confile).parent / f"{name}.ini").is_file():
+		_new_file(extpath=Path(old_confile).parent/f"{name}.ini")
+	with (Path(old_confile).parent / f"{name}.ini").open("w") as f:
 		f.write(f"# Файл сгенерирован Сервисом Конфигурации Диода Данных;\n# savename: {name if name else 'unnamed_file_version'}\n# savetime: {utime}\n")
 		f.write(string)
+		f.close()
 	
 	if return_timestamp:
 		return utime
@@ -650,24 +652,38 @@ def _delete_files(filelist:list):
 
 
 
-def _new_file():
-	filename = st.session_state['new_filename'] if '.ini' in st.session_state['new_filename'][-4::] else f"{st.session_state['new_filename']}.ini"
-	if isfile(f"{st.session_state.dd104m['inidir']}/{filename}"):
-		syslog.syslog(syslog.LOG_WARNING, f"dd104m: Файл {st.session_state.dd104m['inidir']}/{filename} уже существует!")
-		raise FileExistsError
-		
-	try:
-		f = open(f"{st.session_state.dd104m['inidir']}/{filename}", 'w')
-		f.write('#')
-		f.close()
-		utime = _save_to_file("", f"{st.session_state.dd104m['inidir']}/{filename}", f"{filename[:-4:]}", return_timestamp=True)
-		
-	except Exception as e:
-		syslog.syslog(syslog.LOG_CRIT, f"dd104m: Невозможно создать файл {st.session_state.dd104m['inidir']}/{filename}!")
-		raise e
-	# else:
-		# st.session_state.dd104m['selected_file'] = f"{st.session_state.dd104m['inidir']}/{filename}"
-		# close_box(box, 'newfbox')
+def _new_file(extpath=None):
+	if not extpath:
+		filename = st.session_state['new_filename'] if '.ini' in st.session_state['new_filename'][-4::] else f"{st.session_state['new_filename']}.ini"
+		if isfile(f"{st.session_state.dd104m['inidir']}/{filename}"):
+			syslog.syslog(syslog.LOG_WARNING, f"dd104m: Файл {st.session_state.dd104m['inidir']}/{filename} уже существует!")
+			raise FileExistsError
+			
+		try:
+			f = open(f"{st.session_state.dd104m['inidir']}/{filename}", 'w')
+			f.write('#')
+			f.close()
+			utime = _save_to_file("", f"{st.session_state.dd104m['inidir']}/{filename}", f"{filename[:-4:]}", return_timestamp=True)
+			
+		except Exception as e:
+			syslog.syslog(syslog.LOG_CRIT, f"dd104m: Невозможно создать файл {st.session_state.dd104m['inidir']}/{filename}!")
+			raise e
+		# else:
+			# st.session_state.dd104m['selected_file'] = f"{st.session_state.dd104m['inidir']}/{filename}"
+			# close_box(box, 'newfbox')
+	else:
+		if Path(extpath).is_file():
+			syslog.syslog(syslog.LOG_WARNING, f"dd104m: Файл {extpath} уже существует!")
+			raise FileExistsError
+		try:
+			f = open(str(extpath), 'w')
+			f.write('#')
+			f.close()
+			utime = _save_to_file("", str(extpath), f"{Path(extpath).name[:Path(expath).name.rindex('.'):]}", return_timestamp=True)
+			
+		except Exception as e:
+			syslog.syslog(syslog.LOG_CRIT, f"dd104m: Невозможно создать файл {str(extpath)}!")
+			raise e
 
 
 def _edit_svc(path:str): #possible problems: num is anything that comes between dd104<> and .
