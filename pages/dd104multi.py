@@ -63,9 +63,11 @@ def init():
 	if 'ld-editor-flag' not in st.session_state.dd104m.keys():
 		st.session_state.dd104m['ld-editor-flag'] = False
 	
+	if 'ld-archive-use-flag' not in st.session_state.dd104m.keys():
+		st.session_state.dd104m['ld-archive-use-flag'] = []
+	
 	if 'ld-assign-validation-flag' not in st.session_state.dd104m.keys():
 		st.session_state.dd104m['ld-assign-validation-flag'] = False
-	
 	
 	if 'NewFileStat' not in st.session_state.dd104m.keys():
 		st.session_state.dd104m['NewFileStat'] = {'Flag':False, 'Error':''}
@@ -291,7 +293,7 @@ def save_loadout():
 			syslog.syslog(syslog.LOG_CRIT, msg)
 			raise e
 			
-		files = list_sources(st.session_state.dd104m['arcdir'])
+		files = list_sources(st.session_state.dd104m['arcdir']) + list_sources(st.session_state.dd104m['inidir'])
 		for i in range(1, len(st.session_state.dd104m['selected_ld']['selectors'])+1):
 			# filepath = Path(st.session_state.dd104m['arcdir']) / st.session_state.dd104m['selected_ld']['selectors'][f'select_file_{i}'].split('(')[-1][:-1:]
 			
@@ -388,15 +390,7 @@ def _apply_process_ops(out: st.empty):
 		st.session_state.proclist_select = []
 		st.session_state.oplist_select = None
 		out.empty()
-# 		def _cleaner():
-# 			st.session_state.proclist_select = []
-# 			st.session_state.oplist_select = None
-# 			st.session_state.dd104m['proc_submit_disabled'] = True
-# 			out.empty()
-# 			
-# 		
-# 		st.write("Успех!" if not errs else f"Во время выполнения операции {st.session_state.oplist_select} над процессом(-ами) {list(errs.keys())} произошли ошибки. Операции не были применены к этим процессам либо были произведены безуспешно. Подробности:    {errs}  ")
-# 		st.button("OK", on_click=_cleaner)
+
 
 
 def _statparse(data:str) -> dict:
@@ -860,11 +854,27 @@ def _add_process(box:st.empty):
 
 def _ld_create_form(loadout:dict, box:st.empty):
 	
-	
+	def validate():
+		
+		existing = set()
+		length = 0
+		for k,v in st.session_state.items():
+			if 'select_file_' in k and v:
+				length += 1
+				if v not in existing:
+					existing.add(v)
+				else:
+					# out.write(":red[Внимание: обнаружены дублирующиеся значения]")
+					st.session_state.dd104m['ld-assign-validation-flag'] = True
+					break
+		if length == len(existing):
+			st.session_state.dd104m['ld-assign-validation-flag'] = False
 	
 	archived = list_sources(st.session_state.dd104m['arcdir'])
-	files = [f"{x['savename']} ({x['savetime']})" for x in archived]
-	loadouted = [f"{x['savename']} ({x['savetime']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()]
+	current = list_sources(st.session_state.dd104m['inidir'])
+	arch_files = [f"{x['savename']} ({x['savetime']})" for x in archived]
+	files = [f"{x['savename']} ({x['savetime']})" for x in current]
+	loadouted = [f"{x['savename']} ({x['savetime']})" for x in archived if x['filename'] in list_ld(loadout['name']).values()] + [f"{x['savename']} ({x['savetime']})" for x in files if x['filename'] in list_ld(loadout['name']).values()]
 	
 	# box.empty()
 	_form = box.container(border=True)
@@ -879,42 +889,40 @@ def _ld_create_form(loadout:dict, box:st.empty):
 			if loadout['fcount'] <= 0:
 				with cont:
 					
+					def checker(i:int):
+						if f'ld-archive-use-cbox-0' in st.session_state.keys():
+							st.session_state.dd104m['ld-archive-use-flag'][0] = st.session_state[f'ld-archive-use-cbox-0']
+						elif i in st.session_state.dd104m['ld-archive-use-flag'].keys():
+							del(st.session_state.dd104m['ld-archive-use-flag'][0])
+						if f'select_file_0' in st.session_state:
+							st.session_state[f'select_file_0'] = None
+					
 					col1, col2 = st.columns([0.8, 0.2])
-					# col1.caption(f'Процесс 1')
 					
-					st.selectbox(label=f'Файл настроек процесса 1', options=files, index=None, key=f"select_file_1")
+					col2.checkbox(label="Использовать файлы из архива", value=st.session_state.dd104m['ld-archive-use-flag'][0] if 0 in st.session_state.dd104m['ld-archive-use-flag'].keys() else False, on_change=checker, label_visibility="collapsed", key=f'ld-archive-use-cbox-0')
+					
+					col1.selectbox(label=f'Файл настроек процесса 1', options=[files if (0 in st.session_state[f'ld-archive-use-flag'].keys() and not st.session_state[f'ld-archive-use-flag'][0]) else files+arch_files], index=None, on_change=validate, key=f"select_file_0")
+						
 			else:
-				
-				def validate():
-					
-					existing = set()
-					length = 0
-					for k,v in st.session_state.items():
-						if 'select_file_' in k and v:
-							length += 1
-							if v not in existing:
-								existing.add(v)
-							else:
-								# out.write(":red[Внимание: обнаружены дублирующиеся значения]")
-								st.session_state.dd104m['ld-assign-validation-flag'] = True
-								break
-					if length == len(existing):
-						st.session_state.dd104m['ld-assign-validation-flag'] = False
 				
 				for i in range(1, loadout['fcount']+1):
 					with cont:
 						
-						col1, col2 = st.columns([0.6, 0.4])
-						# col1.caption(f'Процесс {i}')
+						def checker(i:int):
+							if f'ld-archive-use-cbox-{i}' in st.session_state.keys():
+								st.session_state.dd104m['ld-archive-use-flag'][i] = st.session_state[f'ld-archive-use-cbox-{i}']
+							elif i in st.session_state.dd104m['ld-archive-use-flag'].keys():
+								del(st.session_state.dd104m['ld-archive-use-flag'][i])
+							if f'select_file_{i}' in st.session_state:
+								st.session_state[f'select_file_{i}'] = None
 						
-						# options = [x for x in files if x not in [v for k,v in st.session_state.items() if 'select_file_' in k]]
+						col1, col2 = st.columns([0.8, 0.2])
 						
-						st.selectbox(label=f'Файл настроек процесса {i}', options=files, index=files.index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, key=f"select_file_{i}")
+						col2.checkbox(label="Использовать файлы из архива", value=st.session_state.dd104m['ld-archive-use-flag'][i] if i in st.session_state.dd104m['ld-archive-use-flag'].keys() else False,, on_change=checker, label_visibility="collapsed", key=f'ld-archive-use-cbox-{i}')
 						
-				
-			
-			# sbtn.button('Сохранить Конфигурацию', on_click=save_wrap, disabled=st.session_state.dd104m['ld-assign-validation-flag'])
-				
+						col1.selectbox(label=f'Файл настроек процесса {i}', options=[files if (i in st.session_state[f'ld-archive-use-flag'].keys() and not st.session_state[f'ld-archive-use-flag'][i]) else files+arch_files], index=[files if (i in st.session_state[f'ld-archive-use-flag'].keys() and not st.session_state[f'ld-archive-use-flag'][i]) else files+arch_files].index(loadouted[i-1]) if i<=len(loadouted) else None, on_change=validate, key=f"select_file_{i}")
+						
+
 
 
 
@@ -966,12 +974,10 @@ def draw_table_status():
 	else:
 		with st.empty():
 			st.write("Нет загруженной конфигурации!")
-		
-		
-		
-		
-		
-	
+
+
+
+
 
 
 def new_render_tx(servicename):
@@ -1175,6 +1181,7 @@ def new_render_tx(servicename):
 				rm = btn_r.button('Удалить последний процесс из списка', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_rm_process, kwargs={'box':ld_formbox}, use_container_width=True, key='rm-process-btn')
 				
 				_ld_create_form(st.session_state.dd104m['selected_ld'], ld_formbox)
+				
 				if st.session_state.dd104m['ld-assign-validation-flag']:
 					ec1.empty().write(':red[Внимание: обнаружены дублирующиеся значения]')
 			
