@@ -1019,15 +1019,15 @@ def new_render_tx(servicename):
 	with Create:
 		def _submit(out:st.empty):
 			try:
-				st.session_state.dd104['NewFileStat']['Flag'] = False
-				st.session_state.dd104['NewFileStat']['Error'] = ''
+				st.session_state.dd104m['NewFileStat']['Flag'] = False
+				st.session_state.dd104m['NewFileStat']['Error'] = ''
 				_new_file()
 			except FileExistsError:
-				st.session_state.dd104['NewFileStat']['Flag'] = True
-				st.session_state.dd104['NewFileStat']['Error'] = f"Файл с такой меткой уже существует!"
+				st.session_state.dd104m['NewFileStat']['Flag'] = True
+				st.session_state.dd104m['NewFileStat']['Error'] = f"Файл с такой меткой уже существует!"
 			except Exception as e:
-				st.session_state.dd104['NewFileStat']['Flag'] = True
-				st.session_state.dd104['NewFileStat']['Error'] = f"При выполнении операции произошла ошибка: {str(e)}"
+				st.session_state.dd104m['NewFileStat']['Flag'] = True
+				st.session_state.dd104m['NewFileStat']['Error'] = f"При выполнении операции произошла ошибка: {str(e)}"
 				# out.markdown(f":red[при выполнении операции произошла ошибка: {str(e)}]")
 			
 			st.session_state.new_filename = None
@@ -1038,8 +1038,8 @@ def new_render_tx(servicename):
 		with tempbox:
 			outs = st.empty()
 			newfbox = st.empty()
-			if st.session_state.dd104['NewFileStat']['Flag']:
-				outs.markdown(f":red[{st.session_state.dd104['NewFileStat']['Error']}; файл не был создан.]")
+			if st.session_state.dd104m['NewFileStat']['Flag']:
+				outs.markdown(f":red[{st.session_state.dd104m['NewFileStat']['Error']}; файл не был создан.]")
 			with newfbox.container():
 				_form = st.form('newfileform')
 				with _form:
