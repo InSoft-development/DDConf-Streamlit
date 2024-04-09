@@ -1216,7 +1216,7 @@ def new_render_tx(servicename):
 			
 			arclist = list_sources(st.session_state.dd104m['arcdir'])
 			
-			options = [f"{i}: Процесс {i} - {[f['savename']+' (' + f['savetime']+')' for f in arclist if f['filename'] == ldlist[i]][0]}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld'] else []
+		options = [f"{i}: Процесс {i} - {[f['savename']+' (' + f['savetime']+')' for f in arclist if f['filename'] == ldlist[i]][0]}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld'] else []
 		
 		
 		
@@ -1249,14 +1249,14 @@ def new_render_tx(servicename):
 				st.session_state.oplist_select = None
 				
 			
-			procselect = st.multiselect(label="Выберите процессы:", options=options if _index else [], default=None, disabled=(not 'active_ld' in st.session_state.dd104m), key=f"proclist_select", placeholder="Не выбрано")
+			procselect = st.multiselect(label="Выберите процессы:", options=options, default=None, disabled=(not 'active_ld' in st.session_state.dd104m), key=f"proclist_select", placeholder="Не выбрано")
 			
 			opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(len(procselect) == 0), key="oplist_select", placeholder="Не выбрано", on_change=_apply_process_ops, kwargs={'out':outbox})
 			
 			btn_l, btn_m, btn_r = st.columns([0.3, 0.3, 0.3])
-			btn_l.button("Остановить все процессы", disabled=(not _index or not options), on_click=_allwrap, kwargs={'op':'Остановить', 'options':options, 'out':outbox}, key="stat-stop-all-btn")
-			btn_m.button("Запустить все процессы", disabled=(not _index or not options), on_click=_allwrap, kwargs={'op':'Запустить', 'options':options, 'out':outbox}, key="stat-start-all-btn")
-			btn_r.button("Перезапустить все процессы", disabled=(not _index or not options), on_click=_allwrap, kwargs={'op':'Перезапустить', 'options':options, 'out':outbox}, key="stat-restart-all-btn")
+			btn_l.button("Остановить все процессы", disabled=not options, on_click=_allwrap, kwargs={'op':'Остановить', 'options':options, 'out':outbox}, key="stat-stop-all-btn")
+			btn_m.button("Запустить все процессы", disabled=not options, on_click=_allwrap, kwargs={'op':'Запустить', 'options':options, 'out':outbox}, key="stat-start-all-btn")
+			btn_r.button("Перезапустить все процессы", disabled=not options, on_click=_allwrap, kwargs={'op':'Перезапустить', 'options':options, 'out':outbox}, key="stat-restart-all-btn")
 		
 		
 	
