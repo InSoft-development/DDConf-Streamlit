@@ -1254,9 +1254,9 @@ def new_render_tx(servicename):
 			opselect = st.selectbox(label="Выберите операцию:", options=["Остановить","Перезапустить","Запустить"], index=None, disabled=(len(procselect) == 0), key="oplist_select", placeholder="Не выбрано", on_change=_apply_process_ops, kwargs={'out':outbox})
 			
 			btn_l, btn_m, btn_r = st.columns([0.3, 0.3, 0.3])
-			btn_l.button("Остановить все процессы", disabled=(not options or not _index), on_click=_allwrap, kwargs={'op':'Остановить', 'options':options, 'out':outbox}, key="stat-stop-all-btn")
-			btn_m.button("Запустить все процессы", disabled=(not options or not _index), on_click=_allwrap, kwargs={'op':'Запустить', 'options':options, 'out':outbox}, key="stat-start-all-btn")
-			btn_r.button("Перезапустить все процессы", disabled=(not options or not _index), on_click=_allwrap, kwargs={'op':'Перезапустить', 'options':options, 'out':outbox}, key="stat-restart-all-btn")
+			btn_l.button("Остановить все процессы", disabled=(not _index or not options), on_click=_allwrap, kwargs={'op':'Остановить', 'options':options, 'out':outbox}, key="stat-stop-all-btn")
+			btn_m.button("Запустить все процессы", disabled=(not _index or not options), on_click=_allwrap, kwargs={'op':'Запустить', 'options':options, 'out':outbox}, key="stat-start-all-btn")
+			btn_r.button("Перезапустить все процессы", disabled=(not _index or not options), on_click=_allwrap, kwargs={'op':'Перезапустить', 'options':options, 'out':outbox}, key="stat-restart-all-btn")
 		
 		
 	
