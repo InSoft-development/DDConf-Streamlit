@@ -1215,6 +1215,7 @@ def new_render_tx(servicename):
 			ldlist = list_ld(st.session_state.dd104m['active_ld']['name'])
 			
 			arclist = list_sources(st.session_state.dd104m['arcdir'])
+			print("arclist:",arclist)
 			
 		options = [f"{i}: Процесс {i} - {[f['savename']+' (' + f['savetime']+')' for f in arclist if f['filename'] == ldlist[i]][0]}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld'] else []
 		
