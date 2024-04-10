@@ -105,6 +105,7 @@ def _archive(filepath:str, location=f'/etc/dd/dd104/') -> None:
 			syslog.syslog(syslog.LOG_CRIT, f"dd104: Ошибка при обработке архива конфигураций, операция не может быть продолжена.")
 			raise e
 
+
 def _archive_d(filepath:str, location=f'/etc/dd/dd104/archive.d'):
 	if exists(filepath):
 		if not isdir(location):
@@ -123,6 +124,7 @@ def _archive_d(filepath:str, location=f'/etc/dd/dd104/archive.d'):
 		msg = f"dd104: провал при архивации файла конфигурации ({filepath}), файл конфигурации отсутствует или недоступен, операция не может быть продолжена."
 		syslog.syslog(syslog.LOG_CRIT, msg)
 		raise RuntimeError(msg)
+
 
 def load_from_file(_path:str) -> dict:
 	mode = _mode.lower()
@@ -173,6 +175,7 @@ def load_from_file(_path:str) -> dict:
 	else:
 		return {'count':1, 'old_savename':'', 'old_savetime':'', 'old_recv_addr':''}
 
+
 def list_loadouts(_dir=INIDIR) -> list: #returns a list of dicts like {'name':'', 'fcount':len([]), 'files':['','']}
 	_dir = Path(_dir)
 	if not _dir.is_dir():
@@ -192,6 +195,7 @@ def list_loadouts(_dir=INIDIR) -> list: #returns a list of dicts like {'name':''
 			raise e
 	return out
 
+
 def list_ld(name: str): #returns the dict of files from the archive that are symlinked to from the loadout dir 
 	if not '/' in name:
 		ldpath = Path(st.session_state.dd104m['loaddir'])/name
@@ -210,6 +214,7 @@ def list_ld(name: str): #returns the dict of files from the archive that are sym
 	
 	print(files)
 	return files
+
 
 def get_active(LDIR:str) -> str: 
 	try:
@@ -231,6 +236,7 @@ def get_active(LDIR:str) -> str:
 		else:
 			return None 
 
+
 def parse_from_user(data) -> str:
 	mode = _mode.lower()
 	if mode == 'tx':
@@ -239,6 +245,7 @@ def parse_from_user(data) -> str:
 			message = message + f"\naddress{i}={data[f'server_addr{i}']}\nport{i}={data[f'server_port{i}']}" 
 		#st.write(message)
 		return message
+
 
 def _save_to_file(string:str, old_confile:str, name='unnamed_file_version', return_timestamp=False) -> None:
 	rtime = time.localtime(time.time())
@@ -342,8 +349,7 @@ def sanitize():
 				st.session_state.dd104m['contents']['count'] -= 1
 				del(st.session_state.dd104m['contents'][f"server_addr{i}"])
 				del(st.session_state.dd104m['contents'][f"server_port{i}"])
-	
-		
+
 
 #WARNING: do not merge w/ sanitize() or we die
 def ld_sanitize():
@@ -390,7 +396,6 @@ def _apply_process_ops(out: st.empty):
 		st.session_state.proclist_select = []
 		st.session_state.oplist_select = None
 		out.empty()
-
 
 
 def _statparse(data:str) -> dict:
@@ -485,7 +490,6 @@ def _new_loadout():
 		raise e
 
 
-
 def _status(num = 1, way='emoji') -> str:
 	if num>=1:
 		service = f"dd104client{num}.service" if _mode == 'tx' else f"dd104server{num}.service"
@@ -563,6 +567,7 @@ def _status(num = 1, way='emoji') -> str:
 					syslog.syslog(syslog.LOG_CRIT, f'dd104m: Ошибка при парсинге блока статуса сервиса, подробности:   {str(e)}  ')
 					raise e
 
+
 def current_op() -> str:
 	try:
 		stat = _status(st.session_state.dd104m['servicename'])
@@ -576,7 +581,7 @@ def current_op() -> str:
 			return 'перезапуск'
 		elif 'stopped' in stat['Active'] :
 			return 'запуск'
-	
+
 
 def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename':'', 'savetime':'', 'filename':''}
 	_dir = Path(_dir)
@@ -603,7 +608,6 @@ def list_sources(_dir=INIDIR) -> list: #returns a list of dicts like {'savename'
 			syslog.syslog(syslog.LOG_CRIT, f'dd104multi: Ошибка: Файл конфигурации {_dir/f} недоступен, подробности:   {str(e)}  ')
 			raise e
 	return out
-	
 
 
 def parse_form(confile: str, box: st.container):
@@ -631,6 +635,7 @@ def parse_form(confile: str, box: st.container):
 			syslog.syslog(syslog.LOG_CRIT, msg)
 			raise e
 
+
 def dict_cleanup(array: dict, to_be_saved=[]):
 	dead_keys=[]
 	for k in array.keys():
@@ -638,6 +643,7 @@ def dict_cleanup(array: dict, to_be_saved=[]):
 			dead_keys.append(k)
 	for k in dead_keys:
 		del(array[k])
+
 
 def _delete_files(filelist:list):
 	errors = ''
@@ -649,8 +655,6 @@ def _delete_files(filelist:list):
 	if len(errors) > 0:
 		syslog.syslog(syslog.LOG_CRIT, f"DD104m: Во время проведения операций удаления произошли ошибки, подробности:     {errors}")
 		st.write(f"DD104m: Во время проведения операций удаления произошли ошибки, подробности:     {errors}")
-	
-
 
 
 def _new_file(extpath=None):
@@ -694,7 +698,7 @@ def _edit_svc(path:str): #possible problems: num is anything that comes between 
 	text = path.read_text().split('\n')
 	for i in range(0, len(text)):
 		if 'ExecStart=' in text[i] and text[i].strip()[0] != '#':
-			text[i] = f"ExecStart=/opt/dd/{st.session_state.dd104m['servicename']}/{st.session_state.dd104m['servicename']} -c {st.session_state.dd104m['loaddir']}.ACTIVE/{st.session_state.dd104m['servicename']}{num}.service"
+			text[i] = f"ExecStart=/opt/dd/{st.session_state.dd104m['servicename']}/{st.session_state.dd104m['servicename']} -c {st.session_state.dd104m['loaddir']}.ACTIVE/{st.session_state.dd104m['servicename']}{num}.ini"
 			break
 	a = path.write_text('\n'.join(text))
 
@@ -842,7 +846,7 @@ def _create_form(formbox: st.container, filepath: str):
 				
 				
 				submit = st.form_submit_button(label='Сохранить', on_click=parse_form, kwargs={'confile':filepath, 'box':formbox})
-			
+
 
 def _add_process(box:st.empty):
 	# out.empty()
@@ -927,10 +931,6 @@ def _ld_create_form(loadout:dict, box:st.empty):
 						options = files if (i in st.session_state.dd104m[f'ld-archive-use-flag'].keys() and not st.session_state.dd104m[f'ld-archive-use-flag'][i] or not i in st.session_state.dd104m[f'ld-archive-use-flag'].keys()) else files+arch_files
 						
 						col1.selectbox(label=f'Файл настроек процесса {i}', options=options, index=options.index(loadouted[i-1]) if (i<=len(loadouted) and loadouted[i-1] in options) else None, on_change=validate, key=f"select_file_{i}")
-						
-
-
-
 
 
 def draw_status():
@@ -980,10 +980,6 @@ def draw_table_status():
 	else:
 		with st.empty():
 			st.write("Нет загруженной конфигурации!")
-
-
-
-
 
 
 def new_render_tx(servicename):
@@ -1283,6 +1279,7 @@ def new_render_tx(servicename):
 def render_rx(servicename):
 	pass
 
+
 def render():
 	servicename = st.session_state.dd104m['servicename']
 	mode = _mode.lower()
@@ -1290,6 +1287,7 @@ def render():
 		new_render_tx(servicename)
 	elif mode == 'rx':
 		render_rx(servicename)
+
 
 #/Render
 
