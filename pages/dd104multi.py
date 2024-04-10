@@ -960,7 +960,7 @@ def draw_table_status():
 	if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld']:
 		ldlist = list_ld(st.session_state.dd104m['active_ld']['name'])
 		filelist = list_sources(st.session_state.dd104m['arcdir']) + list_sources(st.session_state.dd104m['inidir'])
-		options = [f"{i}: {[f['savename']+' ('+f['savetime']+')' for f in filelist if f['filename'] == ldlist[i]][0]}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] 
+		options = [f"{i}: {[f['savename']+' ('+f['savetime']+')' for f in filelist if f['filename'] == ldlist[i]][0] if [f['savename']+' ('+f['savetime']+')' for f in filelist if f['filename'] == ldlist[i]] else 'Файл не назначен'}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] 
 		
 		if options:
 			Data = {'Процесс':[],"Статус":[],'Файл настроек':[]}
