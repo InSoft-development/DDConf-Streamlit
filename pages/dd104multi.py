@@ -811,9 +811,9 @@ def _create_form(formbox: st.container, filepath: str):
 		if st.session_state.dd104m['editor-flag']:
 			with _form:
 				if '/' in filepath:
-					st.caption(f"Редактируемый файл: {filepath.split('/')[-1]}")
+					st.caption(f"Редактируемый файл: {data['old_savename'] if 'old_savename' in data.keys() else filepath.split('/')[-1]}")
 				else:
-					st.caption(f"Редактируемый файл: {filepath}")
+					st.caption(f"Редактируемый файл: {data['old_savename'] if 'old_savename' in data.keys() else filepath}")
 				
 				
 				st.session_state.dd104m['contents']['count'] = 2 #data['count']
