@@ -362,7 +362,7 @@ def ld_sanitize():
 		syslog.syslog(syslog.LOG_CRIT, msg)
 
 
-def _apply_process_ops(out: st.empty):
+def _apply_process_ops(out=None):
 	# out.empty()
 	# out.write(st.session_state)
 	if st.session_state.oplist_select == 'Перезапустить':
@@ -391,11 +391,11 @@ def _apply_process_ops(out: st.empty):
 			syslog.syslog(syslog.LOG_CRIT, msg)
 			#raise RuntimeError(msg)
 		
-	
-	with out:#.container():
-		st.session_state.proclist_select = []
-		st.session_state.oplist_select = None
-		out.empty()
+	if out:
+		with out:#.container():
+			st.session_state.proclist_select = []
+			st.session_state.oplist_select = None
+			out.empty()
 
 
 def _statparse(data:str) -> dict:
@@ -1171,6 +1171,21 @@ def new_render_tx(servicename):
 			
 			def save_wrap():
 				save_loadout()
+				
+				#WARNING: Костыль!!!
+				if st.session_state.ld_selector == _index:
+					options = []
+					if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld']:
+						for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1):
+							sub = [f"{i}: Процесс {i} - {f['savename']+' (' + f['savetime']+')'}" for f in arclist + current if len(ldlist) >= i and f['filename'] == ldlist[i]]
+							options.append(sub[0] if sub else 'Файл не назначен') 
+					
+					st.session_state.proclist_select = options
+					st.session_state.oplist_select = 'Перезапустить'
+					_apply_process_ops(None)
+					st.session_state.proclist_select = []
+					st.session_state.oplist_select = None
+				
 				st.session_state.ld_selector = None
 			# add = st.button('Добавить процесс', disabled=(not 'selected_ld' in st.session_state.dd104m), on_click=_add_process, kwargs={'box':ld_formbox})
 			
