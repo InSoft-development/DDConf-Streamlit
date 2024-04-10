@@ -960,7 +960,10 @@ def draw_table_status():
 	if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld']:
 		ldlist = list_ld(st.session_state.dd104m['active_ld']['name'])
 		filelist = list_sources(st.session_state.dd104m['arcdir']) + list_sources(st.session_state.dd104m['inidir'])
-		options = [f"{i}: {[f['savename']+' ('+f['savetime']+')' for f in filelist if f['filename'] == ldlist[i]][0] if (len(ldlist) >= i and f['filename'] == ldlist[i]) else 'Файл не назначен'}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] 
+		options = []
+		for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1):
+			sub = [f"{i}: Процесс {i} - {[f['savename']+' (' + f['savetime']+')' for f in filelist if len(ldlist) >= i and f['filename'] == ldlist[i]]}"]
+			options.append(sub[0] if sub else 'Файл не назначен'}) 
 		
 		if options:
 			Data = {'Процесс':[],"Статус":[],'Файл настроек':[]}
@@ -1225,7 +1228,12 @@ def new_render_tx(servicename):
 		
 		#WARNING: comprehension below fails if there's no existing file
 		
-		options = [f"{i}: Процесс {i} - {[f['savename']+' (' + f['savetime']+')' for f in arclist+current if f['filename'] == ldlist[i]][0] if (len(ldlist) >= i and f['filename'] == ldlist[i]) else 'Файл не назначен'}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld'] else []
+		options = []
+		if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld']:
+			for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1):
+				sub = [f"{i}: Процесс {i} - {[f['savename']+' (' + f['savetime']+')' for f in arclist + current if len(ldlist) >= i and f['filename'] == ldlist[i]]}"]
+				options.append(sub[0] if sub else 'Файл не назначен'}) 
+			
 		
 		
 		
