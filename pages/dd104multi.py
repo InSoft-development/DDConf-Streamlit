@@ -188,7 +188,7 @@ def list_loadouts(_dir=INIDIR) -> list: #returns a list of dicts like {'name':''
 		try:
 			files = [x for x in listdir(_dir/f) if isfile(join(_dir/f, x))]
 			
-			out.append({'name':f, 'fcount':len(files), 'files':files})
+			out.append({'name':f, 'fcount':len(files) if len(files) else 1, 'files':files})
 		
 		except Exception as e:
 			syslog.syslog(syslog.LOG_CRIT, f'dd104m-loadouts: Ошибка при перечислении файлов директории {_dir}, подробности:   {str(e)}  ')
@@ -212,7 +212,7 @@ def list_ld(name: str): #returns the dict of files from the archive that are sym
 				files[int(i.split('dd104client')[1].split('.')[0] if 'dd104client' in i else i.split('dd104server')[1].split('.')[0])] = str((ldpath/i).resolve())
 			
 	
-	print(files)
+	# print(files)
 	return files
 
 
