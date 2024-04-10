@@ -1010,7 +1010,7 @@ def new_render_tx(servicename):
 			close_box(box, bname)
 		lcol, rcol = st.columns([0.8, 0.2])
 		# rcol.text("Добавить выбор архивных файлов")
-		archive_cb = rcol.checkbox("Добавить архивные файлы", key='editor-archive-checkbox')
+		archive_cb = rcol.checkbox("Добавить выбор архивных файлов", key='editor-archive-checkbox')
 		
 		arclist = list_sources(st.session_state.dd104m['arcdir'])
 		
