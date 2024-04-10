@@ -1008,9 +1008,9 @@ def new_render_tx(servicename):
 		def _close_wrap(box:st.container, bname:str):
 			st.session_state['edit_file_select'] = None
 			close_box(box, bname)
-		lcol, rcol = st.columns([0.8, 0.2])
-		rcol.text("Добавить выбор архивных файлов")
-		archive_cb = rcol.checkbox("Добавить архивные файлы", label_visibility="collapsed")
+		# lcol, rcol = st.columns([0.8, 0.2])
+		# rcol.text("Добавить выбор архивных файлов")
+		archive_cb = rcol.checkbox("Добавить архивные файлы", key='editor-archive-checkbox')
 		
 		arclist = list_sources(st.session_state.dd104m['arcdir'])
 		
