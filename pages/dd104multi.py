@@ -887,7 +887,9 @@ def _ld_create_form(loadout:dict, box:st.empty):
 			cont = st.container()
 			# sbtn, smsg = st.columns([0.3,0.7])
 			# Statusbox = smsg.empty()
-			
+			col1, col2 = cont.columns([0.8, 0.2])
+			col2.text("Добавить выбор архивных файлов")
+			col1.text("Назначение процессов")
 			if loadout['fcount'] <= 0:
 				with cont:
 					
@@ -906,17 +908,17 @@ def _ld_create_form(loadout:dict, box:st.empty):
 					col1.selectbox(label=f'Файл настроек процесса 1', options=(files if (0 in st.session_state.dd104m[f'ld-archive-use-flag'].keys() and not st.session_state.dd104m[f'ld-archive-use-flag'][0] or not 0 in st.session_state.dd104m[f'ld-archive-use-flag'].keys()) else files+arch_files), index=None, on_change=validate, key=f"select_file_0")
 						
 			else:
-				
-				for i in range(1, loadout['fcount']+1):
-					with cont:
-						
-						def checker(i:int):
-							if f'ld-archive-use-cbox-{i}' in st.session_state.keys():
-								st.session_state.dd104m['ld-archive-use-flag'][i] = st.session_state[f'ld-archive-use-cbox-{i}']
-							elif i in st.session_state.dd104m['ld-archive-use-flag'].keys():
-								del(st.session_state.dd104m['ld-archive-use-flag'][i])
-							if f'select_file_{i}' in st.session_state:
-								st.session_state[f'select_file_{i}'] = None
+				with cont:
+					def checker(i:int):
+						if f'ld-archive-use-cbox-{i}' in st.session_state.keys():
+							st.session_state.dd104m['ld-archive-use-flag'][i] = st.session_state[f'ld-archive-use-cbox-{i}']
+						elif i in st.session_state.dd104m['ld-archive-use-flag'].keys():
+							del(st.session_state.dd104m['ld-archive-use-flag'][i])
+						if f'select_file_{i}' in st.session_state:
+							st.session_state[f'select_file_{i}'] = None
+					
+					for i in range(1, loadout['fcount']+1):
+						# with cont:
 						
 						col1, col2 = st.columns([0.8, 0.2])
 						
@@ -1007,8 +1009,8 @@ def new_render_tx(servicename):
 			st.session_state['edit_file_select'] = None
 			close_box(box, bname)
 		lcol, rcol = st.columns([0.8, 0.2])
-		
-		archive_cb = rcol.checkbox("Добавить архивные файлы")
+		rcol.text("Добавить выбор архивных файлов")
+		archive_cb = rcol.checkbox("Добавить архивные файлы", label_visibility="collapsed")
 		
 		arclist = list_sources(st.session_state.dd104m['arcdir'])
 		
