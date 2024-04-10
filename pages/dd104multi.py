@@ -1225,7 +1225,7 @@ def new_render_tx(servicename):
 		
 		#WARNING: comprehension below fails if there's no existing file
 		
-		options = [f"{i}: Процесс {i} - {[f['savename']+' (' + f['savetime']+')' for f in arclist+current if f['filename'] == ldlist[i]][0] if [f['savename']+' (' + f['savetime']+')' for f in arclist+current if f['filename'] == ldlist[i]] else 'Файл не назначен'}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld'] else []
+		options = [f"{i}: Процесс {i} - {[f['savename']+' (' + f['savetime']+')' for f in arclist+current if f['filename'] == ldlist[i]][0] if (len(ldlist) >= i and f['filename'] == ldlist[i]) else 'Файл не назначен'}" for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1)] if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld'] else []
 		
 		
 		
