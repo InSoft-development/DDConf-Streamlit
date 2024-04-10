@@ -1006,11 +1006,16 @@ def new_render_tx(servicename):
 		def _close_wrap(box:st.container, bname:str):
 			st.session_state['edit_file_select'] = None
 			close_box(box, bname)
+		lcol, rcol = st.columns([0.8, 0.2])
 		
-		edit_select = st.selectbox("Выберите файл для редактирования:", options=[f"{source['savename']}; {source['savetime']}" for source in filelist], index=None, key="edit_file_select", placeholder="Не выбрано")
+		archive_cb = rcol.checkbox("Добавить архивные файлы")
+		
+		arclist = list_sources(st.session_state.dd104m['arcdir'])
+		
+		edit_select = lcol.selectbox("Выберите файл для редактирования:", options=[f"{source['savename']}; {source['savetime']}" for source in (filelist if not archive_cb else filelist + arclist)], index=None, key="edit_file_select", placeholder="Не выбрано")
 		
 		if st.button("Редактировать выбранный файл", disabled=(edit_select == None), key="editfbtn"):
-			st.session_state.dd104m['selected_file'] = [source['filename'] for source in filelist if f"{source['savename']}; {source['savetime']}" == edit_select][0]
+			st.session_state.dd104m['selected_file'] = [source['filename'] for source in filelist + arclist if f"{source['savename']}; {source['savetime']}" == edit_select][0]
 			if not st.session_state.dd104m['editor-flag']:
 				st.session_state.dd104m['editor-flag'] = True
 		
