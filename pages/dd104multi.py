@@ -888,8 +888,8 @@ def _ld_create_form(loadout:dict, box:st.empty):
 			# sbtn, smsg = st.columns([0.3,0.7])
 			# Statusbox = smsg.empty()
 			col1, col2 = cont.columns([0.8, 0.2])
-			col2.markdown("Добавить выбор архивных файлов")
-			col1.markdown("Назначение процессов")
+			col2.markdown(":bold[Добавить выбор архивных файлов]")
+			col1.markdown(":bold[Назначение процессов]")
 			if loadout['fcount'] <= 0:
 				with cont:
 					
