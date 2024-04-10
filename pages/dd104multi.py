@@ -962,7 +962,7 @@ def draw_table_status():
 		filelist = list_sources(st.session_state.dd104m['arcdir']) + list_sources(st.session_state.dd104m['inidir'])
 		options = []
 		for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1):
-			sub = [f"{i}: Процесс {i} - {f['savename']+' (' + f['savetime']+')' for f in filelist if len(ldlist) >= i and f['filename'] == ldlist[i]}"]
+			sub = [f"{i}: Процесс {i} - {f['savename']+' (' + f['savetime']+')'}" for f in arclist + current if len(ldlist) >= i and f['filename'] == ldlist[i]]
 			options.append(sub[0] if sub else 'Файл не назначен') 
 		
 		if options:
@@ -1231,7 +1231,11 @@ def new_render_tx(servicename):
 		options = []
 		if 'active_ld' in st.session_state.dd104m.keys() and st.session_state.dd104m['active_ld']:
 			for i in range(1, st.session_state.dd104m['active_ld']['fcount']+1):
-				sub = [f"{i}: Процесс {i} - {f['savename']+' (' + f['savetime']+')' for f in arclist + current if len(ldlist) >= i and f['filename'] == ldlist[i]}"]
+				# sub = []
+				# for f in arclist + current:
+				# 	if len(ldlist) >= i and f['filename'] == ldlist[i]:
+				# 		sub.append(f"{i}: Процесс {i} - {f['savename']+' (' + f['savetime']+')'}")
+				sub = [f"{i}: Процесс {i} - {f['savename']+' (' + f['savetime']+')'}" for f in arclist + current if len(ldlist) >= i and f['filename'] == ldlist[i]]
 				options.append(sub[0] if sub else 'Файл не назначен') 
 			
 		
